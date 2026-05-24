@@ -18,6 +18,20 @@
           "tags": []
         }
       ]
+    },
+    {
+      "slug": "ml",
+      "title": "ML",
+      "chapters": [
+        {
+          "title": "PCA의 한계와 t-SNE: 매니폴드 차원 축소 정복하기",
+          "path": "courses/ml/pca의-한계와-t-sne-매니폴드-차원-축소-정복하기/",
+          "tags": [
+            "ml",
+            "pca"
+          ]
+        }
+      ]
     }
   ]
 }
