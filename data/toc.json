@@ -1,0 +1,18 @@
+{
+  "courses": [
+    {
+      "slug": "전기기초",
+      "title": "전기기초",
+      "chapters": [
+        {
+          "title": "⚡ 콘덴서 충전 애니메이션",
+          "path": "courses/전기기초/콘덴서-충전-애니메이션.html",
+          "tags": [
+            "전기",
+            "capacitor"
+          ]
+        }
+      ]
+    }
+  ]
+}

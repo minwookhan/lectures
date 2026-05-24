@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ 콘덴서 충전 애니메이션</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:#080b10;display:flex;flex-direction:column;align-items:center;padding:18px 10px;font-family:'Noto Sans KR',sans-serif;color:#d0d7de}
+  h1{font-family:'IBM Plex Mono',monospace;font-size:22px;color:#7ee787;margin-bottom:2px;text-align:center}
+  .sub{font-size:12px;color:#6e7681;margin-bottom:12px;text-align:center}
+  .wrap{width:100%;max-width:800px}
+  canvas{display:block;width:100%;border-radius:14px;border:2px solid #1c2128;background:#0d1117}
+  .ctrls{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+  .btn{padding:8px 16px;border:1px solid #2d333b;border-radius:8px;background:rgba(22,27,34,.95);color:#d0d7de;cursor:pointer;font-size:13px;font-family:inherit;transition:all .15s}
+  .btn:hover{border-color:#7ee787;color:#7ee787}
+  .btn.on{border-color:#7ee787;color:#7ee787;background:rgba(126,231,135,.12)}
+  .sl{display:flex;align-items:center;gap:5px;font-size:12px;color:#8b949e;background:rgba(22,27,34,.8);padding:5px 10px;border-radius:8px;border:1px solid #1c2128}
+  .sl input{width:80px;accent-color:#7ee787}
+  .sl .v{color:#7ee787;font-family:'IBM Plex Mono',monospace;min-width:52px;text-align:right}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;max-width:800px;width:100%}
+  .cd{background:rgba(22,27,34,.9);border:1px solid #1c2128;border-radius:10px;padding:10px;text-align:center}
+  .cd h3{font-size:11px;color:#8b949e;margin-bottom:2px}
+  .cd .v{font-family:'IBM Plex Mono',monospace;font-size:20px;color:#7ee787}
+  .cd .u{font-size:10px;color:#6e7681}
+  .info{margin-top:12px;max-width:800px;width:100%;background:rgba(22,27,34,.9);border:1px solid #1c2128;border-radius:12px;padding:14px 18px}
+  .info h2{font-size:14px;color:#7ee787;margin-bottom:4px}
+  .info p{font-size:12px;line-height:1.7;color:#adbac7}
+  .info .hl{color:#f0883e;font-weight:700}
+  .info .eq{font-family:'IBM Plex Mono',monospace;color:#79c0ff}
+</style>
+</head>
+<body>
+<h1>🔋 콘덴서 충전 시뮬레이션</h1>
+<p class="sub">Capacitor Charging — Electron Flow & Accumulation</p>
+<div class="wrap"><canvas id="cv" width="800" height="520"></canvas></div>
+<div class="ctrls">
+  <button class="btn" id="bC" onclick="doCharge()">⚡ 충전</button>
+  <button class="btn" id="bD" onclick="doDischarge()">🔌 방전</button>
+  <button class="btn" onclick="doReset()">🔄 리셋</button>
+  <div class="sl"><span>V</span><input type="range" min="1" max="12" value="6" id="sV" oninput="setV(+this.value)"><span class="v" id="lV">6 V</span></div>
+  <div class="sl"><span>R</span><input type="range" min="1" max="20" value="5" id="sR" oninput="setR(+this.value)"><span class="v" id="lR">5 kΩ</span></div>
+  <div class="sl"><span>C</span><input type="range" min="1" max="20" value="5" id="sC" oninput="setC(+this.value)"><span class="v" id="lC">5 μF</span></div>
+</div>
+<div class="cards">
+  <div class="cd"><h3>전하 Q</h3><div class="v" id="dQ">0.00</div><div class="u">μC</div></div>
+  <div class="cd"><h3>전압 Vc</h3><div class="v" id="dVc">0.00</div><div class="u">V</div></div>
+  <div class="cd"><h3>전류 I</h3><div class="v" id="dI">0.00</div><div class="u">mA</div></div>
+  <div class="cd"><h3>τ = RC</h3><div class="v" id="dT">25.0</div><div class="u">ms</div></div>
+</div>
+<div class="info">
+  <h2>💡 동작 원리</h2>
+  <p>배터리가 <span class="hl">전자(e⁻, 파란 점)</span>를 도선으로 밀어냅니다. 전자는 <span class="hl">음극판(−) 안쪽 표면</span>에 쌓이고, 반대쪽 <span class="hl">양극판(+) 안쪽 표면</span>에서 빠져나갑니다. 유전체 내부에서는 <span class="hl">분극</span>만 일어납니다. R이 크면 전류가 작아 충전이 느리고, C가 크면 저장 전하량이 많아집니다.
+  <br><span class="eq">τ = RC,&nbsp; I(t) = (V/R)·e<sup>−t/τ</sup>,&nbsp; Q = CV</span></p>
+</div>
+
+<script>
+const cv=document.getElementById('cv'), cc=cv.getContext('2d'), CW=800, CH=520;
+
+// ── State ──
+let battV=6, capR=5, capC=5; // V, kΩ, μF
+let Vc=0, charging=false, discharging=false, simTime=0, gT=0, currentI=0;
+
+// ── Geometry ──
+const bat={x:70,y:260,w:54,h:130};
+const pL={x:290,y:130,w:38,h:240}; // − plate
+const pR={x:472,y:130,w:38,h:240}; // + plate
+const die={x:328,y:130,w:144,h:240}; // dielectric
+
+const wireBot=[
+  {x:bat.x+bat.w/2, y:bat.y+bat.h/2+22},
+  {x:bat.x+bat.w/2, y:440},
+  {x:pL.x+pL.w/2, y:440},
+  {x:pL.x+pL.w/2, y:pL.y+pL.h}
+];
+const wireTop=[
+  {x:pR.x+pR.w/2, y:pR.y},
+  {x:pR.x+pR.w/2, y:80},
+  {x:bat.x+bat.w/2, y:80},
+  {x:bat.x+bat.w/2, y:bat.y-bat.h/2+38}
+];
+
+// ── Path helpers ──
+function pLen(p){let l=0;for(let i=1;i<p.length;i++)l+=Math.hypot(p[i].x-p[i-1].x,p[i].y-p[i-1].y);return l}
+function pPt(p,t){let tl=pLen(p),tgt=t*tl;for(let i=1;i<p.length;i++){const s=Math.hypot(p[i].x-p[i-1].x,p[i].y-p[i-1].y);if(tgt<=s){const f=tgt/s;return{x:p[i-1].x+(p[i].x-p[i-1].x)*f,y:p[i-1].y+(p[i].y-p[i-1].y)*f}}tgt-=s}return p[p.length-1]}
+function pDir(p,t){const d=0.002,a=pPt(p,Math.max(0,t-d)),b=pPt(p,Math.min(1,t+d)),dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1;return{dx:dx/m,dy:dy/m}}
+
+// ── Electrons ──
+const wEls=[]; // wire electrons {path,t,prevPositions[]}
+const pMinE=[], pPluE=[]; // plate electrons
+let maxPE=15;
+
+function initWireE(){
+  wEls.length=0;
+  for(let i=0;i<16;i++) wEls.push({path:'bot',t:i/16,prev:[]});
+  for(let i=0;i<16;i++) wEls.push({path:'top',t:i/16,prev:[]});
+}
+
+function rndPlate(plate,side){
+  const m=4;
+  let x;
+  if(side==='right') x=plate.x+plate.w-m-Math.random()*12; // inner surface of left plate
+  else x=plate.x+m+Math.random()*12; // inner surface of right plate
+  return{x,y:plate.y+10+Math.random()*(plate.h-20),w:Math.random()*Math.PI*2};
+}
+
+function initPlateE(){
+  pMinE.length=0;pPluE.length=0;
+  maxPE=Math.round(capC*3);
+  const n=Math.round(maxPE*0.5);
+  for(let i=0;i<n;i++){pMinE.push(rndPlate(pL,'right'));pPluE.push(rndPlate(pR,'left'))}
+}
+
+// ── Dipoles ──
+const dips=[];
+function initDip(){
+  dips.length=0;
+  for(let r=0;r<9;r++)for(let c2=0;c2<5;c2++){
+    dips.push({x:die.x+16+c2*(die.w-32)/4,y:die.y+16+r*(die.h-32)/8,a:Math.random()*0.4-0.2,ta:0});
+  }
+}
+
+// ── Controls ──
+function doCharge(){charging=true;discharging=false;updBtn()}
+function doDischarge(){discharging=true;charging=false;updBtn()}
+function doReset(){charging=false;discharging=false;Vc=0;simTime=0;currentI=0;hist.t=[];hist.v=[];hist.q=[];hist.i=[];initWireE();initPlateE();initDip();updBtn()}
+function setV(v){battV=v;document.getElementById('lV').textContent=v+' V';updTau()}
+function setR(v){capR=v;document.getElementById('lR').textContent=v+' kΩ';updTau()}
+function setC(v){capC=v;document.getElementById('lC').textContent=v+' μF';maxPE=Math.round(capC*3);updTau()}
+function updTau(){document.getElementById('dT').textContent=(capR*capC).toFixed(1)}
+function updBtn(){
+  document.getElementById('bC').className='btn'+(charging?' on':'');
+  document.getElementById('bD').className='btn'+(discharging?' on':'');
+}
+
+// ── Physics ──
+function update(dt){
+  gT+=dt;
+  // tau in seconds: RC visual time constant. capR in kΩ, capC in μF → RC in ms
+  // We want charging to take a few seconds visually
+  const tau = capR * capC * 0.05; // e.g. 5*5*0.05 = 1.25 seconds
+
+  if(charging){
+    Vc += (battV - Vc) * (1 - Math.exp(-dt / tau));
+    if(Vc > battV - 0.005) Vc = battV;
+    currentI = (battV - Vc) / capR;
+  }else if(discharging){
+    Vc -= Vc * (1 - Math.exp(-dt / tau));
+    currentI = -Vc / capR;
+    if(Vc < 0.005){Vc=0;discharging=false;updBtn()}
+  }else{
+    currentI *= 0.92;
+  }
+
+  // wire electrons — speed proportional to current magnitude
+  // normI goes from 1.0 (max current at start) to ~0 (fully charged)
+  const peakI = battV / capR; // max possible current
+  const normI = Math.min(Math.abs(currentI) / Math.max(peakI, 0.001), 1.0);
+  // Ensure minimum visible speed when charging/discharging so electrons always move
+  const minSpd = (charging || discharging) ? 0.08 : 0;
+  const spd = minSpd + normI * 0.7; // t-units per second (0.08 ~ 0.78)
+
+  for(const e of wEls){
+    const pp = e.path==='bot' ? wireBot : wireTop;
+    const pos = pPt(pp, Math.max(0, Math.min(1, e.t)));
+    e.prev.push({x:pos.x, y:pos.y});
+    if(e.prev.length > 14) e.prev.shift();
+
+    if(charging)  { e.t += spd * dt; if(e.t > 1) e.t -= 1; }
+    if(discharging){ e.t -= spd * dt; if(e.t < 0) e.t += 1; }
+  }
+
+  // plate electrons
+  const cr=Vc/Math.max(battV,0.1);
+  const tMinus=Math.round(maxPE*0.5+cr*maxPE*0.5);
+  const tPlus=Math.round(maxPE*0.5-cr*maxPE*0.45);
+  while(pMinE.length<tMinus)pMinE.push(rndPlate(pL,'right'));
+  while(pMinE.length>tMinus&&pMinE.length>0)pMinE.pop();
+  while(pPluE.length<tPlus)pPluE.push(rndPlate(pR,'left'));
+  while(pPluE.length>tPlus&&pPluE.length>0)pPluE.pop();
+
+  // dipoles
+  for(const d of dips){d.ta=cr*Math.PI;d.a+=(d.ta-d.a)*0.06}
+
+  // display
+  const Q=Vc*capC;
+  document.getElementById('dQ').textContent=Q.toFixed(2);
+  document.getElementById('dVc').textContent=Vc.toFixed(2);
+  document.getElementById('dI').textContent=(currentI*1000/(capR||1)).toFixed(2);
+}
+
+// ── Drawing ──
+function drawWire(p,col){
+  cc.beginPath();cc.moveTo(p[0].x,p[0].y);
+  for(let i=1;i<p.length;i++)cc.lineTo(p[i].x,p[i].y);
+  cc.strokeStyle=col;cc.lineWidth=4;cc.lineCap='round';cc.lineJoin='round';cc.stroke();
+  // highlight glow
+  cc.strokeStyle='rgba(45,74,34,0.3)';cc.lineWidth=10;cc.stroke();
+}
+
+function drawBat(){
+  const bx=bat.x,by=bat.y,bw=bat.w,bh=bat.h;
+  cc.fillStyle='#1a1f26';cc.beginPath();cc.roundRect(bx,by-bh/2,bw,bh,10);cc.fill();
+  cc.strokeStyle='#3d444d';cc.lineWidth=2;cc.stroke();
+  // terminals
+  cc.fillStyle='#da3633';cc.fillRect(bx+bw/2-10,by-bh/2-8,20,10);
+  cc.fillStyle='#388bfd';cc.fillRect(bx+bw/2-10,by+bh/2-2,20,10);
+  cc.fillStyle='#fff';cc.font='bold 15px IBM Plex Mono';cc.textAlign='center';cc.textBaseline='middle';
+  cc.fillText('+',bx+bw/2,by-bh/2+18);
+  cc.fillText('−',bx+bw/2,by+bh/2-18);
+  cc.fillStyle='#7ee787';cc.font='bold 18px IBM Plex Mono';
+  cc.fillText(battV+'V',bx+bw/2,by);
+  cc.fillStyle='#6e7681';cc.font='11px Noto Sans KR';
+  cc.fillText('배터리',bx+bw/2,by+bh/2+26);
+}
+
+function drawPlates(){
+  const cr=Vc/Math.max(battV,0.1);
+  // − plate
+  cc.fillStyle='#22272e';cc.beginPath();cc.roundRect(pL.x,pL.y,pL.w,pL.h,4);cc.fill();
+  cc.fillStyle=`rgba(56,139,253,${0.1+cr*0.7})`;cc.fillRect(pL.x+pL.w-14,pL.y+2,14,pL.h-4);
+  cc.strokeStyle='#388bfd';cc.lineWidth=2;cc.beginPath();cc.roundRect(pL.x,pL.y,pL.w,pL.h,4);cc.stroke();
+  // + plate
+  cc.fillStyle='#22272e';cc.beginPath();cc.roundRect(pR.x,pR.y,pR.w,pR.h,4);cc.fill();
+  cc.fillStyle=`rgba(218,54,51,${0.1+cr*0.7})`;cc.fillRect(pR.x,pR.y+2,14,pR.h-4);
+  cc.strokeStyle='#da3633';cc.lineWidth=2;cc.beginPath();cc.roundRect(pR.x,pR.y,pR.w,pR.h,4);cc.stroke();
+  // labels
+  cc.font='bold 20px IBM Plex Mono';cc.textAlign='center';
+  cc.fillStyle='#388bfd';cc.fillText('−',pL.x+pL.w/2,pL.y-12);
+  cc.fillStyle='#da3633';cc.fillText('+',pR.x+pR.w/2,pR.y-12);
+  cc.font='11px Noto Sans KR';cc.fillStyle='#6e7681';
+  cc.fillText('음극판',pL.x+pL.w/2,pL.y+pL.h+18);
+  cc.fillText('양극판',pR.x+pR.w/2,pR.y+pR.h+18);
+  // surface annotations
+  if(cr>0.05){
+    cc.font='10px IBM Plex Mono';
+    cc.fillStyle='rgba(121,192,255,0.8)';cc.textAlign='right';
+    cc.fillText('e⁻ 쌓임→',pL.x-4,pL.y+pL.h/2);
+    cc.fillStyle='rgba(218,54,51,0.8)';cc.textAlign='left';
+    cc.fillText('←e⁻ 빠짐',pR.x+pR.w+4,pR.y+pR.h/2);
+  }
+}
+
+function drawDielec(){
+  cc.fillStyle='rgba(240,136,62,0.06)';cc.fillRect(die.x,die.y,die.w,die.h);
+  cc.strokeStyle='rgba(240,136,62,0.25)';cc.lineWidth=1;
+  cc.setLineDash([5,4]);cc.strokeRect(die.x,die.y,die.w,die.h);cc.setLineDash([]);
+  cc.fillStyle='rgba(240,136,62,0.6)';cc.font='11px Noto Sans KR';cc.textAlign='center';
+  cc.fillText('유전체 (절연)',die.x+die.w/2,die.y+die.h+18);
+  const cr=Vc/Math.max(battV,0.1);
+  for(const d of dips){
+    const len=10;
+    const wb=cr<0.03?Math.sin(gT*2+d.x*.1+d.y*.07)*.6:0;
+    const a=d.a+wb;
+    const dx=Math.cos(a)*len,dy=Math.sin(a*.25)*len*.2;
+    cc.beginPath();cc.arc(d.x+dx/2,d.y+dy/2,3.5,0,Math.PI*2);
+    cc.fillStyle=`rgba(218,54,51,${.25+cr*.55})`;cc.fill();
+    cc.beginPath();cc.arc(d.x-dx/2,d.y-dy/2,3.5,0,Math.PI*2);
+    cc.fillStyle=`rgba(56,139,253,${.25+cr*.55})`;cc.fill();
+    cc.beginPath();cc.moveTo(d.x-dx/2,d.y-dy/2);cc.lineTo(d.x+dx/2,d.y+dy/2);
+    cc.strokeStyle=`rgba(240,136,62,${.15+cr*.45})`;cc.lineWidth=1;cc.stroke();
+  }
+}
+
+function drawPlateE(){
+  for(const e of pMinE){
+    const wx=Math.sin(gT*2.5+e.w)*2,wy=Math.cos(gT*2+e.w)*2;
+    const ex=e.x+wx,ey=e.y+wy;
+    // glow
+    const g=cc.createRadialGradient(ex,ey,0,ex,ey,10);
+    g.addColorStop(0,'rgba(121,192,255,0.45)');g.addColorStop(1,'rgba(121,192,255,0)');
+    cc.beginPath();cc.arc(ex,ey,10,0,Math.PI*2);cc.fillStyle=g;cc.fill();
+    // dot
+    cc.beginPath();cc.arc(ex,ey,3.5,0,Math.PI*2);cc.fillStyle='#79c0ff';cc.fill();
+    cc.strokeStyle='rgba(200,230,255,0.6)';cc.lineWidth=1;cc.stroke();
+  }
+  for(const e of pPluE){
+    const wx=Math.sin(gT*2.5+e.w)*2,wy=Math.cos(gT*2+e.w)*2;
+    cc.beginPath();cc.arc(e.x+wx,e.y+wy,3,0,Math.PI*2);cc.fillStyle='rgba(121,192,255,0.5)';cc.fill();
+  }
+}
+
+function drawWireE(){
+  const isMoving=charging||discharging;
+  for(const e of wEls){
+    const pp=e.path==='bot'?wireBot:wireTop;
+    const pos=pPt(pp,Math.max(0,Math.min(1,e.t)));
+
+    // ── Comet trail ──
+    if(isMoving&&e.prev.length>1){
+      for(let i=1;i<e.prev.length;i++){
+        const alpha=(i/e.prev.length)*0.5;
+        const r=2+i/e.prev.length*3;
+        cc.beginPath();cc.arc(e.prev[i].x,e.prev[i].y,r,0,Math.PI*2);
+        cc.fillStyle=`rgba(100,180,255,${alpha*0.3})`;cc.fill();
+      }
+      // trail line
+      cc.beginPath();cc.moveTo(e.prev[0].x,e.prev[0].y);
+      for(let i=1;i<e.prev.length;i++)cc.lineTo(e.prev[i].x,e.prev[i].y);
+      cc.lineTo(pos.x,pos.y);
+      cc.strokeStyle='rgba(100,180,255,0.25)';cc.lineWidth=3;cc.lineCap='round';cc.stroke();
+    }
+
+    // ── Outer glow ──
+    const gr=cc.createRadialGradient(pos.x,pos.y,0,pos.x,pos.y,16);
+    gr.addColorStop(0,'rgba(100,180,255,0.5)');gr.addColorStop(.4,'rgba(80,160,255,0.15)');gr.addColorStop(1,'rgba(80,160,255,0)');
+    cc.beginPath();cc.arc(pos.x,pos.y,16,0,Math.PI*2);cc.fillStyle=gr;cc.fill();
+
+    // ── Electron body ──
+    cc.beginPath();cc.arc(pos.x,pos.y,5.5,0,Math.PI*2);
+    const ig=cc.createRadialGradient(pos.x-1,pos.y-1,0,pos.x,pos.y,5.5);
+    ig.addColorStop(0,'#c8e6ff');ig.addColorStop(.5,'#79c0ff');ig.addColorStop(1,'#388bfd');
+    cc.fillStyle=ig;cc.fill();
+    cc.strokeStyle='rgba(200,230,255,0.7)';cc.lineWidth=1.2;cc.stroke();
+
+    // ── e⁻ label ──
+    cc.fillStyle='#fff';cc.font='bold 7px IBM Plex Mono';cc.textAlign='center';cc.textBaseline='middle';
+    cc.fillText('e⁻',pos.x,pos.y+0.5);
+  }
+}
+
+function drawEField(){
+  const cr=Vc/Math.max(battV,0.1);
+  if(cr<0.02)return;
+  const n=7,a=cr*.55;
+  cc.strokeStyle=`rgba(255,220,60,${a})`;cc.fillStyle=`rgba(255,220,60,${a})`;cc.lineWidth=1.5;
+  for(let i=0;i<n;i++){
+    const y=pL.y+18+i*(pL.h-36)/(n-1);
+    const x1=pR.x-2,x2=pL.x+pL.w+2;
+    const len=(x1-x2)*cr,mx=(x1+x2)/2;
+    cc.beginPath();cc.moveTo(mx+len/2,y);cc.lineTo(mx-len/2,y);cc.stroke();
+    cc.beginPath();cc.moveTo(mx-len/2,y);cc.lineTo(mx-len/2+9,y-4);cc.lineTo(mx-len/2+9,y+4);cc.closePath();cc.fill();
+  }
+  cc.fillStyle=`rgba(255,220,60,${a})`;cc.font='bold 13px IBM Plex Mono';cc.textAlign='center';
+  cc.fillText('E field',(pL.x+pR.x)/2+10,pL.y+pL.h/2-35);
+}
+
+function drawFlowArrows(){
+  if(Math.abs(currentI)<0.005)return;
+  const a=Math.min(Math.abs(currentI)*0.15,0.85);
+  cc.font='bold 12px IBM Plex Mono';cc.textAlign='center';
+  if(currentI>0){
+    cc.fillStyle=`rgba(126,231,135,${a})`;
+    cc.fillText('⟶ 전류 I (관습적 방향)',(bat.x+pR.x)/2+30,68);
+    cc.fillStyle=`rgba(121,192,255,${a})`;
+    cc.fillText('⟵ 전자 e⁻ 이동 방향',(bat.x+pL.x)/2+30,456);
+  }else{
+    cc.fillStyle=`rgba(126,231,135,${a})`;
+    cc.fillText('⟵ 전류 I (방전)',(bat.x+pR.x)/2+30,68);
+    cc.fillStyle=`rgba(121,192,255,${a})`;
+    cc.fillText('⟶ 전자 e⁻ 이동 (방전)',(bat.x+pL.x)/2+30,456);
+  }
+}
+
+// ── Graph ──
+const hist={t:[],v:[],q:[],i:[]};
+function drawGraph(){
+  const gx=580,gy=50,gw=205,gh=130;
+  cc.fillStyle='rgba(13,17,23,.88)';cc.beginPath();cc.roundRect(gx,gy,gw,gh,8);cc.fill();
+  cc.strokeStyle='#1c2128';cc.lineWidth=1;cc.stroke();
+  if(charging||discharging){
+    hist.t.push(simTime);hist.v.push(Vc);hist.q.push(Vc*capC);hist.i.push(Math.abs(currentI*1000/(capR||1)));
+    if(hist.t.length>250){hist.t.shift();hist.v.shift();hist.q.shift();hist.i.shift()}
+  }
+  if(hist.t.length<2)return;
+  const p=8,pw=gw-p*2,ph=gh-p*2-16,t0=hist.t[0],mt=Math.max(hist.t[hist.t.length-1]-t0,0.5);
+  // Vc
+  cc.beginPath();
+  for(let i=0;i<hist.v.length;i++){const x=gx+p+(hist.t[i]-t0)/mt*pw,y=gy+p+16+ph-(hist.v[i]/Math.max(battV,1))*ph;i?cc.lineTo(x,y):cc.moveTo(x,y)}
+  cc.strokeStyle='#7ee787';cc.lineWidth=2;cc.stroke();
+  // I
+  const mI=Math.max(...hist.i,0.1);
+  cc.beginPath();
+  for(let i=0;i<hist.i.length;i++){const x=gx+p+(hist.t[i]-t0)/mt*pw,y=gy+p+16+ph-(hist.i[i]/mI)*ph;i?cc.lineTo(x,y):cc.moveTo(x,y)}
+  cc.strokeStyle='#f0883e';cc.lineWidth=1.5;cc.stroke();
+  // legend
+  cc.font='10px IBM Plex Mono';cc.textAlign='left';
+  cc.fillStyle='#7ee787';cc.fillText('── Vc',gx+p,gy+p+8);
+  cc.fillStyle='#f0883e';cc.fillText('── I',gx+p+55,gy+p+8);
+  cc.fillStyle='#6e7681';cc.fillText('시간→',gx+gw-p-38,gy+gh-4);
+}
+
+// ── Water analogy ──
+function drawWater(){
+  const ax=580,ay=200,aw=205,ah=145;
+  cc.fillStyle='rgba(13,17,23,.88)';cc.beginPath();cc.roundRect(ax,ay,aw,ah,8);cc.fill();
+  cc.strokeStyle='#1c2128';cc.lineWidth=1;cc.stroke();
+  cc.font='bold 11px Noto Sans KR';cc.fillStyle='#f0883e';cc.textAlign='center';
+  cc.fillText('🌊 수조 비유',ax+aw/2,ay+16);
+  const cr=Vc/Math.max(battV,0.1);
+  const tL={x:ax+18,y:ay+30,w:42,h:85},tR={x:ax+aw-60,y:ay+30,w:42,h:85};
+  cc.strokeStyle='#3d444d';cc.lineWidth=1.5;
+  cc.strokeRect(tL.x,tL.y,tL.w,tL.h);cc.strokeRect(tR.x,tR.y,tR.w,tR.h);
+  const lLev=.25+cr*.55,rLev=Math.max(.05,.25-cr*.2);
+  cc.fillStyle='rgba(56,139,253,0.45)';cc.fillRect(tL.x+1,tL.y+tL.h*(1-lLev),tL.w-2,tL.h*lLev);
+  cc.fillStyle='rgba(218,54,51,0.3)';cc.fillRect(tR.x+1,tR.y+tR.h*(1-rLev),tR.w-2,tR.h*rLev);
+  const mx=ax+aw/2;
+  cc.strokeStyle='rgba(240,136,62,.65)';cc.lineWidth=3;
+  cc.beginPath();cc.moveTo(mx,tL.y+5);cc.quadraticCurveTo(mx+cr*14,ay+30+42,mx,tL.y+tL.h-5);cc.stroke();
+  cc.font='9px Noto Sans KR';cc.fillStyle='#6e7681';cc.textAlign='center';
+  cc.fillText('전하↑',tL.x+tL.w/2,tL.y+tL.h+12);
+  cc.fillText('전하↓',tR.x+tR.w/2,tR.y+tR.h+12);
+  cc.fillStyle='#f0883e';cc.fillText('고무막',mx,tL.y+tL.h+12);
+}
+
+// ── Resistor ──
+function drawResistor(){
+  const rx=(wireTop[1].x+wireTop[2].x)/2,ry=wireTop[1].y;
+  // zigzag symbol
+  cc.fillStyle='rgba(13,17,23,.9)';cc.beginPath();cc.roundRect(rx-30,ry-14,60,28,5);cc.fill();
+  cc.strokeStyle='#6e7681';cc.lineWidth=1.5;cc.stroke();
+  cc.strokeStyle='#adbac7';cc.lineWidth=2;cc.beginPath();
+  const zw=6,zh=8,n=4,sx=rx-n*zw;
+  cc.moveTo(sx,ry);
+  for(let i=0;i<n;i++){cc.lineTo(sx+zw*(i+.25),ry-zh);cc.lineTo(sx+zw*(i+.75),ry+zh);cc.lineTo(sx+zw*(i+1),ry)}
+  cc.stroke();
+  cc.fillStyle='#adbac7';cc.font='10px IBM Plex Mono';cc.textAlign='center';
+  cc.fillText(capR+'kΩ',rx,ry+22);
+}
+
+// ── Main loop ──
+function draw(){
+  cc.clearRect(0,0,CW,CH);
+  // grid
+  cc.strokeStyle='rgba(48,54,61,.12)';cc.lineWidth=1;
+  for(let x=0;x<CW;x+=40){cc.beginPath();cc.moveTo(x,0);cc.lineTo(x,CH);cc.stroke()}
+  for(let y=0;y<CH;y+=40){cc.beginPath();cc.moveTo(0,y);cc.lineTo(CW,y);cc.stroke()}
+
+  drawWire(wireBot,'#2d4a22');drawWire(wireTop,'#2d4a22');
+  drawDielec();drawEField();drawPlates();drawPlateE();
+  drawBat();drawWireE();drawFlowArrows();
+  drawResistor();drawGraph();drawWater();
+}
+
+function loop(){
+  const dt=0.016;simTime+=dt;
+  update(dt);draw();
+  requestAnimationFrame(loop);
+}
+
+initWireE();initPlateE();initDip();updTau();loop();
+</script>
+</body>
+</html>
