@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리 — 강의 자료</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='8' y='8' width='16' height='16' rx='3' transform='rotate(45 16 16)' fill='%235e6ad2'/></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+</head>
+<body class="admin-body">
+
+  <header class="admin-header">
+    <a class="admin-brand" href="../">
+      <span class="dot"></span>
+      <span>lectures</span>
+      <span class="sep">/</span>
+      <span class="cur">admin</span>
+    </a>
+    <div class="admin-header__actions">
+      <span class="admin-status" id="connStatus" title="GitHub 연결 상태">
+        <span class="status-dot"></span>
+        <span class="status-text">미연결</span>
+      </span>
+      <button class="icon-btn" id="settingsBtn" aria-label="설정" title="설정 (s)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" aria-label="테마 전환" title="테마 전환 (t)">
+        <svg id="themeIconLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg id="themeIconDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+
+    <!-- Upload section -->
+    <section class="card">
+      <header class="card__head">
+        <h2>업로드</h2>
+        <p class="card__hint">zip 폴더 또는 단일 HTML 파일을 끌어다 놓으세요</p>
+      </header>
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".zip,.html,.htm" hidden>
+        <div class="dropzone__inner">
+          <svg class="dropzone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <div class="dropzone__main">파일을 드래그하거나 <button type="button" class="link-btn" id="browseBtn">클릭해서 선택</button></div>
+          <div class="dropzone__hint">.zip · .html</div>
+        </div>
+      </div>
+
+      <div class="upload-form" id="uploadForm" hidden>
+        <div class="preview">
+          <div class="preview__head">
+            <div>
+              <div class="preview__label">감지됨</div>
+              <div class="preview__name" id="previewName">—</div>
+            </div>
+            <button class="ghost-btn" id="cancelBtn">취소</button>
+          </div>
+          <div class="preview__body">
+            <div class="preview__tree" id="previewTree"></div>
+            <div class="preview__notes" id="previewNotes"></div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="courseSelect">과목</label>
+            <div class="field__row">
+              <select id="courseSelect"></select>
+              <button class="ghost-btn" id="newCourseBtn" type="button">+ 새 과목</button>
+            </div>
+          </div>
+          <div class="field" id="newCourseFields" hidden>
+            <label for="newCourseTitle">새 과목 이름</label>
+            <input id="newCourseTitle" type="text" placeholder="예: 데이터베이스">
+            <label for="newCourseSlug" class="sublabel">슬러그 (URL용, 자동 생성됨)</label>
+            <input id="newCourseSlug" type="text" placeholder="database">
+          </div>
+          <div class="field">
+            <label for="chapterTitle">챕터 제목</label>
+            <input id="chapterTitle" type="text" placeholder="예: 정렬 알고리즘">
+          </div>
+          <div class="field">
+            <label for="chapterTags">태그 <span class="sublabel-inline">쉼표로 구분</span></label>
+            <input id="chapterTags" type="text" placeholder="기초, 비교정렬">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <div class="form-actions__path">
+            <span class="muted">생성될 경로:</span>
+            <code id="targetPath">—</code>
+          </div>
+          <button class="primary-btn" id="uploadBtn" disabled>업로드</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catalog section -->
+    <section class="card">
+      <header class="card__head">
+        <h2>자료 목록</h2>
+        <p class="card__hint">드래그로 순서 변경 · 클릭으로 수정 · 휴지통 아이콘으로 삭제</p>
+      </header>
+      <div class="catalog" id="catalog">
+        <div class="empty">목차를 불러오는 중…</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel">
+      <header class="modal__head">
+        <h3>GitHub 연결 설정</h3>
+        <button class="icon-btn" data-close aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="field">
+          <label for="repoOwner">레포 소유자</label>
+          <input id="repoOwner" type="text" placeholder="your-github-username">
+        </div>
+        <div class="field">
+          <label for="repoName">레포 이름</label>
+          <input id="repoName" type="text" placeholder="lectures">
+        </div>
+        <div class="field">
+          <label for="repoBranch">브랜치</label>
+          <input id="repoBranch" type="text" placeholder="main" value="main">
+        </div>
+        <div class="field">
+          <label for="ghToken">Personal Access Token</label>
+          <input id="ghToken" type="password" placeholder="ghp_...">
+          <div class="help">
+            <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">Fine-grained PAT 발급 ↗</a>
+            <span>· 해당 레포 <code>Contents: Read &amp; Write</code> 권한만 필요</span>
+          </div>
+        </div>
+        <div class="warning">
+          <strong>주의</strong> 토큰은 이 브라우저에만 저장됩니다. 공용 PC에서는 절대 입력하지 마세요.
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <button class="ghost-btn" id="testConnBtn">연결 테스트</button>
+        <div style="flex:1"></div>
+        <button class="ghost-btn" data-close>취소</button>
+        <button class="primary-btn" id="saveSettingsBtn">저장</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Edit Chapter Modal -->
+  <div class="modal" id="editModal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel modal__panel--small">
+      <header class="modal__head">
+        <h3>챕터 수정</h3>
+        <button class="icon-btn" data-close aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="field">
+          <label for="editTitle">제목</label>
+          <input id="editTitle" type="text">
+        </div>
+        <div class="field">
+          <label for="editTags">태그 <span class="sublabel-inline">쉼표로 구분</span></label>
+          <input id="editTags" type="text">
+        </div>
+        <div class="muted">
+          <small>경로: <code id="editPath"></code></small>
+        </div>
+      </div>
+      <footer class="modal__foot">
+        <div style="flex:1"></div>
+        <button class="ghost-btn" data-close>취소</button>
+        <button class="primary-btn" id="saveEditBtn">저장</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Progress Modal -->
+  <div class="modal" id="progressModal" hidden>
+    <div class="modal__backdrop"></div>
+    <div class="modal__panel modal__panel--small">
+      <div class="modal__body">
+        <div class="progress">
+          <div class="progress__spinner"></div>
+          <div class="progress__text" id="progressText">처리 중…</div>
+        </div>
+        <div class="progress__log" id="progressLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

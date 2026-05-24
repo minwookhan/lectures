@@ -1,0 +1,15 @@
+{
+  "courses": [
+    {
+      "slug": "sample-course",
+      "title": "샘플 강의",
+      "chapters": [
+        {
+          "title": "시작하기",
+          "path": "courses/sample-course/01-intro/",
+          "tags": ["소개", "샘플"]
+        }
+      ]
+    }
+  ]
+}
