@@ -7,7 +7,15 @@
         {
           "title": "시작하기",
           "path": "courses/sample-course/01-intro/",
-          "tags": ["소개", "샘플"]
+          "tags": [
+            "소개",
+            "샘플"
+          ]
+        },
+        {
+          "title": "⚡ 콘덴서 충전 애니메이션",
+          "path": "courses/sample-course/콘덴서-충전-애니메이션.html",
+          "tags": []
         }
       ]
     }
