@@ -1,16 +1,13 @@
 {
   "courses": [
     {
-      "slug": "전기기초",
-      "title": "전기기초",
+      "slug": "sample-course",
+      "title": "샘플 강의",
       "chapters": [
         {
-          "title": "⚡ 콘덴서 충전 애니메이션",
-          "path": "courses/전기기초/콘덴서-충전-애니메이션.html",
-          "tags": [
-            "전기",
-            "capacitor"
-          ]
+          "title": "시작하기",
+          "path": "courses/sample-course/01-intro/",
+          "tags": ["소개", "샘플"]
         }
       ]
     }
