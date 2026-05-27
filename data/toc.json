@@ -39,6 +39,19 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "iot",
+      "title": "iot",
+      "chapters": [
+        {
+          "title": "아두이노 피아노 타일 게임 만들기",
+          "path": "courses/iot/아두이노-피아노-타일-게임-만들기/",
+          "tags": [
+            "iot"
+          ]
+        }
+      ]
     }
   ]
 }
