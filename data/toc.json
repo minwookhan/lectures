@@ -16,6 +16,13 @@
           "title": "⚡ 콘덴서 충전 애니메이션",
           "path": "courses/sample-course/콘덴서-충전-애니메이션.html",
           "tags": []
+        },
+        {
+          "title": "아두이노 피아노 타일 게임 만들기",
+          "path": "courses/sample-course/아두이노-피아노-타일-게임-만들기/",
+          "tags": [
+            "iot"
+          ]
         }
       ]
     },
