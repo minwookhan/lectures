@@ -57,6 +57,17 @@
           ]
         }
       ]
+    },
+    {
+      "slug": "deeplearning",
+      "title": "DeepLearning",
+      "chapters": [
+        {
+          "title": "CNN 성능 개선 실습: 흑백 Sign Language MNIST 인식",
+          "path": "courses/deeplearning/cnn-성능-개선-실습-흑백-sign-language-mnist-인식/",
+          "tags": []
+        }
+      ]
     }
   ]
 }

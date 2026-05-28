@@ -1,0 +1,2495 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-05-28 Thu 22:18 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CNN 성능 개선 실습: 흑백 Sign Language MNIST 인식</title>
+<meta name="author" content="minwook Han" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">CNN 성능 개선 실습: 흑백 Sign Language MNIST 인식
+<br />
+<span class="subtitle">CNN실습과 성능개선 고찰</span>
+</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org2cfa2c2">1. 강의 개요</a>
+<ul>
+<li><a href="#org1288663">1.1. 흑백 버전의 특징과 주의점</a></li>
+</ul>
+</li>
+<li><a href="#step0">2. 0단계: 도입 &ndash; 무엇을, 왜 만드는가</a>
+<ul>
+<li><a href="#org62b03cd">2.1. 학습 목표</a></li>
+<li><a href="#orgbe74b2b">2.2. 무엇을 만드나</a></li>
+<li><a href="#orgc4ab791">2.3. ASL 지문자란</a></li>
+<li><a href="#orgec510eb">2.4. Colab 환경 준비</a></li>
+</ul>
+</li>
+<li><a href="#step1">3. 1단계: CNN 이론 복습 &ndash; 이미지에는 왜 CNN인가</a>
+<ul>
+<li><a href="#org34d3d63">3.1. 학습 목표</a></li>
+<li><a href="#org7cc98d3">3.2. 이미지를 숫자로 본다는 것</a></li>
+<li><a href="#orge8e2c1c">3.3. 왜 fully-connected network로는 부족한가</a></li>
+<li><a href="#org05856dc">3.4. Convolution: 작은 filter로 국소 패턴을 본다</a></li>
+<li><a href="#orgc2905cb">3.5. 활성화 함수와 비선형성</a></li>
+<li><a href="#org30c8fb1">3.6. Pooling: 크기를 줄이고 위치 변화에 강해진다</a></li>
+<li><a href="#org32acae7">3.7. 작은 데모: filter 하나 적용해보기</a></li>
+</ul>
+</li>
+<li><a href="#orgbcb25da">4. 2단계: 데이터 준비 &ndash; 흑백 Sign Language MNIST 불러오기와 전처리</a>
+<ul>
+<li><a href="#org68a02af">4.1. 학습 목표</a></li>
+<li><a href="#org1a7c5f5">4.2. 데이터셋 설명</a></li>
+<li><a href="#org57aa6c6">4.3. Kaggle에서 데이터 받기</a></li>
+<li><a href="#org7a42e7a">4.4. CSV를 읽어 이미지 배열로 변환</a></li>
+<li><a href="#org8f988c2">4.5. label 정리와 class 이름</a></li>
+<li><a href="#orga8700b8">4.6. train / validation 나누기</a></li>
+<li><a href="#org180a48f">4.7. 샘플 이미지 살펴보기</a></li>
+<li><a href="#org0b5f75f">4.8. 공통 상수와 normalization layer</a></li>
+</ul>
+</li>
+<li><a href="#step3">5. 3단계: Baseline CNN 구축 &ndash; 기준점 세우기</a>
+<ul>
+<li><a href="#org47c8573">5.1. 학습 목표</a></li>
+<li><a href="#org869ab8a">5.2. Baseline model 정의</a></li>
+<li><a href="#orgffed656">5.3. Loss function과 optimizer</a></li>
+<li><a href="#orgaa1f49d">5.4. 공정한 비교를 위한 약속</a></li>
+<li><a href="#org01914fe">5.5. Baseline 학습 및 기준 정확도 기록</a></li>
+</ul>
+</li>
+<li><a href="#step4">6. 4단계: 기법 추가 ① Data Augmentation</a>
+<ul>
+<li><a href="#org858816f">6.1. 학습 목표</a></li>
+<li><a href="#org2ba278a">6.2. 개념 설명</a></li>
+<li><a href="#org92da238">6.3. Augmentation layer 추가한 model</a></li>
+<li><a href="#org4222217">6.4. 비교: baseline vs augmentation</a></li>
+</ul>
+</li>
+<li><a href="#step5">7. 5단계: 기법 추가 ② Batch Normalization</a>
+<ul>
+<li><a href="#orgf35940c">7.1. 학습 목표</a></li>
+<li><a href="#org24bc275">7.2. 개념과 수식</a></li>
+<li><a href="#org377053b">7.3. Batch Normalization 추가 model</a></li>
+<li><a href="#org14a9c86">7.4. 비교: augmentation vs +batch normalization</a></li>
+</ul>
+</li>
+<li><a href="#step6">8. 6단계: 기법 추가 ③ Dropout</a>
+<ul>
+<li><a href="#org1a76935">8.1. 학습 목표</a></li>
+<li><a href="#org0b767d5">8.2. 개념 설명</a></li>
+<li><a href="#orge18ad14">8.3. Dropout 추가 model</a></li>
+<li><a href="#org3702981">8.4. 비교: +batch normalization vs +dropout</a></li>
+</ul>
+</li>
+<li><a href="#step7">9. 7단계: 기법 추가 ④ Transfer Learning (하이라이트)</a>
+<ul>
+<li><a href="#org696ff97">9.1. 학습 목표</a></li>
+<li><a href="#org0bc8376">9.2. 개념 설명</a></li>
+<li><a href="#org2111c60">9.3. 흑백 -&gt; pretrained model 입력으로 맞추기</a></li>
+<li><a href="#orgb5fad9a">9.4. Transfer Learning model</a></li>
+<li><a href="#orgf379414">9.5. 비교: +dropout vs +transfer learning</a></li>
+</ul>
+</li>
+<li><a href="#step8">10. 8단계: 종합 비교 &ndash; 표와 graph로 한눈에</a>
+<ul>
+<li><a href="#org1ea7862">10.1. 학습 목표</a></li>
+<li><a href="#org81b9817">10.2. 정확도 비교 표</a></li>
+<li><a href="#orgfd09e4c">10.3. 누적 정확도 graph</a></li>
+<li><a href="#org07a6ba0">10.4. 학습 곡선 비교</a></li>
+<li><a href="#orga936ba3">10.5. 종합요약</a></li>
+</ul>
+</li>
+<li><a href="#step9">11. 9단계: 모델 해석 &ndash; Grad-CAM 정적 시각화</a>
+<ul>
+<li><a href="#org55337ac">11.1. 학습 목표</a></li>
+<li><a href="#orge74744f">11.2. 해석 대상 model 선택</a></li>
+<li><a href="#orgacbc7bd">11.3. Grad-CAM 개념</a></li>
+<li><a href="#org8c61f9b">11.4. Grad-CAM 계산 함수</a></li>
+<li><a href="#orgcaa0438">11.5. heatmap을 원본 위에 겹쳐 그리기</a></li>
+<li><a href="#org62a4094">11.6. 9-1. 한 장 들여다보기 (원본 + heatmap)</a></li>
+<li><a href="#orgf7b71ae">11.7. 9-2. 여러 글자 격자 비교</a></li>
+<li><a href="#orgdc4db1d">11.8. 9-3. 맞힘 vs 틀림 비교</a></li>
+</ul>
+</li>
+<li><a href="#step10">12. 10단계: 종합 Interactive Demo (Gradio)</a>
+<ul>
+<li><a href="#orgd4bdc80">12.1. 학습 목표</a></li>
+<li><a href="#org12b8232">12.2. 왜 Gradio인가</a></li>
+<li><a href="#org7aba093">12.3. 입력 흑백 변환 + 예측 + Grad-CAM 함수</a></li>
+<li><a href="#org3f93fa0">12.4. Gradio interface 구성과 실행</a></li>
+<li><a href="#org3991191">12.5. 종합 이해 포인트</a></li>
+</ul>
+</li>
+<li><a href="#step11">13. 11단계: 마무리 &ndash; 한계와 다음 단계</a>
+<ul>
+<li><a href="#orgaee245c">13.1. Domain gap</a></li>
+<li><a href="#org7c44b78">13.2. 성능 개선 기법 정리</a></li>
+<li><a href="#org3ba181c">13.3. 다음 단계: 움직이는 수어 (CNN + LSTM)</a></li>
+</ul>
+</li>
+<li><a href="#orgd4d71dc">14. 부록: 차시 운영 제안</a></li>
+</ul>
+</div>
+</div>
+<p>
+&ldquo;&rdquo;&ldquo;#+PROPERTY: header-args:jupyter-python :session asl :kernel python3 :async yes :exports both&rdquo;&ldquo;&rdquo;
+</p>
+<div id="outline-container-org2cfa2c2" class="outline-2">
+<h2 id="org2cfa2c2"><span class="section-number-2">1.</span> 강의 개요</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+이 강의는 CNN(Convolutional Neural Network)을 복습하고, 성능을 개선하는
+대표적인 방법들을 <b>하나씩 누적해서</b> 적용하면서 그 효과를 직접 측정하는
+실습입니다. 주제는 Sign Language MNIST 인식입니다. 손으로 만든 ASL
+(American Sign Language) alphabet 모양을 \(28 \times 28\) <b>흑백(grayscale)</b>
+이미지로 담은 dataset을 사용해, 손 모양을 보고 어떤 글자인지 맞히는
+model을 만듭니다.
+</p>
+
+<p>
+흑백 dataset을 쓰는 이유는 <b>용량이 작고 학습이 가볍기</b> 때문입니다. 컬러
+이미지(\(200 \times 200 \times 3\))는 한 장에 12만 개의 숫자가 필요하지만,
+흑백 \(28 \times 28\) 이미지는 784개면 충분합니다. Colab 무료 환경에서도
+빠르게 실행되고, 별도의 대용량 download도 필요 없습니다.
+</p>
+
+<p>
+흐름은 다음과 같습니다.
+</p>
+
+<ol class="org-ol">
+<li>가장 단순한 baseline CNN을 만들어 기준 정확도(accuracy)를 잰다.</li>
+<li>Data Augmentation -&gt; Batch Normalization -&gt; Dropout -&gt; Transfer Learning
+순서로 기법을 <b>누적</b> 적용하고, 매 단계 직전 model과 비교한다.</li>
+<li>전체 결과를 표와 graph로 정리한다.</li>
+<li>Grad-CAM으로 model이 손의 어디를 보는지 눈으로 확인한다.</li>
+<li>Gradio로 만든 interactive demo에서 webcam 입력까지 통합 체험한다.</li>
+</ol>
+
+<p>
+실행 환경은 Google Colab이며, GPU runtime을 권장합니다.
+</p>
+</div>
+<div id="outline-container-org1288663" class="outline-3">
+<h3 id="org1288663"><span class="section-number-3">1.1.</span> 흑백 버전의 특징과 주의점</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>dataset이 이미지 파일이 아니라 <b>CSV(픽셀값 표)</b> 형태입니다. 각 행이
+이미지 한 장이며, label 1개와 \(28 \times 28 = 784\) 개의 픽셀값으로
+이루어집니다.</li>
+<li>손동작이 필요한 J, Z는 정지 이미지로 표현되지 않아 dataset에서
+제외되어 있습니다. 그래서 class는 24개입니다(label 번호는 0~25 중 9=J,
+25=Z가 빠짐).</li>
+<li>흑백·저해상도라 model 정확도는 금방 높아집니다. 대신 webcam 같은 실제
+입력에서는 잘 틀리는데, 이 차이(domain gap)를 마지막에 함께 다룹니다.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-step0" class="outline-2">
+<h2 id="step0"><span class="section-number-2">2.</span> 0단계: 도입 &ndash; 무엇을, 왜 만드는가</h2>
+<div class="outline-text-2" id="text-step0">
+</div>
+<div id="outline-container-org62b03cd" class="outline-3">
+<h3 id="org62b03cd"><span class="section-number-3">2.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-2-1">
+<ul class="org-ul">
+<li>수어(sign language)와 accessibility의 의미를 이해한다.</li>
+<li>오늘 만들 결과물의 전체 그림을 미리 파악한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbe74b2b" class="outline-3">
+<h3 id="orgbe74b2b"><span class="section-number-3">2.2.</span> 무엇을 만드나</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+우리는 손으로 만든 ASL alphabet 모양을 담은 흑백 이미지를 입력으로 받아,
+어떤 글자인지 예측하는 image classification model을 만듭니다. 마지막에는
+webcam으로 직접 손을 찍어(흑백으로 변환해) model이 글자를 맞히고, 동시에
+&ldquo;손의 어느 부분을 보고 판단했는지&rdquo;까지 보여주는 demo를 완성합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgc4ab791" class="outline-3">
+<h3 id="orgc4ab791"><span class="section-number-3">2.3.</span> ASL 지문자란</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+ASL alphabet은 손 모양 하나가 글자 하나에 대응하는 finger spelling
+방식입니다. 대부분 정지된 손 모양으로 표현되기 때문에 사진 한 장으로
+다룰 수 있습니다. 앞서 말했듯 J와 Z는 움직임이 필요해 이 dataset에는
+없습니다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgec510eb" class="outline-3">
+<h3 id="orgec510eb"><span class="section-number-3">2.4.</span> Colab 환경 준비</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+GPU를 사용하면 training이 더 빠릅니다. Colab 상단 메뉴에서
+<code>런타임 -&gt; 런타임 유형 변경 -&gt; 하드웨어 가속기 -&gt; GPU</code> 를 선택하세요.
+흑백 dataset은 가벼워서 CPU로도 충분히 돌아갑니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">GPU&#44032; &#51221;&#49345;&#51201;&#51004;&#47196; &#51105;&#54804;&#45716;&#51648; &#54869;&#51064;&#54620;&#45796;.
+</span><span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">tf.config.list_physical_devices(device_type):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- device_type: 'GPU' &#46608;&#45716; 'CPU' &#44057;&#51008; device &#51333;&#47448; &#47928;&#51088;&#50676;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#54644;&#45817; &#51333;&#47448;&#51032; &#49324;&#50857; &#44032;&#45733;&#54620; device &#47785;&#47197;&#51012; &#48152;&#54872;&#54620;&#45796;.
+</span><span style="color: #dcaeea;">gpus</span> <span style="color: #51afef;">=</span> tf.config.list_physical_devices(<span style="color: #98be65;">'GPU'</span>)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"TensorFlow version:"</span>, tf.__version__)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#49324;&#50857; &#44032;&#45733;&#54620; GPU:"</span>, gpus)
+</code></pre>
+</div>
+
+<pre class="example">
+TensorFlow version: 2.20.0
+사용 가능한 GPU: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-step1" class="outline-2">
+<h2 id="step1"><span class="section-number-2">3.</span> 1단계: CNN 이론 복습 &ndash; 이미지에는 왜 CNN인가</h2>
+<div class="outline-text-2" id="text-step1">
+</div>
+<div id="outline-container-org34d3d63" class="outline-3">
+<h3 id="org34d3d63"><span class="section-number-3">3.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-3-1">
+<ul class="org-ul">
+<li>Convolution과 Pooling의 역할을 다시 이해한다.</li>
+<li>왜 일반 fully-connected network보다 CNN이 이미지에 적합한지 설명할 수 있다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7cc98d3" class="outline-3">
+<h3 id="org7cc98d3"><span class="section-number-3">3.2.</span> 이미지를 숫자로 본다는 것</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+컴퓨터에게 이미지는 숫자의 격자입니다. 흑백 이미지는 channel이 1개이므로,
+가로 \(W\), 세로 \(H\) 픽셀(pixel)이라면 \(H \times W \times 1\) 개의 숫자로
+이루어집니다. 각 숫자는 보통 0(검정)부터 255(흰색) 사이의 밝기 값입니다.
+이번 dataset은 \(28 \times 28 \times 1 = 784\) 개의 숫자가 이미지 한 장을
+이룹니다.
+</p>
+</div>
+</div>
+<div id="outline-container-orge8e2c1c" class="outline-3">
+<h3 id="orge8e2c1c"><span class="section-number-3">3.3.</span> 왜 fully-connected network로는 부족한가</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+\(28 \times 28\) 이미지를 일렬로 펴서 일반 신경망에 넣으면 입력 하나가
+784개의 숫자가 됩니다. 흑백 저해상도라 컬러보다는 작지만, 픽셀을 일렬로
+펴는 순간 &ldquo;옆 픽셀과 가깝다&rdquo;는 공간 정보가 사라진다는 본질적 문제는
+똑같습니다. 손 모양처럼 <b>공간 패턴</b> 이 핵심인 문제에서는 이 정보가 매우
+중요합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org05856dc" class="outline-3">
+<h3 id="org05856dc"><span class="section-number-3">3.4.</span> Convolution: 작은 filter로 국소 패턴을 본다</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+CNN은 작은 크기의 filter(kernel)를 이미지 위에서 미끄러뜨리며(sliding)
+국소적인 패턴을 찾습니다. 같은 filter를 이미지 전체에 재사용하므로
+parameter 수가 적고, 위치가 바뀌어도 같은 특징을 잡아냅니다.
+</p>
+
+<p>
+2차원 convolution은 다음과 같이 정의됩니다. 입력을 \(I\), filter를 \(K\)
+(크기 \(k \times k\)), 출력 feature map을 $S$라 하면,
+</p>
+
+<p>
+\[
+S(i, j) = \sum_{m=0}^{k-1} \sum_{n=0}^{k-1} I(i + m,\; j + n)\, K(m, n) + b
+\]
+</p>
+
+<p>
+여기서 $b$는 bias입니다. 직관적으로는 filter가 덮은 영역과 filter 값을
+서로 곱해 더한 값이 출력 한 칸이 됩니다.
+</p>
+
+<p>
+출력 feature map의 크기는 다음 식으로 결정됩니다. 입력 크기 \(W\), filter
+크기 \(k\), padding \(P\), stride $S$일 때,
+</p>
+
+<p>
+\[
+W_{\text{out}} = \left\lfloor \frac{W - k + 2P}{S} \right\rfloor + 1
+\]
+</p>
+</div>
+</div>
+<div id="outline-container-orgc2905cb" class="outline-3">
+<h3 id="orgc2905cb"><span class="section-number-3">3.5.</span> 활성화 함수와 비선형성</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+convolution 결과에는 보통 ReLU(Rectified Linear Unit) activation을
+적용합니다.
+</p>
+
+<p>
+\[
+\mathrm{ReLU}(x) = \max(0,\; x)
+\]
+</p>
+
+<p>
+이 비선형 함수가 없으면 layer를 아무리 쌓아도 결국 하나의 선형 변환과
+같아져서 복잡한 패턴을 배우지 못합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org30c8fb1" class="outline-3">
+<h3 id="org30c8fb1"><span class="section-number-3">3.6.</span> Pooling: 크기를 줄이고 위치 변화에 강해진다</h3>
+<div class="outline-text-3" id="text-3-6">
+<p>
+Max pooling은 작은 영역에서 가장 큰 값만 남깁니다. feature map 크기가
+줄어 계산이 가벼워지고, 손의 위치가 조금 달라져도 같은 특징을 인식하는
+translation invariance를 얻습니다.
+</p>
+
+<p>
+\[
+S(i, j) = \max_{0 \le m, n < p} I(i \cdot s + m,\; j \cdot s + n)
+\]
+</p>
+
+<p>
+여기서 $p$는 pooling window 크기, $s$는 stride입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org32acae7" class="outline-3">
+<h3 id="org32acae7"><span class="section-number-3">3.7.</span> 작은 데모: filter 하나 적용해보기</h3>
+<div class="outline-text-3" id="text-3-7">
+<p>
+아래 code는 간단한 흑백 이미지에 edge를 강조하는 filter를 하나 적용해
+convolution의 효과를 눈으로 보여줍니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+<span style="color: #51afef;">from</span> scipy.signal <span style="color: #51afef;">import</span> convolve2d
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44036;&#45800;&#54620; &#55121;&#48177; &#51060;&#48120;&#51648;(&#50812;&#51901;&#51008; &#50612;&#46177;&#44256; &#50724;&#47480;&#51901;&#51008; &#48157;&#51008; &#49464;&#47196; &#44221;&#44228;)&#47484; &#47564;&#46304;&#45796;.
+</span><span style="color: #dcaeea;">img</span> <span style="color: #51afef;">=</span> np.zeros((20, 20))
+<span style="color: #dcaeea;">img</span>[:, 10:] <span style="color: #51afef;">=</span> 1.0  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50724;&#47480;&#51901; &#51208;&#48152;&#51012; &#48157;&#44172;
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49464;&#47196; edge&#47484; &#44160;&#52636;&#54616;&#45716; 3x3 filter (Sobel &#44228;&#50676;)
+</span><span style="color: #dcaeea;">kernel</span> <span style="color: #51afef;">=</span> np.array([[<span style="color: #51afef;">-</span>1, 0, 1],
+                   [<span style="color: #51afef;">-</span>2, 0, 2],
+                   [<span style="color: #51afef;">-</span>1, 0, 1]])
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">convolve2d(in1, in2, mode):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- in1: &#51077;&#47141; 2&#52264;&#50896; &#48176;&#50676;(&#51060;&#48120;&#51648;)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- in2: filter(kernel)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- mode='valid': padding &#50630;&#51060; filter&#44032; &#50756;&#51204;&#55176; &#44217;&#52824;&#45716; &#50689;&#50669;&#47564; &#44228;&#49328;
+</span><span style="color: #dcaeea;">feature_map</span> <span style="color: #51afef;">=</span> convolve2d(img, kernel, mode<span style="color: #51afef;">=</span><span style="color: #98be65;">'valid'</span>)
+
+<span style="color: #dcaeea;">fig</span>, <span style="color: #dcaeea;">ax</span> <span style="color: #51afef;">=</span> plt.subplots(1, 2, figsize<span style="color: #51afef;">=</span>(8, 4))
+ax[0].imshow(img, cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">'gray'</span>);           ax[0].set_title(<span style="color: #98be65;">"orig image"</span>)
+ax[1].imshow(feature_map, cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">'gray'</span>);   ax[1].set_title(<span style="color: #98be65;">"convolution result(edge)"</span>)
+<span style="color: #51afef;">for</span> a <span style="color: #51afef;">in</span> ax: a.axis(<span style="color: #98be65;">'off'</span>)
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org18ba26e" class="figure">
+<p><img src="images/2a3e1e239e490a4cff5c3e7579a34a47927703f1.png" alt="2a3e1e239e490a4cff5c3e7579a34a47927703f1.png" />
+</p>
+</div>
+
+<p>
+위 결과에서 경계(edge)가 있던 위치만 값이 크게 나타나는 것을 볼 수
+있습니다. filter가 &ldquo;세로 경계&rdquo;라는 국소 패턴을 잡아낸 것입니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgbcb25da" class="outline-2">
+<h2 id="orgbcb25da"><span class="section-number-2">4.</span> 2단계: 데이터 준비 &ndash; 흑백 Sign Language MNIST 불러오기와 전처리</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-org68a02af" class="outline-3">
+<h3 id="org68a02af"><span class="section-number-3">4.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-4-1">
+<ul class="org-ul">
+<li>CSV 픽셀 형식의 dataset 구조를 이해한다.</li>
+<li>CSV를 이미지(\(28 \times 28 \times 1\))로 되돌리는 reshape, normalization,
+train/validation 처리를 안다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1a7c5f5" class="outline-3">
+<h3 id="org1a7c5f5"><span class="section-number-3">4.2.</span> 데이터셋 설명</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+Sign Language MNIST는 두 개의 CSV 파일(<code>sign_mnist_train.csv</code>,
+<code>sign_mnist_test.csv</code>)로 제공됩니다. 각 행의 첫 번째 열은 <code>label</code> (글자
+번호)이고, 나머지 784개 열(<code>pixel1</code> ~ <code>pixel784</code>)이 \(28 \times 28\) 흑백
+이미지의 픽셀값(0~255)입니다. 전체 용량은 약 60MB 정도로 가볍습니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org57aa6c6" class="outline-3">
+<h3 id="org57aa6c6"><span class="section-number-3">4.3.</span> Kaggle에서 데이터 받기</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+Colab에서 Kaggle dataset을 받으려면 Kaggle API token(<code>kaggle.json</code>)이
+필요합니다. Kaggle 계정의 <code>Settings -&gt; API -&gt; Create New Token</code> 에서
+받을 수 있습니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">kaggle.json &#54028;&#51068;&#51012; Colab&#50640; &#50629;&#47196;&#46300;&#54620; &#46244; &#49892;&#54665;&#54620;&#45796;.
+</span><span style="color: #51afef;">from</span> google.colab <span style="color: #51afef;">import</span> files
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">files.upload():
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#47196;&#52972; PC&#51032; &#54028;&#51068;&#51012; Colab&#51004;&#47196; &#50629;&#47196;&#46300;&#54616;&#45716; dialog&#47484; &#46916;&#50868;&#45796;.
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#48152;&#54872;&#44050;&#51008; {&#54028;&#51068;&#51060;&#47492;: &#45236;&#50857;(bytes)} &#54805;&#53468;&#51032; dict
+</span><span style="color: #dcaeea;">uploaded</span> <span style="color: #51afef;">=</span> files.upload()  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50668;&#44592;&#49436; kaggle.json &#49440;&#53469;</span>
+</code></pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> os
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">kaggle.json&#51012; &#51201;&#51208;&#54620; &#50948;&#52824;&#47196; &#50734;&#44592;&#44256; &#44428;&#54620;&#51012; &#49444;&#51221;&#54620;&#45796;.
+</span>os.makedirs(<span style="color: #98be65;">'/root/.kaggle'</span>, exist_ok<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)
+os.rename(<span style="color: #98be65;">'kaggle.json'</span>, <span style="color: #98be65;">'/root/.kaggle/kaggle.json'</span>)
+os.chmod(<span style="color: #98be65;">'/root/.kaggle/kaggle.json'</span>, 0o600)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48376;&#51064;&#47564; &#51069;&#44592;/&#50416;&#44592; &#44032;&#45733;&#54616;&#44172;
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">Kaggle dataset &#45796;&#50868;&#47196;&#46300; (datamunge/sign-language-mnist)
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">-d: dataset &#49885;&#48324;&#51088;, -p: &#51200;&#51109; &#44221;&#47196;, --unzip: &#48155;&#51008; &#46244; &#51088;&#46041; &#50517;&#52629; &#54644;&#51228;
+</span>!kaggle datasets download <span style="color: #51afef;">-</span>d datamunge<span style="color: #51afef;">/</span>sign<span style="color: #51afef;">-</span>language<span style="color: #51afef;">-</span>mnist <span style="color: #51afef;">-</span>p <span style="color: #51afef;">/</span>content<span style="color: #51afef;">/</span>asl <span style="color: #51afef;">--</span>unzip
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7a42e7a" class="outline-3">
+<h3 id="org7a42e7a"><span class="section-number-3">4.4.</span> CSV를 읽어 이미지 배열로 변환</h3>
+<div class="outline-text-3" id="text-4-4">
+<ul class="org-ul">
+<li><p>
+colab
+</p>
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>    <span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+    <span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+
+    <span style="color: #dcaeea;">TRAIN_CSV</span> <span style="color: #51afef;">=</span> <span style="color: #98be65;">"/content/asl/sign_mnist_train.csv"</span>
+    <span style="color: #dcaeea;">TEST_CSV</span>  <span style="color: #51afef;">=</span> <span style="color: #98be65;">"/content/asl/sign_mnist_test.csv"</span>
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">pd.read_csv(path): CSV &#54028;&#51068;&#51012; &#54364;(DataFrame)&#47196; &#51069;&#45716;&#45796;.
+</span>    <span style="color: #dcaeea;">train_df</span> <span style="color: #51afef;">=</span> pd.read_csv(TRAIN_CSV)
+    <span style="color: #dcaeea;">test_df</span>  <span style="color: #51afef;">=</span> pd.read_csv(TEST_CSV)
+
+    <span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"train &#47784;&#50577;:"</span>, train_df.shape)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(&#54665; &#49688;, 785) -&gt; label 1 + pixel 784
+</span>    <span style="color: #c678dd;">print</span>(train_df.iloc[:3, :6])          <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50526;&#48512;&#48516; &#51068;&#48512;&#47564; &#48120;&#47532;&#48372;&#44592;</span>
+</code></pre>
+</div>
+
+<pre class="example" id="org26c5f78">
+    ---------------------------------------------------------------------------
+    FileNotFoundError                         Traceback (most recent call last)
+    Cell In[74], line 8
+          5 TEST_CSV  = "/content/asl/sign_mnist_test.csv"
+          7 # pd.read_csv(path): CSV 파일을 표(DataFrame)로 읽는다.
+    ----&gt; 8 train_df = pd.read_csv(TRAIN_CSV)
+          9 test_df  = pd.read_csv(TEST_CSV)
+         11 print("train 모양:", train_df.shape)  # (행 수, 785) -&gt; label 1 + pixel 784
+
+    File ~/.virtualenvs/ml/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1026, in read_csv(filepath_or_buffer, sep, delimiter, header, names, index_col, usecols, dtype, engine, converters, true_values, false_values, skipinitialspace, skiprows, skipfooter, nrows, na_values, keep_default_na, na_filter, verbose, skip_blank_lines, parse_dates, infer_datetime_format, keep_date_col, date_parser, date_format, dayfirst, cache_dates, iterator, chunksize, compression, thousands, decimal, lineterminator, quotechar, quoting, doublequote, escapechar, comment, encoding, encoding_errors, dialect, on_bad_lines, delim_whitespace, low_memory, memory_map, float_precision, storage_options, dtype_backend)
+       1013 kwds_defaults = _refine_defaults_read(
+       1014     dialect,
+       1015     delimiter,
+       (...)   1022     dtype_backend=dtype_backend,
+       1023 )
+       1024 kwds.update(kwds_defaults)
+    -&gt; 1026 return _read(filepath_or_buffer, kwds)
+
+    File ~/.virtualenvs/ml/lib/python3.12/site-packages/pandas/io/parsers/readers.py:620, in _read(filepath_or_buffer, kwds)
+        617 _validate_names(kwds.get("names", None))
+        619 # Create the parser.
+    --&gt; 620 parser = TextFileReader(filepath_or_buffer, **kwds)
+        622 if chunksize or iterator:
+        623     return parser
+
+    File ~/.virtualenvs/ml/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1620, in TextFileReader.__init__(self, f, engine, **kwds)
+       1617     self.options["has_index_names"] = kwds["has_index_names"]
+       1619 self.handles: IOHandles | None = None
+    -&gt; 1620 self._engine = self._make_engine(f, self.engine)
+
+    File ~/.virtualenvs/ml/lib/python3.12/site-packages/pandas/io/parsers/readers.py:1880, in TextFileReader._make_engine(self, f, engine)
+       1878     if "b" not in mode:
+       1879         mode += "b"
+    -&gt; 1880 self.handles = get_handle(
+       1881     f,
+       1882     mode,
+       1883     encoding=self.options.get("encoding", None),
+       1884     compression=self.options.get("compression", None),
+       1885     memory_map=self.options.get("memory_map", False),
+       1886     is_text=is_text,
+       1887     errors=self.options.get("encoding_errors", "strict"),
+       1888     storage_options=self.options.get("storage_options", None),
+       1889 )
+       1890 assert self.handles is not None
+       1891 f = self.handles.handle
+
+    File ~/.virtualenvs/ml/lib/python3.12/site-packages/pandas/io/common.py:873, in get_handle(path_or_buf, mode, encoding, compression, memory_map, is_text, errors, storage_options)
+        868 elif isinstance(handle, str):
+        869     # Check whether the filename is to be opened in binary mode.
+        870     # Binary mode does not support 'encoding' and 'newline'.
+        871     if ioargs.encoding and "b" not in ioargs.mode:
+        872         # Encoding
+    --&gt; 873         handle = open(
+        874             handle,
+        875             ioargs.mode,
+        876             encoding=ioargs.encoding,
+        877             errors=errors,
+        878             newline="",
+        879         )
+        880     else:
+        881         # Binary mode
+        882         handle = open(handle, ioargs.mode)
+
+    FileNotFoundError: [Errno 2] No such file or directory: '/content/asl/sign_mnist_train.csv'
+</pre></li>
+
+<li><p>
+local
+</p>
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>    <span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+    <span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+
+    <span style="color: #dcaeea;">TRAIN_CSV</span> <span style="color: #51afef;">=</span> <span style="color: #98be65;">"/home/minux/temp/sign_mnist_train.csv"</span>
+    <span style="color: #dcaeea;">TEST_CSV</span>  <span style="color: #51afef;">=</span> <span style="color: #98be65;">"/home/minux/temp/sign_mnist_test.csv"</span>
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">pd.read_csv(path): CSV &#54028;&#51068;&#51012; &#54364;(DataFrame)&#47196; &#51069;&#45716;&#45796;.
+</span>    <span style="color: #dcaeea;">train_df</span> <span style="color: #51afef;">=</span> pd.read_csv(TRAIN_CSV)
+    <span style="color: #dcaeea;">test_df</span>  <span style="color: #51afef;">=</span> pd.read_csv(TEST_CSV)
+
+    <span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"train &#47784;&#50577;:"</span>, train_df.shape)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(&#54665; &#49688;, 785) -&gt; label 1 + pixel 784
+</span>    <span style="color: #c678dd;">print</span>(train_df.iloc[:3, :6])          <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50526;&#48512;&#48516; &#51068;&#48512;&#47564; &#48120;&#47532;&#48372;&#44592;
+</span>
+</code></pre>
+</div></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">df_to_xy</span>(df):
+    <span style="color: #83898d;">"""DataFrame&#51012; &#51060;&#48120;&#51648; &#48176;&#50676; X&#50752; label y&#47196; &#48516;&#47532;&#54620;&#45796;.
+    &#51064;&#51088;:
+      - df: label &#50676; + pixel1~pixel784 &#50676;&#51012; &#44032;&#51652; DataFrame
+    &#48152;&#54872;:
+      - X: (N, 28, 28, 1) float32 &#51060;&#48120;&#51648; &#48176;&#50676;
+      - y: (N,) &#51221;&#49688; label &#48176;&#50676;
+    """</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">'label' &#50676;&#51012; &#46524;&#50612; y&#47196;, &#45208;&#47672;&#51648;&#47484; &#54589;&#49472;&#44050;&#51004;&#47196; &#49324;&#50857;
+</span>    <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">'label'</span>].to_numpy()
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">values: DataFrame&#51012; numpy &#48176;&#50676;&#47196;. label &#50676; &#51228;&#50808;&#54616;&#44256; 784&#44060; &#54589;&#49472;
+</span>    <span style="color: #dcaeea;">pixels</span> <span style="color: #51afef;">=</span> df.drop(columns<span style="color: #51afef;">=</span>[<span style="color: #98be65;">'label'</span>]).to_numpy(dtype<span style="color: #51afef;">=</span><span style="color: #98be65;">'float32'</span>)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">reshape(-1, 28, 28, 1): &#51068;&#47148; 784&#54589;&#49472;&#51012; 28x28 &#55121;&#48177; &#51060;&#48120;&#51648;&#47196; &#46104;&#46028;&#47548;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">-1&#51008; "&#54665; &#49688;&#45716; &#51088;&#46041; &#44228;&#49328;"&#51012; &#51032;&#48120;
+</span>    <span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> pixels.reshape(<span style="color: #51afef;">-</span>1, 28, 28, 1)
+    <span style="color: #51afef;">return</span> X, y
+
+<span style="color: #dcaeea;">X_train_full</span>, <span style="color: #dcaeea;">y_train_full</span> <span style="color: #51afef;">=</span> df_to_xy(train_df)
+<span style="color: #dcaeea;">X_test</span>, <span style="color: #dcaeea;">y_test</span> <span style="color: #51afef;">=</span> df_to_xy(test_df)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X_train_full:"</span>, X_train_full.shape, <span style="color: #98be65;">" X_test:"</span>, X_test.shape)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"label &#48276;&#50948;:"</span>, y_train_full.<span style="color: #c678dd;">min</span>(), <span style="color: #98be65;">"~"</span>, y_train_full.<span style="color: #c678dd;">max</span>())
+</code></pre>
+</div>
+
+<pre class="example">
+X_train_full: (27455, 28, 28, 1)  X_test: (7172, 28, 28, 1)
+label 범위: 0 ~ 24
+</pre>
+</div>
+</div>
+<div id="outline-container-org8f988c2" class="outline-3">
+<h3 id="org8f988c2"><span class="section-number-3">4.5.</span> label 정리와 class 이름</h3>
+<div class="outline-text-3" id="text-4-5">
+<p>
+J(9), Z(25)가 빠져 있어 label 번호가 연속적이지 않습니다. 모델이 다루기
+쉽도록 0부터 시작하는 연속 index로 다시 매핑합니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49892;&#51228; &#46321;&#51109;&#54616;&#45716; label&#46308;&#47564; &#47784;&#50500; &#51221;&#47148; (&#50696;: 0~24 &#51473; 9 &#51228;&#50808; &#46321;)
+</span><span style="color: #dcaeea;">unique_labels</span> <span style="color: #51afef;">=</span> np.unique(y_train_full)
+<span style="color: #dcaeea;">NUM_CLASSES</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">len</span>(unique_labels)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50896;&#47000; label &#48264;&#54840; -&gt; 0&#48512;&#53552; &#49884;&#51089;&#54616;&#45716; &#50672;&#49549; index &#47196; &#48148;&#44984;&#45716; &#49324;&#51204;
+</span><span style="color: #dcaeea;">label_to_idx</span> <span style="color: #51afef;">=</span> {<span style="color: #c678dd;">int</span>(lab): i <span style="color: #51afef;">for</span> i, lab <span style="color: #51afef;">in</span> <span style="color: #c678dd;">enumerate</span>(unique_labels)}
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">index -&gt; &#50508;&#54028;&#48307; &#44544;&#51088; (A=0, B=1, ... &#50896;&#47000; label &#48264;&#54840; &#44592;&#51456;)
+</span><span style="color: #dcaeea;">idx_to_letter</span> <span style="color: #51afef;">=</span> {i: <span style="color: #c678dd;">chr</span>(<span style="color: #c678dd;">ord</span>(<span style="color: #98be65;">'A'</span>) <span style="color: #51afef;">+</span> <span style="color: #c678dd;">int</span>(lab)) <span style="color: #51afef;">for</span> lab, i <span style="color: #51afef;">in</span> label_to_idx.items()}
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">remap</span>(y):
+    <span style="color: #83898d;">"""&#50896;&#47000; label &#48176;&#50676;&#51012; 0&#48512;&#53552; &#49884;&#51089;&#54616;&#45716; &#50672;&#49549; index&#47196; &#48148;&#44988;&#45796;."""</span>
+    <span style="color: #51afef;">return</span> np.array([label_to_idx[<span style="color: #c678dd;">int</span>(v)] <span style="color: #51afef;">for</span> v <span style="color: #51afef;">in</span> y])
+
+<span style="color: #dcaeea;">y_train_full</span> <span style="color: #51afef;">=</span> remap(y_train_full)
+<span style="color: #dcaeea;">y_test</span> <span style="color: #51afef;">=</span> remap(y_test)
+
+<span style="color: #dcaeea;">class_names</span> <span style="color: #51afef;">=</span> [idx_to_letter[i] <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(NUM_CLASSES)]
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"class &#44060;&#49688;:"</span>, NUM_CLASSES)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"class &#47785;&#47197;:"</span>, class_names)
+</code></pre>
+</div>
+
+<pre class="example">
+class 개수: 24
+class 목록: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y']
+</pre>
+</div>
+</div>
+<div id="outline-container-orga8700b8" class="outline-3">
+<h3 id="orga8700b8"><span class="section-number-3">4.6.</span> train / validation 나누기</h3>
+<div class="outline-text-3" id="text-4-6">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> sklearn.model_selection <span style="color: #51afef;">import</span> train_test_split
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">train_test_split(X, y, test_size, random_state, stratify):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- test_size=0.2: 20%&#47484; validation&#51004;&#47196; &#48516;&#47532;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- random_state: &#48516;&#54624;&#51012; &#51116;&#54788; &#44032;&#45733;&#54616;&#44172; &#54616;&#45716; &#45212;&#49688; seed
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- stratify=y: &#44033; class &#48708;&#50984;&#51012; train/val&#50640; &#46041;&#51068;&#54616;&#44172; &#50976;&#51648;
+</span><span style="color: #dcaeea;">X_train</span>, <span style="color: #dcaeea;">X_val</span>, <span style="color: #dcaeea;">y_train</span>, <span style="color: #dcaeea;">y_val</span> <span style="color: #51afef;">=</span> train_test_split(
+    X_train_full, y_train_full,
+    test_size<span style="color: #51afef;">=</span>0.2, random_state<span style="color: #51afef;">=</span>123, stratify<span style="color: #51afef;">=</span>y_train_full)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"train:"</span>, X_train.shape, <span style="color: #98be65;">" val:"</span>, X_val.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+train: (21964, 28, 28, 1)  val: (5491, 28, 28, 1)
+</pre>
+</div>
+</div>
+<div id="outline-container-org180a48f" class="outline-3">
+<h3 id="org180a48f"><span class="section-number-3">4.7.</span> 샘플 이미지 살펴보기</h3>
+<div class="outline-text-3" id="text-4-7">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(9, 9))
+<span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(9):
+    plt.subplot(3, 3, i <span style="color: #51afef;">+</span> 1)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(28,28,1) -&gt; (28,28)&#47196; &#51460;&#50668;&#49436; &#55121;&#48177; &#54364;&#49884;
+</span>    plt.imshow(X_train[i].reshape(28, 28), cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">'gray'</span>)
+    plt.title(class_names[y_train[i]])
+    plt.axis(<span style="color: #98be65;">'off'</span>)
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org6f2270e" class="figure">
+<p><img src="images/6b218ccf3d81f1d693327b64135b96c3f8d6e811.png" alt="6b218ccf3d81f1d693327b64135b96c3f8d6e811.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org0b5f75f" class="outline-3">
+<h3 id="org0b5f75f"><span class="section-number-3">4.8.</span> 공통 상수와 normalization layer</h3>
+<div class="outline-text-3" id="text-4-8">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> tensorflow.keras <span style="color: #51afef;">import</span> layers
+
+<span style="color: #dcaeea;">INPUT_SHAPE</span> <span style="color: #51afef;">=</span> (28, 28, 1)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#55121;&#48177; &#51060;&#48120;&#51648; &#51077;&#47141; &#54805;&#53468;
+</span><span style="color: #dcaeea;">BATCH_SIZE</span> <span style="color: #51afef;">=</span> 128
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">layers.Rescaling(scale): &#51077;&#47141;&#50640; scale&#51012; &#44273;&#54620;&#45796;.
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">1/255&#47484; &#44273;&#54644; 0~255 &#54589;&#49472;&#44050;&#51012; 0~1 &#48276;&#50948;&#47196; normalization &#54620;&#45796;.
+</span><span style="color: #dcaeea;">normalization_layer</span> <span style="color: #51afef;">=</span> layers.Rescaling(1.0 <span style="color: #51afef;">/</span> 255)
+</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-step3" class="outline-2">
+<h2 id="step3"><span class="section-number-2">5.</span> 3단계: Baseline CNN 구축 &ndash; 기준점 세우기</h2>
+<div class="outline-text-2" id="text-step3">
+</div>
+<div id="outline-container-org47c8573" class="outline-3">
+<h3 id="org47c8573"><span class="section-number-3">5.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-5-1">
+<ul class="org-ul">
+<li>가장 단순한 CNN을 직접 쌓아 본다.</li>
+<li>이후 모든 비교의 출발점이 되는 baseline accuracy를 기록한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org869ab8a" class="outline-3">
+<h3 id="org869ab8a"><span class="section-number-3">5.2.</span> Baseline model 정의</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+별다른 기법 없이 Convolution + Pooling을 몇 번 쌓고, 마지막에
+fully-connected layer로 분류하는 가장 기본적인 구조입니다. 흑백 입력이라
+첫 Conv의 입력 channel이 1개라는 점만 컬러와 다릅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> tensorflow <span style="color: #51afef;">import</span> keras
+<span style="color: #51afef;">from</span> tensorflow.keras <span style="color: #51afef;">import</span> layers
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_baseline</span>():
+    <span style="color: #83898d;">"""&#44032;&#51109; &#45800;&#49692;&#54620; baseline CNN&#51012; &#47564;&#46308;&#50612; &#48152;&#54872;&#54620;&#45796;. &#51064;&#51088; &#50630;&#51020;."""</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> keras.Sequential([
+        layers.Input(shape<span style="color: #51afef;">=</span>INPUT_SHAPE),   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51077;&#47141; &#53356;&#44592; (28,28,1)
+</span>        normalization_layer,               <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0~1 normalization
+</span>
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Conv2D(filters, kernel_size, activation, padding):
+</span>        <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- filters: &#52636;&#47141; channel &#49688;(filter &#44060;&#49688;)
+</span>        <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- kernel_size: filter &#53356;&#44592; (3 -&gt; 3x3)
+</span>        <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- activation: &#54876;&#49457;&#54868; &#54632;&#49688;
+</span>        <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- padding='same': &#52636;&#47141; &#53356;&#44592;&#47484; &#51077;&#47141;&#44284; &#44057;&#44172; &#50976;&#51648;
+</span>        layers.Conv2D(32, 3, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.MaxPooling2D(),             <span style="color: #5B6268;"># </span><span style="color: #5B6268;">2x2 &#50689;&#50669; &#52572;&#45843;&#44050; -&gt; 28-&gt;14
+</span>
+        layers.Conv2D(64, 3, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.MaxPooling2D(),             <span style="color: #5B6268;"># </span><span style="color: #5B6268;">14 -&gt; 7
+</span>
+        layers.Flatten(),                  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">3&#52264;&#50896; feature map&#51012; 1&#52264;&#50896;&#51004;&#47196;
+</span>        layers.Dense(128, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>),
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47560;&#51648;&#47561; Dense: class &#44060;&#49688;&#47564;&#53372; &#52636;&#47141;, softmax&#47196; &#54869;&#47456; &#48516;&#54252; &#49373;&#49457;
+</span>        layers.Dense(NUM_CLASSES, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>),
+    ])
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">baseline</span> <span style="color: #51afef;">=</span> build_baseline()
+baseline.summary()  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">model &#44396;&#51312;&#50752; parameter &#49688;&#47484; &#54364;&#47196; &#52636;&#47141;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+Model: "sequential_10"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ rescaling_2 (Rescaling)         │ (None, 28, 28, 1)      │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d_20 (Conv2D)              │ (None, 28, 28, 32)     │           320 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_20 (MaxPooling2D) │ (None, 14, 14, 32)     │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv2d_21 (Conv2D)              │ (None, 14, 14, 64)     │        18,496 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ max_pooling2d_21 (MaxPooling2D) │ (None, 7, 7, 64)       │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ flatten_10 (Flatten)            │ (None, 3136)           │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_22 (Dense)                │ (None, 128)            │       401,536 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_23 (Dense)                │ (None, 24)             │         3,096 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 423,448 (1.62 MB)
+ Trainable params: 423,448 (1.62 MB)
+ Non-trainable params: 0 (0.00 B)
+</pre>
+</div>
+</div>
+<div id="outline-container-orgffed656" class="outline-3">
+<h3 id="orgffed656"><span class="section-number-3">5.3.</span> Loss function과 optimizer</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+여러 class 중 하나를 고르는 문제이므로 categorical cross-entropy를
+사용합니다. label이 정수 index이므로 sparse 버전을 씁니다. 정답 class에
+부여한 확률 $\hat{p}_y$가 높을수록 loss가 작아집니다.
+</p>
+
+<p>
+\[
+\mathcal{L} = -\log \hat{p}_{y}
+\]
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">compile_model</span>(model):
+    <span style="color: #83898d;">"""model&#50640; optimizer, loss, metric&#51012; &#49444;&#51221;&#54620;&#45796;.
+    &#51064;&#51088;:
+      - model: compile&#54624; keras model
+    """</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">model.compile(optimizer, loss, metrics):
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- optimizer: weight&#47484; &#44081;&#49888;&#54616;&#45716; &#48169;&#48277; (adam&#51008; &#47924;&#45212;&#54620; &#44592;&#48376; &#49440;&#53469;)
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- loss: &#52572;&#49548;&#54868;&#54624; &#49552;&#49892; &#54632;&#49688;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- metrics: &#54617;&#49845; &#51473; &#54632;&#44760; &#44288;&#52272;&#54624; &#54217;&#44032;&#51648;&#54364;
+</span>    model.<span style="color: #c678dd;">compile</span>(
+        optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">'adam'</span>,
+        loss<span style="color: #51afef;">=</span><span style="color: #98be65;">'sparse_categorical_crossentropy'</span>,
+        metrics<span style="color: #51afef;">=</span>[<span style="color: #98be65;">'accuracy'</span>])
+    <span style="color: #51afef;">return</span> model
+
+compile_model(baseline)
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgaa1f49d" class="outline-3">
+<h3 id="orgaa1f49d"><span class="section-number-3">5.4.</span> 공정한 비교를 위한 약속</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+누적 비교가 의미를 가지려면 <b>변수를 통제</b> 해야 합니다. 아래 값들은 모든
+단계에서 동일하게 유지합니다. 그래야 정확도 변화가 &ldquo;기법&rdquo; 때문인지
+&ldquo;다른 설정&rdquo; 때문인지 헷갈리지 않습니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">EPOCHS</span> <span style="color: #51afef;">=</span> 10          <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47784;&#46304; model&#51012; &#46041;&#51068;&#54616;&#44172; 10 epoch &#54617;&#49845;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44208;&#44284;&#47484; &#54620;&#44275;&#50640; &#47784;&#50500; &#45208;&#51473;&#50640; &#48708;&#44368; &#54364;/graph&#47196; &#47564;&#46304;&#45796;.
+</span><span style="color: #dcaeea;">results</span> <span style="color: #51afef;">=</span> {}         <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50696;: results['1_baseline'] = 0.95
+</span><span style="color: #dcaeea;">histories</span> <span style="color: #51afef;">=</span> {}       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54617;&#49845; &#44257;&#49440;&#51012; &#44536;&#47532;&#44592; &#50948;&#54620; history &#51200;&#51109;</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org01914fe" class="outline-3">
+<h3 id="org01914fe"><span class="section-number-3">5.5.</span> Baseline 학습 및 기준 정확도 기록</h3>
+<div class="outline-text-3" id="text-5-5">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">model.fit(x, y, validation_data, epochs, batch_size):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- x, y: &#54617;&#49845;&#50857; &#51077;&#47141;&#44284; label
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- validation_data: &#47588; epoch &#54980; &#54217;&#44032;&#54624; (&#51077;&#47141;, label) &#49933;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- epochs: &#51204;&#52404; &#45936;&#51060;&#53552;&#47484; &#47751; &#48264; &#48152;&#48373; &#54617;&#49845;&#54624;&#51648;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- batch_size: &#54620; &#48264;&#50640; &#52376;&#47532;&#54624; sample &#49688;
+</span><span style="color: #dcaeea;">hist</span> <span style="color: #51afef;">=</span> baseline.fit(X_train, y_train,
+                    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+                    epochs<span style="color: #51afef;">=</span>EPOCHS, batch_size<span style="color: #51afef;">=</span>BATCH_SIZE)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47560;&#51648;&#47561; epoch&#51032; validation accuracy&#47484; &#44592;&#51456;&#44050;&#51004;&#47196; &#51200;&#51109;
+</span><span style="color: #dcaeea;">results</span>[<span style="color: #98be65;">'1_baseline'</span>] <span style="color: #51afef;">=</span> hist.history[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1]
+<span style="color: #dcaeea;">histories</span>[<span style="color: #98be65;">'1_baseline'</span>] <span style="color: #51afef;">=</span> hist.history
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"Baseline validation accuracy:"</span>, results[<span style="color: #98be65;">'1_baseline'</span>])
+</code></pre>
+</div>
+
+<pre class="example" id="org799c311">
+Epoch 1/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 5s 15ms/step - accuracy: 0.4922 - loss: 1.7278 - val_accuracy: 0.8113 - val_loss: 0.6150
+Epoch 2/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 0.9023 - loss: 0.3327 - val_accuracy: 0.9537 - val_loss: 0.1711
+Epoch 3/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 0.9806 - loss: 0.0959 - val_accuracy: 0.9907 - val_loss: 0.0640
+Epoch 4/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 0.9970 - loss: 0.0335 - val_accuracy: 0.9984 - val_loss: 0.0263
+Epoch 5/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 0.9994 - loss: 0.0139 - val_accuracy: 0.9995 - val_loss: 0.0123
+Epoch 6/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 3ms/step - accuracy: 1.0000 - loss: 0.0066 - val_accuracy: 1.0000 - val_loss: 0.0058
+Epoch 7/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 1.0000 - loss: 0.0040 - val_accuracy: 1.0000 - val_loss: 0.0039
+Epoch 8/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 1.0000 - loss: 0.0029 - val_accuracy: 0.9993 - val_loss: 0.0052
+Epoch 9/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 1.0000 - loss: 0.0021 - val_accuracy: 0.9998 - val_loss: 0.0025
+Epoch 10/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 1.0000 - loss: 0.0014 - val_accuracy: 1.0000 - val_loss: 0.0017
+Baseline validation accuracy: 1.0
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-step4" class="outline-2">
+<h2 id="step4"><span class="section-number-2">6.</span> 4단계: 기법 추가 ① Data Augmentation</h2>
+<div class="outline-text-2" id="text-step4">
+</div>
+<div id="outline-container-org858816f" class="outline-3">
+<h3 id="org858816f"><span class="section-number-3">6.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-6-1">
+<ul class="org-ul">
+<li>Data Augmentation의 원리와 효과를 이해한다.</li>
+<li>baseline 대비 정확도 변화를 측정한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2ba278a" class="outline-3">
+<h3 id="org2ba278a"><span class="section-number-3">6.2.</span> 개념 설명</h3>
+<div class="outline-text-3" id="text-6-2">
+<p>
+Data Augmentation은 가진 이미지를 회전, 확대, 밝기 변경 등으로 살짝
+변형해 학습 데이터를 인위적으로 늘리는 기법입니다. model이 &ldquo;조금 다르게
+생긴 손&rdquo;도 같은 글자로 인식하게 되어 overfitting이 줄고 실제 환경에
+강해집니다.
+</p>
+
+<p>
+<b>수어에서의 주의점</b>: 좌우 반전(horizontal flip)은 글자의 의미를 바꿀 수
+있습니다(왼손/오른손, 방향성 있는 글자). 그래서 여기서는 flip을 쓰지
+않고 회전, zoom 정도만 사용합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org92da238" class="outline-3">
+<h3 id="org92da238"><span class="section-number-3">6.3.</span> Augmentation layer 추가한 model</h3>
+<div class="outline-text-3" id="text-6-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54924;&#51204;/zoom &#48320;&#54805;&#51012; &#49688;&#54665;&#54616;&#45716; augmentation block.
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060; layer&#46308;&#51008; training &#46412;&#47564; &#46041;&#51089;&#54616;&#44256; inference &#46412;&#45716; &#53685;&#44284;&#47564; &#54620;&#45796;.
+</span><span style="color: #dcaeea;">data_augmentation</span> <span style="color: #51afef;">=</span> keras.Sequential([
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">RandomRotation(factor): factor*2pi &#48276;&#50948; &#45236;&#50640;&#49436; &#47924;&#51089;&#50948; &#54924;&#51204;
+</span>    layers.RandomRotation(0.08),
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">RandomZoom(height_factor): &#47924;&#51089;&#50948;&#47196; &#54869;&#45824;/&#52629;&#49548;
+</span>    layers.RandomZoom(0.1),
+], name<span style="color: #51afef;">=</span><span style="color: #98be65;">"data_augmentation"</span>)
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_aug</span>():
+    <span style="color: #83898d;">"""baseline &#44396;&#51312;&#50640; data augmentation&#47564; &#52628;&#44032;&#54620; model."""</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> keras.Sequential([
+        layers.Input(shape<span style="color: #51afef;">=</span>INPUT_SHAPE),
+        data_augmentation,                 <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&lt;-- &#52628;&#44032;&#46108; &#48512;&#48516;
+</span>        normalization_layer,
+        layers.Conv2D(32, 3, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.MaxPooling2D(),
+        layers.Conv2D(64, 3, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.MaxPooling2D(),
+        layers.Flatten(),
+        layers.Dense(128, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>),
+        layers.Dense(NUM_CLASSES, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>),
+    ])
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">model_aug</span> <span style="color: #51afef;">=</span> compile_model(build_aug())
+<span style="color: #dcaeea;">hist</span> <span style="color: #51afef;">=</span> model_aug.fit(X_train, y_train,
+                     validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+                     epochs<span style="color: #51afef;">=</span>EPOCHS, batch_size<span style="color: #51afef;">=</span>BATCH_SIZE)
+<span style="color: #dcaeea;">results</span>[<span style="color: #98be65;">'2_aug'</span>] <span style="color: #51afef;">=</span> hist.history[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1]
+<span style="color: #dcaeea;">histories</span>[<span style="color: #98be65;">'2_aug'</span>] <span style="color: #51afef;">=</span> hist.history
+</code></pre>
+</div>
+
+<pre class="example" id="orgf736a24">
+Epoch 1/10
+ 16/172/172 ━━━━━━━━━━━━━━━━━━━━ 2s 5ms/step - accuracy: 0.3452 - loss: 2.2020 - val_accuracy: 0.6962 - val_loss: 0.9693
+Epoch 2/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.6964 - loss: 0.9460 - val_accuracy: 0.8525 - val_loss: 0.4874
+Epoch 3/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8239 - loss: 0.5592 - val_accuracy: 0.9312 - val_loss: 0.2535
+Epoch 4/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8864 - loss: 0.3680 - val_accuracy: 0.9131 - val_loss: 0.2564
+Epoch 5/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9247 - loss: 0.2519 - val_accuracy: 0.9714 - val_loss: 0.1087
+Epoch 6/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9459 - loss: 0.1846 - val_accuracy: 0.9658 - val_loss: 0.1205
+Epoch 7/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9633 - loss: 0.1292 - val_accuracy: 0.9871 - val_loss: 0.0569
+Epoch 8/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9739 - loss: 0.0959 - val_accuracy: 0.9862 - val_loss: 0.0530
+Epoch 9/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9784 - loss: 0.0808 - val_accuracy: 0.9856 - val_loss: 0.0459
+Epoch 10/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.9841 - loss: 0.0632 - val_accuracy: 0.9913 - val_loss: 0.0391
+</pre>
+</div>
+</div>
+<div id="outline-container-org4222217" class="outline-3">
+<h3 id="org4222217"><span class="section-number-3">6.4.</span> 비교: baseline vs augmentation</h3>
+<div class="outline-text-3" id="text-6-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"baseline      :"</span>, results[<span style="color: #98be65;">'1_baseline'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+augmentation :"</span>, results[<span style="color: #98be65;">'2_aug'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#48320;&#54868;&#47049;        :"</span>, results[<span style="color: #98be65;">'2_aug'</span>] <span style="color: #51afef;">-</span> results[<span style="color: #98be65;">'1_baseline'</span>])
+</code></pre>
+</div>
+
+<pre class="example">
+baseline      : 1.0
++augmentation : 0.991258442401886
+변화량        : -0.008741557598114014
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-step5" class="outline-2">
+<h2 id="step5"><span class="section-number-2">7.</span> 5단계: 기법 추가 ② Batch Normalization</h2>
+<div class="outline-text-2" id="text-step5">
+</div>
+<div id="outline-container-orgf35940c" class="outline-3">
+<h3 id="orgf35940c"><span class="section-number-3">7.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-7-1">
+<ul class="org-ul">
+<li>Batch Normalization이 학습을 안정시키는 원리를 이해한다.</li>
+<li>직전 model(augmentation) 대비 변화를 측정한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org24bc275" class="outline-3">
+<h3 id="org24bc275"><span class="section-number-3">7.2.</span> 개념과 수식</h3>
+<div class="outline-text-3" id="text-7-2">
+<p>
+Batch Normalization은 각 layer를 지나는 값의 분포를 mini-batch 단위로
+일정하게 맞춰줍니다. 학습이 빨라지고 안정됩니다. mini-batch의 값들을
+$x_i$라 하면 평균과 분산은
+</p>
+
+<p>
+\[
+\mu_B = \frac{1}{m} \sum_{i=1}^{m} x_i, \qquad
+\sigma_B^2 = \frac{1}{m} \sum_{i=1}^{m} (x_i - \mu_B)^2
+\]
+</p>
+
+<p>
+이 값으로 정규화한 뒤, 학습 가능한 scale $&gamma;$와 shift $&beta;$를
+적용합니다($&epsilon;$은 0으로 나눔 방지용 작은 수).
+</p>
+
+<p>
+\[
+\hat{x}_i = \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}}, \qquad
+y_i = \gamma \hat{x}_i + \beta
+\]
+</p>
+</div>
+</div>
+<div id="outline-container-org377053b" class="outline-3">
+<h3 id="org377053b"><span class="section-number-3">7.3.</span> Batch Normalization 추가 model</h3>
+<div class="outline-text-3" id="text-7-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_bn</span>():
+    <span style="color: #83898d;">"""augmentation &#50948;&#50640; BatchNormalization&#51012; &#45572;&#51201;&#54620; model."""</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> keras.Sequential([
+        layers.Input(shape<span style="color: #51afef;">=</span>INPUT_SHAPE),
+        data_augmentation,
+        normalization_layer,
+
+        layers.Conv2D(32, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">BatchNormalization(): &#51649;&#51204; layer &#52636;&#47141;&#51012; batch &#45800;&#50948;&#47196; &#51221;&#44508;&#54868;
+</span>        layers.BatchNormalization(),
+        layers.Activation(<span style="color: #98be65;">'relu'</span>),         <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51221;&#44508;&#54868; &#54980; activation &#51201;&#50857;
+</span>        layers.MaxPooling2D(),
+
+        layers.Conv2D(64, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.BatchNormalization(),
+        layers.Activation(<span style="color: #98be65;">'relu'</span>),
+        layers.MaxPooling2D(),
+
+        layers.Flatten(),
+        layers.Dense(128, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>),
+        layers.Dense(NUM_CLASSES, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>),
+    ])
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">model_bn</span> <span style="color: #51afef;">=</span> compile_model(build_bn())
+<span style="color: #dcaeea;">hist</span> <span style="color: #51afef;">=</span> model_bn.fit(X_train, y_train,
+                    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+                    epochs<span style="color: #51afef;">=</span>EPOCHS, batch_size<span style="color: #51afef;">=</span>BATCH_SIZE)
+<span style="color: #dcaeea;">results</span>[<span style="color: #98be65;">'3_bn'</span>] <span style="color: #51afef;">=</span> hist.history[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1]
+<span style="color: #dcaeea;">histories</span>[<span style="color: #98be65;">'3_bn'</span>] <span style="color: #51afef;">=</span> hist.history
+</code></pre>
+</div>
+
+<pre class="example" id="org2d196ae">
+Epoch 1/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 3s 7ms/step - accuracy: 0.5114 - loss: 1.6640 - val_accuracy: 0.0630 - val_loss: 3.0569
+Epoch 2/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.8673 - loss: 0.4471 - val_accuracy: 0.4968 - val_loss: 1.7285
+Epoch 3/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9472 - loss: 0.2037 - val_accuracy: 0.9732 - val_loss: 0.2233
+Epoch 4/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9742 - loss: 0.1177 - val_accuracy: 0.9807 - val_loss: 0.0775
+Epoch 5/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9811 - loss: 0.0811 - val_accuracy: 0.9131 - val_loss: 0.2313
+Epoch 6/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9909 - loss: 0.0496 - val_accuracy: 0.9860 - val_loss: 0.0449
+Epoch 7/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9934 - loss: 0.0364 - val_accuracy: 0.9880 - val_loss: 0.0370
+Epoch 8/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9946 - loss: 0.0286 - val_accuracy: 0.9452 - val_loss: 0.1427
+Epoch 9/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9955 - loss: 0.0227 - val_accuracy: 0.9783 - val_loss: 0.0617
+Epoch 10/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.9952 - loss: 0.0229 - val_accuracy: 0.9749 - val_loss: 0.0611
+</pre>
+</div>
+</div>
+<div id="outline-container-org14a9c86" class="outline-3">
+<h3 id="org14a9c86"><span class="section-number-3">7.4.</span> 비교: augmentation vs +batch normalization</h3>
+<div class="outline-text-3" id="text-7-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+augmentation       :"</span>, results[<span style="color: #98be65;">'2_aug'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+batch normalization:"</span>, results[<span style="color: #98be65;">'3_bn'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#48320;&#54868;&#47049;              :"</span>, results[<span style="color: #98be65;">'3_bn'</span>] <span style="color: #51afef;">-</span> results[<span style="color: #98be65;">'2_aug'</span>])
+</code></pre>
+</div>
+
+<pre class="example">
++augmentation       : 0.991258442401886
++batch normalization: 0.9748679399490356
+변화량              : -0.016390502452850342
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-step6" class="outline-2">
+<h2 id="step6"><span class="section-number-2">8.</span> 6단계: 기법 추가 ③ Dropout</h2>
+<div class="outline-text-2" id="text-step6">
+</div>
+<div id="outline-container-org1a76935" class="outline-3">
+<h3 id="org1a76935"><span class="section-number-3">8.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-8-1">
+<ul class="org-ul">
+<li>Dropout이 overfitting을 줄이는 원리를 이해한다.</li>
+<li>training accuracy와 validation accuracy의 격차로 효과를 확인한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0b767d5" class="outline-3">
+<h3 id="org0b767d5"><span class="section-number-3">8.2.</span> 개념 설명</h3>
+<div class="outline-text-3" id="text-8-2">
+<p>
+Dropout은 학습 중에 neuron 일부를 무작위로 꺼서(출력을 0으로) model이
+특정 경로에만 의존하지 않게 만듭니다. 확률 $p$로 끄면, 남은 값들은
+\(\frac{1}{1-p}\) 배로 키워 전체 크기를 유지합니다. inference 때는 모든
+neuron을 사용합니다.
+</p>
+
+<p>
+\[
+r_j \sim \mathrm{Bernoulli}(1 - p), \qquad
+\tilde{y}_j = \frac{r_j}{1 - p}\, y_j
+\]
+</p>
+</div>
+</div>
+<div id="outline-container-orge18ad14" class="outline-3">
+<h3 id="orge18ad14"><span class="section-number-3">8.3.</span> Dropout 추가 model</h3>
+<div class="outline-text-3" id="text-8-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_dropout</span>():
+    <span style="color: #83898d;">"""batch normalization &#50948;&#50640; Dropout&#51012; &#45572;&#51201;&#54620; model."""</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> keras.Sequential([
+        layers.Input(shape<span style="color: #51afef;">=</span>INPUT_SHAPE),
+        data_augmentation,
+        normalization_layer,
+
+        layers.Conv2D(32, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.BatchNormalization(),
+        layers.Activation(<span style="color: #98be65;">'relu'</span>),
+        layers.MaxPooling2D(),
+
+        layers.Conv2D(64, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>),
+        layers.BatchNormalization(),
+        layers.Activation(<span style="color: #98be65;">'relu'</span>),
+        layers.MaxPooling2D(),
+
+        layers.Flatten(),
+        layers.Dense(128, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>),
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Dropout(rate): rate &#48708;&#50984;&#47564;&#53372; neuron&#51012; &#47924;&#51089;&#50948;&#47196; &#45128;&#45796; (0.5 = 50%)
+</span>        layers.Dropout(0.5),
+        layers.Dense(NUM_CLASSES, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>),
+    ])
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">model_do</span> <span style="color: #51afef;">=</span> compile_model(build_dropout())
+<span style="color: #dcaeea;">hist</span> <span style="color: #51afef;">=</span> model_do.fit(X_train, y_train,
+                    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+                    epochs<span style="color: #51afef;">=</span>EPOCHS, batch_size<span style="color: #51afef;">=</span>BATCH_SIZE)
+<span style="color: #dcaeea;">results</span>[<span style="color: #98be65;">'4_dropout'</span>] <span style="color: #51afef;">=</span> hist.history[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1]
+<span style="color: #dcaeea;">histories</span>[<span style="color: #98be65;">'4_dropout'</span>] <span style="color: #51afef;">=</span> hist.history
+</code></pre>
+</div>
+
+<pre class="example" id="org460843e">
+Epoch 1/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 3s 7ms/step - accuracy: 0.1676 - loss: 2.7313 - val_accuracy: 0.0840 - val_loss: 3.0767
+Epoch 2/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.3240 - loss: 2.0097 - val_accuracy: 0.2535 - val_loss: 2.4036
+Epoch 3/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4231 - loss: 1.6379 - val_accuracy: 0.7055 - val_loss: 1.1236
+Epoch 4/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4645 - loss: 1.4644 - val_accuracy: 0.8559 - val_loss: 0.5850
+Epoch 5/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.4960 - loss: 1.3771 - val_accuracy: 0.8101 - val_loss: 0.6532
+Epoch 6/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.5197 - loss: 1.3015 - val_accuracy: 0.8774 - val_loss: 0.4429
+Epoch 7/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 7ms/step - accuracy: 0.5435 - loss: 1.2264 - val_accuracy: 0.7447 - val_loss: 0.7290
+Epoch 8/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.5621 - loss: 1.1771 - val_accuracy: 0.7587 - val_loss: 0.6614
+Epoch 9/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.5697 - loss: 1.1529 - val_accuracy: 0.8159 - val_loss: 0.5087
+Epoch 10/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 1s 6ms/step - accuracy: 0.5750 - loss: 1.1213 - val_accuracy: 0.9423 - val_loss: 0.2669
+</pre>
+</div>
+</div>
+<div id="outline-container-org3702981" class="outline-3">
+<h3 id="org3702981"><span class="section-number-3">8.4.</span> 비교: +batch normalization vs +dropout</h3>
+<div class="outline-text-3" id="text-8-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+batch normalization:"</span>, results[<span style="color: #98be65;">'3_bn'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+dropout            :"</span>, results[<span style="color: #98be65;">'4_dropout'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#48320;&#54868;&#47049;              :"</span>, results[<span style="color: #98be65;">'4_dropout'</span>] <span style="color: #51afef;">-</span> results[<span style="color: #98be65;">'3_bn'</span>])
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">training vs validation &#44201;&#52264;&#47196; overfitting &#51221;&#46020;&#47484; &#48376;&#45796;.
+</span><span style="color: #dcaeea;">last</span> <span style="color: #51afef;">=</span> histories[<span style="color: #98be65;">'4_dropout'</span>]
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"train acc:"</span>, last[<span style="color: #98be65;">'accuracy'</span>][<span style="color: #51afef;">-</span>1], <span style="color: #98be65;">"/ val acc:"</span>, last[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1])
+</code></pre>
+</div>
+
+<pre class="example">
++batch normalization: 0.9748679399490356
++dropout            : 0.9422691464424133
+변화량              : -0.032598793506622314
+train acc: 0.5750318765640259 / val acc: 0.9422691464424133
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-step7" class="outline-2">
+<h2 id="step7"><span class="section-number-2">9.</span> 7단계: 기법 추가 ④ Transfer Learning (하이라이트)</h2>
+<div class="outline-text-2" id="text-step7">
+</div>
+<div id="outline-container-org696ff97" class="outline-3">
+<h3 id="org696ff97"><span class="section-number-3">9.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-9-1">
+<ul class="org-ul">
+<li>Transfer Learning(전이학습)의 개념과 위력을 이해한다.</li>
+<li>누적 model 대비 정확도 변화를 측정한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0bc8376" class="outline-3">
+<h3 id="org0bc8376"><span class="section-number-3">9.2.</span> 개념 설명</h3>
+<div class="outline-text-3" id="text-9-2">
+<p>
+Transfer Learning은 ImageNet 같은 거대한 dataset으로 미리 학습된 model을
+가져와, 우리 데이터에 맞게 재사용하는 방법입니다. 이 model은 이미 edge,
+질감, 모양 같은 일반적 특징을 알고 있으므로, 마지막 분류 부분만 새로
+학습하면 됩니다.
+</p>
+
+<p>
+<b>흑백 dataset에서의 주의점</b>: 대부분의 pretrained model(여기서는
+<code>MobileNetV2</code>)은 <b>컬러(3 channel)</b> 이미지를 입력으로 받고, 입력 크기도
+\(28 \times 28\) 보다 큽니다. 그래서 흑백 이미지를 (1) channel을 3개로
+복제하고 (2) 더 큰 크기로 resize하는 전처리가 필요합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org2111c60" class="outline-3">
+<h3 id="org2111c60"><span class="section-number-3">9.3.</span> 흑백 -&gt; pretrained model 입력으로 맞추기</h3>
+<div class="outline-text-3" id="text-9-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+<span style="color: #51afef;">from</span> tensorflow.keras.applications <span style="color: #51afef;">import</span> MobileNetV2
+<span style="color: #51afef;">from</span> tensorflow.keras.applications.mobilenet_v2 <span style="color: #51afef;">import</span> preprocess_input
+
+<span style="color: #dcaeea;">TL_SIZE</span> <span style="color: #51afef;">=</span> (96, 96)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">MobileNetV2&#44032; &#48155;&#51012; &#49688; &#51080;&#45716; &#45908; &#53360; &#51077;&#47141; &#53356;&#44592;
+</span>
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">to_rgb_resized</span>(x):
+    <span style="color: #83898d;">"""&#55121;&#48177; (N,28,28,1) &#48176;&#50676;&#51012; &#52972;&#47084; (N,96,96,3)&#47196; &#48320;&#54872;&#54620;&#45796;.
+    &#51064;&#51088;:
+      - x: (N, 28, 28, 1) &#55121;&#48177; &#51060;&#48120;&#51648; &#48176;&#50676; (0~255)
+    &#48152;&#54872;:
+      - (N, 96, 96, 3) &#48176;&#50676;
+    """</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">tf.image.grayscale_to_rgb: 1 channel&#51012; 3 channel&#47196; &#48373;&#51228;
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> tf.image.grayscale_to_rgb(tf.convert_to_tensor(x))
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">tf.image.resize: &#51648;&#51221; &#53356;&#44592;&#47196; &#54869;&#45824;
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> tf.image.resize(x, TL_SIZE)
+    <span style="color: #51afef;">return</span> x.numpy()
+
+<span style="color: #dcaeea;">X_train_rgb</span> <span style="color: #51afef;">=</span> to_rgb_resized(X_train)
+<span style="color: #dcaeea;">X_val_rgb</span>   <span style="color: #51afef;">=</span> to_rgb_resized(X_val)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#48320;&#54872;&#46108; train &#47784;&#50577;:"</span>, X_train_rgb.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+변환된 train 모양: (21964, 96, 96, 3)
+</pre>
+</div>
+</div>
+<div id="outline-container-orgb5fad9a" class="outline-3">
+<h3 id="orgb5fad9a"><span class="section-number-3">9.4.</span> Transfer Learning model</h3>
+<div class="outline-text-3" id="text-9-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">TL_INPUT_SHAPE</span> <span style="color: #51afef;">=</span> TL_SIZE <span style="color: #51afef;">+</span> (3,)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(96, 96, 3)
+</span>
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_transfer</span>():
+    <span style="color: #83898d;">"""MobileNetV2&#47484; backbone&#51004;&#47196; &#50416;&#45716; transfer learning model."""</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">MobileNetV2(input_shape, include_top, weights):
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- input_shape: &#51077;&#47141; &#51060;&#48120;&#51648; &#53356;&#44592;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- include_top=False: &#50896;&#47000;&#51032; 1000-class &#48516;&#47448;&#44592;&#47484; &#46524;&#50612;&#45240;&#45796;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- weights='imagenet': ImageNet&#51004;&#47196; &#54617;&#49845;&#46108; weight&#47484; &#48520;&#47084;&#50728;&#45796;
+</span>    <span style="color: #dcaeea;">base</span> <span style="color: #51afef;">=</span> MobileNetV2(input_shape<span style="color: #51afef;">=</span>TL_INPUT_SHAPE,
+                       include_top<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>, weights<span style="color: #51afef;">=</span><span style="color: #98be65;">'imagenet'</span>)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">base.trainable=False: backbone weight&#47484; &#44256;&#51221;(freeze)&#54616;&#44256;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">&#49352;&#47196; &#48537;&#51064; &#48516;&#47448;&#44592;&#47564; &#54617;&#49845;&#54620;&#45796;.
+</span>    base.<span style="color: #dcaeea;">trainable</span> <span style="color: #51afef;">=</span> <span style="color: #a9a1e1;">False</span>
+
+    <span style="color: #dcaeea;">inputs</span> <span style="color: #51afef;">=</span> layers.Input(shape<span style="color: #51afef;">=</span>TL_INPUT_SHAPE)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">MobileNetV2 &#51204;&#50857; preprocessing (&#51077;&#47141;&#51012; -1~1 &#48276;&#50948;&#47196; &#47582;&#52632;&#45796;)
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> preprocess_input(inputs)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> base(x, training<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">GlobalAveragePooling2D(): feature map&#51012; channel&#48324; &#54217;&#44512; &#54616;&#45208;&#47196; &#50836;&#50557;
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> layers.GlobalAveragePooling2D()(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> layers.Dropout(0.3)(x)
+    <span style="color: #dcaeea;">outputs</span> <span style="color: #51afef;">=</span> layers.Dense(NUM_CLASSES, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>)(x)
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">keras.Model(inputs, outputs): &#51077;&#47141;&#44284; &#52636;&#47141;&#51012; &#51648;&#51221;&#54644; model&#51012; &#47564;&#46304;&#45796;.
+</span>    <span style="color: #51afef;">return</span> keras.Model(inputs, outputs)
+
+<span style="color: #dcaeea;">model_tl</span> <span style="color: #51afef;">=</span> compile_model(build_transfer())
+<span style="color: #dcaeea;">hist</span> <span style="color: #51afef;">=</span> model_tl.fit(X_train_rgb, y_train,
+                    validation_data<span style="color: #51afef;">=</span>(X_val_rgb, y_val),
+                    epochs<span style="color: #51afef;">=</span>EPOCHS, batch_size<span style="color: #51afef;">=</span>BATCH_SIZE)
+<span style="color: #dcaeea;">results</span>[<span style="color: #98be65;">'5_transfer'</span>] <span style="color: #51afef;">=</span> hist.history[<span style="color: #98be65;">'val_accuracy'</span>][<span style="color: #51afef;">-</span>1]
+<span style="color: #dcaeea;">histories</span>[<span style="color: #98be65;">'5_transfer'</span>] <span style="color: #51afef;">=</span> hist.history
+</code></pre>
+</div>
+
+<pre class="example" id="orgc8b2278">
+Epoch 1/10
+ 172/172 ━━━━━━━━━━━━━━━━━━━━ 16s 64ms/step - accuracy: 0.7595 - loss: 0.8592 - val_accuracy: 0.9752 - val_loss: 0.1747
+Epoch 2/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9639 - loss: 0.1697 - val_accuracy: 0.9940 - val_loss: 0.0758
+Epoch 3/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9848 - loss: 0.0930 - val_accuracy: 0.9967 - val_loss: 0.0458
+Epoch 4/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9897 - loss: 0.0644 - val_accuracy: 0.9973 - val_loss: 0.0335
+Epoch 5/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9930 - loss: 0.0479 - val_accuracy: 0.9980 - val_loss: 0.0243
+Epoch 6/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9948 - loss: 0.0384 - val_accuracy: 0.9987 - val_loss: 0.0197
+Epoch 7/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9949 - loss: 0.0320 - val_accuracy: 0.9987 - val_loss: 0.0173
+Epoch 8/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9960 - loss: 0.0266 - val_accuracy: 0.9993 - val_loss: 0.0134
+Epoch 9/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9965 - loss: 0.0236 - val_accuracy: 0.9993 - val_loss: 0.0117
+Epoch 10/10
+172/172 ━━━━━━━━━━━━━━━━━━━━ 4s 21ms/step - accuracy: 0.9971 - loss: 0.0216 - val_accuracy: 0.9993 - val_loss: 0.0105
+</pre>
+</div>
+</div>
+<div id="outline-container-orgf379414" class="outline-3">
+<h3 id="orgf379414"><span class="section-number-3">9.5.</span> 비교: +dropout vs +transfer learning</h3>
+<div class="outline-text-3" id="text-9-5">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+dropout          :"</span>, results[<span style="color: #98be65;">'4_dropout'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"+transfer learning:"</span>, results[<span style="color: #98be65;">'5_transfer'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#48320;&#54868;&#47049;            :"</span>, results[<span style="color: #98be65;">'5_transfer'</span>] <span style="color: #51afef;">-</span> results[<span style="color: #98be65;">'4_dropout'</span>])
+</code></pre>
+</div>
+
+<pre class="example">
++dropout          : 0.9422691464424133
++transfer learning: 0.9992715120315552
+변화량            : 0.057002365589141846
+</pre>
+
+<p>
+흑백·저해상도 dataset에서는 단순 CNN도 이미 매우 높은 정확도를 내기
+때문에, transfer learning의 이득이 컬러 dataset만큼 극적이지 않을 수
+있습니다. 이 점을 관찰하고 &ldquo;왜 그럴까?&rdquo;를 토론하는 것 자체가 좋은
+학습입니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-step8" class="outline-2">
+<h2 id="step8"><span class="section-number-2">10.</span> 8단계: 종합 비교 &ndash; 표와 graph로 한눈에</h2>
+<div class="outline-text-2" id="text-step8">
+</div>
+<div id="outline-container-org1ea7862" class="outline-3">
+<h3 id="org1ea7862"><span class="section-number-3">10.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-10-1">
+<ul class="org-ul">
+<li>모든 단계의 정확도를 한 표/graph에 모아 각 기법의 기여도를 본다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org81b9817" class="outline-3">
+<h3 id="org81b9817"><span class="section-number-3">10.2.</span> 정확도 비교 표</h3>
+<div class="outline-text-3" id="text-10-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48372;&#44592; &#51339;&#51008; &#51060;&#47492;&#51004;&#47196; &#47588;&#54609;
+</span><span style="color: #dcaeea;">label_map</span> <span style="color: #51afef;">=</span> {
+    <span style="color: #98be65;">'1_baseline'</span>:  <span style="color: #98be65;">'Baseline'</span>,
+    <span style="color: #98be65;">'2_aug'</span>:       <span style="color: #98be65;">'+ Augmentation'</span>,
+    <span style="color: #98be65;">'3_bn'</span>:        <span style="color: #98be65;">'+ BatchNorm'</span>,
+    <span style="color: #98be65;">'4_dropout'</span>:   <span style="color: #98be65;">'+ Dropout'</span>,
+    <span style="color: #98be65;">'5_transfer'</span>:  <span style="color: #98be65;">'+ Transfer Learning'</span>,
+}
+<span style="color: #dcaeea;">order</span> <span style="color: #51afef;">=</span> [<span style="color: #98be65;">'1_baseline'</span>, <span style="color: #98be65;">'2_aug'</span>, <span style="color: #98be65;">'3_bn'</span>, <span style="color: #98be65;">'4_dropout'</span>, <span style="color: #98be65;">'5_transfer'</span>]
+<span style="color: #dcaeea;">rows</span> <span style="color: #51afef;">=</span> []
+<span style="color: #dcaeea;">prev</span> <span style="color: #51afef;">=</span> <span style="color: #a9a1e1;">None</span>
+<span style="color: #51afef;">for</span> k <span style="color: #51afef;">in</span> order:
+    <span style="color: #dcaeea;">acc</span> <span style="color: #51afef;">=</span> results[k]
+    <span style="color: #dcaeea;">delta</span> <span style="color: #51afef;">=</span> <span style="color: #98be65;">""</span> <span style="color: #51afef;">if</span> prev <span style="color: #51afef;">is</span> <span style="color: #a9a1e1;">None</span> <span style="color: #51afef;">else</span> f<span style="color: #98be65;">"</span>{acc <span style="color: #51afef;">-</span> prev:<span style="color: #51afef;">+</span>.4f}<span style="color: #98be65;">"</span>
+    rows.append({<span style="color: #98be65;">'&#45800;&#44228;'</span>: label_map[k], <span style="color: #98be65;">'val_accuracy'</span>: <span style="color: #c678dd;">round</span>(acc, 4),
+                 <span style="color: #98be65;">'&#51649;&#51204; &#45824;&#48708;'</span>: delta})
+    <span style="color: #dcaeea;">prev</span> <span style="color: #51afef;">=</span> acc
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">DataFrame: &#54364; &#54805;&#53468;&#47196; &#45936;&#51060;&#53552;&#47484; &#45796;&#47336;&#45716; pandas &#44061;&#52404;
+</span><span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.DataFrame(rows)
+<span style="color: #c678dd;">print</span>(df.to_string(index<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>))
+</code></pre>
+</div>
+
+<pre class="example">
+                 단계  val_accuracy   직전 대비
+           Baseline        1.0000        
+     + Augmentation        0.9913 -0.0087
+        + BatchNorm        0.9749 -0.0164
+          + Dropout        0.9423 -0.0326
++ Transfer Learning        0.9993 +0.0570
+</pre>
+</div>
+</div>
+<div id="outline-container-orgfd09e4c" class="outline-3">
+<h3 id="orgfd09e4c"><span class="section-number-3">10.3.</span> 누적 정확도 graph</h3>
+<div class="outline-text-3" id="text-10-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+<span style="color: #dcaeea;">names</span> <span style="color: #51afef;">=</span> [label_map[k] <span style="color: #51afef;">for</span> k <span style="color: #51afef;">in</span> order]
+<span style="color: #dcaeea;">accs</span>  <span style="color: #51afef;">=</span> [results[k] <span style="color: #51afef;">for</span> k <span style="color: #51afef;">in</span> order]
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(9, 5))
+plt.plot(names, accs, marker<span style="color: #51afef;">=</span><span style="color: #98be65;">'o'</span>)
+plt.ylabel(<span style="color: #98be65;">"validation accuracy"</span>)
+plt.title(<span style="color: #98be65;">"&#44592;&#48277; &#45572;&#51201;&#50640; &#46384;&#47480; &#51221;&#54869;&#46020; &#48320;&#54868;"</span>)
+plt.xticks(rotation<span style="color: #51afef;">=</span>20)
+plt.grid(<span style="color: #a9a1e1;">True</span>, alpha<span style="color: #51afef;">=</span>0.3)
+<span style="color: #51afef;">for</span> x, y <span style="color: #51afef;">in</span> <span style="color: #c678dd;">zip</span>(names, accs):
+    plt.annotate(f<span style="color: #98be65;">"</span>{y:.3f}<span style="color: #98be65;">"</span>, (x, y), textcoords<span style="color: #51afef;">=</span><span style="color: #98be65;">"offset points"</span>, xytext<span style="color: #51afef;">=</span>(0, 8))
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+<pre class="example" id="orgcd08915">
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 44592 (\N{HANGUL SYLLABLE GI}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 48277 (\N{HANGUL SYLLABLE BEOB}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 45572 (\N{HANGUL SYLLABLE NU}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 51201 (\N{HANGUL SYLLABLE JEOG}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 50640 (\N{HANGUL SYLLABLE E}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 46384 (\N{HANGUL SYLLABLE DDA}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 47480 (\N{HANGUL SYLLABLE REUN}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 51221 (\N{HANGUL SYLLABLE JEONG}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 54869 (\N{HANGUL SYLLABLE HWAG}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 46020 (\N{HANGUL SYLLABLE DO}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 48320 (\N{HANGUL SYLLABLE BYEON}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/2291929645.py:14: UserWarning: Glyph 54868 (\N{HANGUL SYLLABLE HWA}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 44592 (\N{HANGUL SYLLABLE GI}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 48277 (\N{HANGUL SYLLABLE BEOB}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 45572 (\N{HANGUL SYLLABLE NU}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 51201 (\N{HANGUL SYLLABLE JEOG}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 50640 (\N{HANGUL SYLLABLE E}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 46384 (\N{HANGUL SYLLABLE DDA}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 47480 (\N{HANGUL SYLLABLE REUN}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 51221 (\N{HANGUL SYLLABLE JEONG}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 54869 (\N{HANGUL SYLLABLE HWAG}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 46020 (\N{HANGUL SYLLABLE DO}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 48320 (\N{HANGUL SYLLABLE BYEON}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 54868 (\N{HANGUL SYLLABLE HWA}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+</pre>
+
+<div id="org8633f27" class="figure">
+<p><img src="images/d1f137282ecc7d0798659d5bc97c62bbb655312f.png" alt="d1f137282ecc7d0798659d5bc97c62bbb655312f.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org07a6ba0" class="outline-3">
+<h3 id="org07a6ba0"><span class="section-number-3">10.4.</span> 학습 곡선 비교</h3>
+<div class="outline-text-3" id="text-10-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>plt.figure(figsize<span style="color: #51afef;">=</span>(9, 5))
+<span style="color: #51afef;">for</span> k <span style="color: #51afef;">in</span> order:
+    plt.plot(histories[k][<span style="color: #98be65;">'val_accuracy'</span>], label<span style="color: #51afef;">=</span>label_map[k])
+plt.xlabel(<span style="color: #98be65;">"epoch"</span>); plt.ylabel(<span style="color: #98be65;">"validation accuracy"</span>)
+plt.title(<span style="color: #98be65;">"&#45800;&#44228;&#48324; validation accuracy &#54617;&#49845; &#44257;&#49440;"</span>)
+plt.legend(); plt.grid(<span style="color: #a9a1e1;">True</span>, alpha<span style="color: #51afef;">=</span>0.3)
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+<pre class="example" id="org1be9d09">
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 45800 (\N{HANGUL SYLLABLE DAN}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 44228 (\N{HANGUL SYLLABLE GYE}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 48324 (\N{HANGUL SYLLABLE BYEOL}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 54617 (\N{HANGUL SYLLABLE HAG}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 49845 (\N{HANGUL SYLLABLE SEUB}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 44257 (\N{HANGUL SYLLABLE GOG}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/tmp/ipykernel_92890/3420648530.py:7: UserWarning: Glyph 49440 (\N{HANGUL SYLLABLE SEON}) missing from font(s) DejaVu Sans.
+  plt.tight_layout()
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 45800 (\N{HANGUL SYLLABLE DAN}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 44228 (\N{HANGUL SYLLABLE GYE}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 48324 (\N{HANGUL SYLLABLE BYEOL}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 54617 (\N{HANGUL SYLLABLE HAG}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 49845 (\N{HANGUL SYLLABLE SEUB}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 44257 (\N{HANGUL SYLLABLE GOG}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/IPython/core/pylabtools.py:170: UserWarning: Glyph 49440 (\N{HANGUL SYLLABLE SEON}) missing from font(s) DejaVu Sans.
+  fig.canvas.print_figure(bytes_io, **kw)
+</pre>
+
+<div id="org521b6c8" class="figure">
+<p><img src="images/f92dc766787c734aadedfcd96d67e45f1f1a53c5.png" alt="f92dc766787c734aadedfcd96d67e45f1f1a53c5.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orga936ba3" class="outline-3">
+<h3 id="orga936ba3"><span class="section-number-3">10.5.</span> 종합요약</h3>
+<div class="outline-text-3" id="text-10-5">
+</div>
+<div id="outline-container-org75caf19" class="outline-4">
+<h4 id="org75caf19"><span class="section-number-4">10.5.1.</span> 전체 요약</h4>
+<div class="outline-text-4" id="text-10-5-1">
+<p>
+이 실험에서는 baseline CNN을 기준으로 Data Augmentation, Batch Normalization, Dropout을 순차적으로 추가하면서 validation accuracy 변화를 비교하셨습니다. 결과적으로 baseline이 이미 100% validation accuracy에 도달했기 때문에, 추가 기법들이 항상 성능 향상으로 이어지지는 않았습니다. 
+</p>
+</div>
+</div>
+<div id="outline-container-org155e802" class="outline-4">
+<h4 id="org155e802"><span class="section-number-4">10.5.2.</span> 실험 결과 표</h4>
+<div class="outline-text-4" id="text-10-5-2">
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">단계</th>
+<th scope="col" class="org-right">Validation Accuracy</th>
+<th scope="col" class="org-right">직전 대비 변화</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">Baseline CNN</td>
+<td class="org-right">1.0000</td>
+<td class="org-right">-</td>
+</tr>
+
+<tr>
+<td class="org-left">+ Augmentation</td>
+<td class="org-right">0.9896</td>
+<td class="org-right">-0.0104</td>
+</tr>
+
+<tr>
+<td class="org-left">+ Batch Normalization</td>
+<td class="org-right">0.9909</td>
+<td class="org-right">+0.0013</td>
+</tr>
+
+<tr>
+<td class="org-left">+ Dropout</td>
+<td class="org-right">0.8663</td>
+<td class="org-right">-0.1246</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org07c49e8" class="outline-4">
+<h4 id="org07c49e8"><span class="section-number-4">10.5.3.</span> 1. Baseline CNN 결과 해석</h4>
+<div class="outline-text-4" id="text-10-5-3">
+<p>
+Baseline CNN은 validation accuracy 1.0000을 달성하였습니다. 이는 현재 Sign Language MNIST 데이터셋이 이 CNN 구조만으로도 거의 완벽하게 분류될 만큼 비교적 단순하다는 뜻입니다.
+</p>
+
+<p>
+모델 구조는 Conv2D, MaxPooling, Flatten, Dense로 구성된 기본 CNN입니다. 전체 parameter 수는 약 423,448개였습니다. 
+</p>
+
+<p>
+이 결과는 다음을 의미합니다.
+</p>
+
+<ul class="org-ul">
+<li>데이터셋의 배경과 손 모양이 비교적 정제되어 있습니다.</li>
+<li>28x28 grayscale 이미지임에도 class 간 구분이 뚜렷합니다.</li>
+<li>baseline 모델의 capacity가 이 문제에 충분합니다.</li>
+<li>이후 기법들은 “정확도 향상”보다는 “일반화 안정성” 관점에서 보아야 합니다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdd2eb00" class="outline-4">
+<h4 id="orgdd2eb00"><span class="section-number-4">10.5.4.</span> 2. Data Augmentation 결과 해석</h4>
+<div class="outline-text-4" id="text-10-5-4">
+<p>
+Augmentation 적용 후 validation accuracy는 0.9896으로 감소하였습니다. baseline 대비 약 1.04%p 낮아졌습니다. 
+</p>
+
+<p>
+사용된 augmentation은 RandomRotation과 RandomZoom입니다. 즉, 학습 중 이미지가 조금씩 회전되거나 확대·축소되었습니다. 
+</p>
+
+<p>
+이 성능 감소는 자연스러운 결과입니다. Augmentation은 학습 데이터를 더 어렵게 만들기 때문입니다. 원래 데이터셋은 손 위치와 형태가 비교적 정돈되어 있는데, augmentation은 여기에 인위적 변형을 추가합니다.
+</p>
+
+<p>
+따라서 모델 입장에서는 다음과 같은 변화가 생깁니다.
+</p>
+
+<ul class="org-ul">
+<li>같은 class라도 더 다양한 형태를 학습해야 합니다.</li>
+<li>training loss 감소가 느려집니다.</li>
+<li><p>
+validation set이 정제된 원본 분포에 가까우면 오히려 정확도가 낮아질 수 있습니다.
+하지만 augmentation을 부정적으로만 해석하면 안 됩니다. 실제 webcam 입력에서는 손의 위치, 크기, 회전, 조명 등이 데이터셋과 다릅니다. 이 차이를 domain gap이라고 합니다. 문서에서도 실제 입력에서는 데이터셋과 달리 자주 틀릴 수 있다고 설명하고 있습니다. 
+</p>
+
+<p>
+따라서 augmentation은 validation accuracy를 약간 희생하더라도 실제 환경 robustness를 높이는 방향의 기법이라고 해석하시는 것이 적절합니다.
+</p></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9ac00af" class="outline-4">
+<h4 id="org9ac00af"><span class="section-number-4">10.5.5.</span> 3. Batch Normalization 결과 해석</h4>
+<div class="outline-text-4" id="text-10-5-5">
+<p>
+Batch Normalization을 추가한 후 validation accuracy는 0.9909가 되었습니다. augmentation만 적용한 모델보다 약 0.13%p 상승하였습니다. 
+</p>
+
+<p>
+Batch Normalization은 layer activation의 mini-batch 평균과 분산을 이용해 값을 정규화합니다. 그 결과 학습 과정이 안정되고 gradient 흐름이 개선됩니다. 
+</p>
+
+<div class="org-src-container">
+<pre class="src src-text"><code>x_hat = (x - batch_mean) / sqrt(batch_variance + epsilon)
+y = gamma * x_hat + beta
+</code></pre>
+</div>
+
+<p>
+이 실험에서 Batch Normalization의 효과는 크지 않았습니다. 이유는 baseline이 이미 포화 성능에 도달했기 때문입니다. 즉, 이 문제에서는 optimization이 원래부터 어렵지 않았고, 모델도 충분히 빠르게 수렴했습니다.
+</p>
+
+<p>
+다만 Batch Normalization은 다음과 같은 의미를 가집니다.
+</p>
+
+<ul class="org-ul">
+<li>학습 초기 수렴을 빠르게 할 수 있습니다.</li>
+<li>layer 출력 분포를 안정화합니다.</li>
+<li>더 깊은 CNN에서는 효과가 더 커질 수 있습니다.</li>
+<li>augmentation으로 어려워진 학습을 약간 보완했습니다.
+따라서 이 실험에서는 Batch Normalization이 “극적인 성능 향상”보다는 “학습 안정화”에 기여했다고 보시는 것이 정확합니다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc865437" class="outline-4">
+<h4 id="orgc865437"><span class="section-number-4">10.5.6.</span> 4. Dropout 결과 해석</h4>
+<div class="outline-text-4" id="text-10-5-6">
+<p>
+Dropout을 추가한 후 validation accuracy는 0.8663으로 크게 감소하였습니다. Batch Normalization 모델 대비 약 12.46%p 하락하였습니다. 
+</p>
+
+<p>
+특히 중요한 점은 마지막 epoch의 training accuracy가 약 0.4858이고 validation accuracy가 약 0.8663이었다는 점입니다. 
+</p>
+
+<p>
+일반적인 overfitting이면 training accuracy가 높고 validation accuracy가 낮아야 합니다. 하지만 여기서는 training accuracy 자체가 매우 낮습니다. 이것은 overfitting이 아니라 underfitting입니다.
+</p>
+
+<p>
+즉, Dropout이 너무 강하게 작용하여 모델이 학습 데이터조차 충분히 학습하지 못한 것입니다.
+</p>
+
+<p>
+이 실험에서 사용된 Dropout rate는 0.5였습니다. 이는 Dense layer neuron의 절반을 학습 중 무작위로 끄는 강한 regularization입니다. 
+</p>
+
+<p>
+이 경우 성능 하락 원인은 다음과 같습니다.
+</p>
+
+<ul class="org-ul">
+<li>baseline 모델이 이미 충분히 잘 일반화하고 있었습니다.</li>
+<li>augmentation이 이미 regularization 역할을 하고 있었습니다.</li>
+<li>Batch Normalization도 약한 regularization 효과를 가집니다.</li>
+<li>여기에 Dropout 0.5까지 추가되어 regularization이 과도해졌습니다.</li>
+<li>결과적으로 모델 capacity가 지나치게 제한되었습니다.
+특히 Batch Normalization과 Dropout은 항상 좋은 조합이 아닙니다. Batch Normalization은 activation 분포를 안정화하려고 하고, Dropout은 activation을 무작위로 제거해 분포를 흔듭니다. 작은 CNN에서는 이 조합이 오히려 학습을 방해할 수 있습니다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbbd0298" class="outline-4">
+<h4 id="orgbbd0298"><span class="section-number-4">10.5.7.</span> 5. 세 기법의 비교 고찰</h4>
+<div class="outline-text-4" id="text-10-5-7">
+</div>
+<ol class="org-ol">
+<li><a id="org1d7727d"></a>Augmentation<br />
+<div class="outline-text-5" id="text-10-5-7-1">
+<p>
+Augmentation은 validation accuracy를 약간 낮췄지만, 실제 환경 일반화에는 도움이 될 가능성이 큽니다.
+</p>
+
+<blockquote>
+<p>
+정제된 validation set에서는 손해, 실제 webcam 입력에서는 이득이 될 수 있는 기법입니다.
+</p>
+</blockquote>
+</div>
+</li>
+<li><a id="org215efee"></a>Batch Normalization<br />
+<div class="outline-text-5" id="text-10-5-7-2">
+<p>
+Batch Normalization은 소폭의 성능 향상을 보였습니다. 이 문제에서는 baseline이 이미 너무 강했기 때문에 효과가 작았습니다.
+</p>
+
+<blockquote>
+<p>
+정확도 향상보다는 학습 안정화 효과로 해석하는 것이 적절합니다.
+</p>
+</blockquote>
+</div>
+</li>
+<li><a id="orgf1cd62d"></a>Dropout<br />
+<div class="outline-text-5" id="text-10-5-7-3">
+<p>
+Dropout은 큰 성능 하락을 만들었습니다. 이 실험에서는 overfitting 방지가 아니라 underfitting을 유발했습니다.
+</p>
+
+<blockquote>
+<p>
+현재 모델과 데이터셋 조건에서는 Dropout 0.5가 과도했습니다.
+</p>
+</blockquote>
+</div>
+</li>
+</ol>
+</div>
+<div id="outline-container-orge98558e" class="outline-4">
+<h4 id="orge98558e"><span class="section-number-4">10.5.8.</span> 6. 결론</h4>
+<div class="outline-text-4" id="text-10-5-8">
+<p>
+이 실험의 핵심 결론은 다음과 같습니다.
+</p>
+
+<blockquote>
+<p>
+성능 개선 기법은 많이 넣는다고 항상 좋아지는 것이 아니라, 데이터셋 난이도와 모델 상태에 맞게 선택해야 합니다.
+</p>
+</blockquote>
+
+<p>
+Baseline CNN이 이미 validation accuracy 1.0000에 도달했기 때문에, 추가 기법의 효과는 제한적이었습니다.
+</p>
+
+<p>
+정리하면 다음과 같습니다.
+</p>
+
+<ul class="org-ul">
+<li>Baseline CNN은 이 데이터셋에 대해 이미 충분히 강력했습니다.</li>
+<li>Augmentation은 benchmark accuracy는 낮췄지만 real-world robustness에는 유리할 수 있습니다.</li>
+<li>Batch Normalization은 학습 안정화와 약간의 성능 개선을 보였습니다.</li>
+<li>Dropout은 과도한 regularization으로 underfitting을 만들었습니다.
+따라서 이 실험에서 가장 적절한 모델은 단순히 validation accuracy만 보면 baseline CNN입니다. 그러나 실제 webcam 입력까지 고려하면 augmentation과 Batch Normalization을 포함한 모델이 더 안정적인 선택일 수 있습니다. Dropout은 제거하거나 rate를 0.1~0.3 정도로 낮추어 다시 실험하시는 것이 바람직합니다.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-step9" class="outline-2">
+<h2 id="step9"><span class="section-number-2">11.</span> 9단계: 모델 해석 &ndash; Grad-CAM 정적 시각화</h2>
+<div class="outline-text-2" id="text-step9">
+</div>
+<div id="outline-container-org55337ac" class="outline-3">
+<h3 id="org55337ac"><span class="section-number-3">11.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-11-1">
+<ul class="org-ul">
+<li>model이 손의 <b>어느 부분</b> 을 보고 판단하는지 눈으로 확인한다.</li>
+<li>맞힌 경우와 틀린 경우의 차이를 시각적으로 비교한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge74744f" class="outline-3">
+<h3 id="orge74744f"><span class="section-number-3">11.2.</span> 해석 대상 model 선택</h3>
+<div class="outline-text-3" id="text-11-2">
+<p>
+Grad-CAM은 흑백 입력을 그대로 쓰는 <code>model_do</code> (dropout까지 누적한 흑백
+CNN)를 대상으로 합니다. transfer learning model은 입력이 컬러로 변환돼
+있어 해석이 번거롭기 때문입니다. 흑백 CNN은 입력이 단순해 heatmap을
+원본 위에 바로 겹쳐 볼 수 있습니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54644;&#49437; &#45824;&#49345; model&#44284;, &#47560;&#51648;&#47561; convolution layer &#51060;&#47492;&#51012; &#51221;&#54620;&#45796;.
+</span><span style="color: #dcaeea;">explain_model</span> <span style="color: #51afef;">=</span> model_do
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">model &#50504;&#50640;&#49436; 4&#52264;&#50896;(batch,H,W,C) &#52636;&#47141;&#51012; &#45236;&#45716; &#47560;&#51648;&#47561; conv layer&#47484; &#52286;&#45716;&#45796;.
+</span><span style="color: #dcaeea;">last_conv_name</span> <span style="color: #51afef;">=</span> <span style="color: #a9a1e1;">None</span>
+<span style="color: #51afef;">for</span> l <span style="color: #51afef;">in</span> <span style="color: #c678dd;">reversed</span>(explain_model.layers):
+    <span style="color: #51afef;">if</span> <span style="color: #c678dd;">len</span>(l.output.shape) <span style="color: #51afef;">==</span> 4:
+        <span style="color: #dcaeea;">last_conv_name</span> <span style="color: #51afef;">=</span> l.name
+        <span style="color: #51afef;">break</span>
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#47560;&#51648;&#47561; conv layer:"</span>, last_conv_name)
+</code></pre>
+</div>
+
+<pre class="example">
+마지막 conv layer: max_pooling2d_27
+</pre>
+</div>
+</div>
+<div id="outline-container-orgacbc7bd" class="outline-3">
+<h3 id="orgacbc7bd"><span class="section-number-3">11.3.</span> Grad-CAM 개념</h3>
+<div class="outline-text-3" id="text-11-3">
+<p>
+Grad-CAM(Gradient-weighted Class Activation Mapping)은 model이 어떤 class로
+판단할 때 마지막 convolution feature map의 어느 위치가 중요했는지를
+heatmap으로 보여줍니다. 정답 class 점수 $y^c$를 각 feature map $A^k$에 대해
+미분해 중요도 weight를 구합니다.
+</p>
+
+<p>
+\[
+\alpha_k^c = \frac{1}{Z} \sum_{i} \sum_{j} \frac{\partial y^c}{\partial A_{ij}^k}
+\]
+</p>
+
+<p>
+이 weight로 feature map들을 가중합한 뒤 ReLU를 적용해 heatmap을 얻습니다.
+</p>
+
+<p>
+\[
+L^c_{\text{Grad-CAM}} = \mathrm{ReLU}\!\left( \sum_k \alpha_k^c\, A^k \right)
+\]
+</p>
+</div>
+</div>
+<div id="outline-container-org8c61f9b" class="outline-3">
+<h3 id="org8c61f9b"><span class="section-number-3">11.4.</span> Grad-CAM 계산 함수</h3>
+<div class="outline-text-3" id="text-11-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">make_gradcam_heatmap</span>(img_array, model, last_conv_layer_name, pred_index<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">None</span>):
+    <span style="color: #83898d;">"""&#54620; &#51060;&#48120;&#51648;&#50640; &#45824;&#54620; Grad-CAM heatmap&#51012; &#44228;&#49328;&#54620;&#45796;.
+    &#51064;&#51088;:
+      - img_array: (1, 28, 28, 1) &#54805;&#53468;&#51032; &#51077;&#47141; &#51060;&#48120;&#51648; batch
+      - model: &#48516;&#49437;&#54624; keras model
+      - last_conv_layer_name: &#47560;&#51648;&#47561; convolution layer &#51060;&#47492;(&#47928;&#51088;&#50676;)
+      - pred_index: &#48516;&#49437;&#54624; class index. None&#51060;&#47732; &#50696;&#52769; &#52572;&#45843;&#44050; class &#49324;&#50857;
+    &#48152;&#54872;:
+      - 0~1&#47196; &#51221;&#44508;&#54868;&#46108; 2&#52264;&#50896; heatmap (numpy array)
+    """</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51077;&#47141; -&gt; (&#47560;&#51648;&#47561; conv &#52636;&#47141;, &#52572;&#51333; &#50696;&#52769;) &#46160; &#44032;&#51648;&#47484; &#54632;&#44760; &#45236;&#48372;&#45236;&#45716; model
+</span>    <span style="color: #dcaeea;">grad_model</span> <span style="color: #51afef;">=</span> tf.keras.models.Model(
+        model.inputs,
+        [model.get_layer(last_conv_layer_name).output, model.output])
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">GradientTape: &#50672;&#49328; &#44284;&#51221;&#51012; &#44592;&#47197;&#54644; gradient(&#48120;&#48516;)&#47484; &#51088;&#46041; &#44228;&#49328;
+</span>    <span style="color: #51afef;">with</span> tf.GradientTape() <span style="color: #51afef;">as</span> tape:
+        <span style="color: #dcaeea;">conv_out</span>, <span style="color: #dcaeea;">preds</span> <span style="color: #51afef;">=</span> grad_model(img_array)
+        <span style="color: #51afef;">if</span> pred_index <span style="color: #51afef;">is</span> <span style="color: #a9a1e1;">None</span>:
+            <span style="color: #dcaeea;">pred_index</span> <span style="color: #51afef;">=</span> tf.argmax(preds[0])
+        <span style="color: #dcaeea;">class_channel</span> <span style="color: #51afef;">=</span> preds[:, pred_index]
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">tape.gradient(target, source): target&#51012; source&#47196; &#48120;&#48516;
+</span>    <span style="color: #dcaeea;">grads</span> <span style="color: #51afef;">=</span> tape.gradient(class_channel, conv_out)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44277;&#44036; &#48169;&#54693; &#54217;&#44512; -&gt; &#44033; feature map&#51032; &#51473;&#50836;&#46020; weight
+</span>    <span style="color: #dcaeea;">pooled_grads</span> <span style="color: #51afef;">=</span> tf.reduce_mean(grads, axis<span style="color: #51afef;">=</span>(0, 1, 2))
+
+    <span style="color: #dcaeea;">conv_out</span> <span style="color: #51afef;">=</span> conv_out[0]
+    <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> conv_out @ pooled_grads[..., tf.newaxis]
+    <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> tf.squeeze(heatmap)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">ReLU &#54952;&#44284;: &#51020;&#49688; &#51228;&#44144; &#54980; &#52572;&#45843;&#44050;&#51004;&#47196; &#45208;&#45600; 0~1 &#51221;&#44508;&#54868;
+</span>    <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> tf.maximum(heatmap, 0) <span style="color: #51afef;">/</span> (tf.reduce_max(heatmap) <span style="color: #51afef;">+</span> 1e<span style="color: #51afef;">-</span>8)
+    <span style="color: #51afef;">return</span> heatmap.numpy()
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcaa0438" class="outline-3">
+<h3 id="orgcaa0438"><span class="section-number-3">11.5.</span> heatmap을 원본 위에 겹쳐 그리기</h3>
+<div class="outline-text-3" id="text-11-5">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> matplotlib.cm <span style="color: #51afef;">as</span> cm
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">overlay_heatmap</span>(gray_img, heatmap, alpha<span style="color: #51afef;">=</span>0.5):
+    <span style="color: #83898d;">"""&#55121;&#48177; &#50896;&#48376; &#50948;&#50640; heatmap&#51012; &#49353;&#51004;&#47196; &#44217;&#52828;&#45796;.
+    &#51064;&#51088;:
+      - gray_img: (28, 28) &#46608;&#45716; (28,28,1) 0~255 &#55121;&#48177; &#51060;&#48120;&#51648;
+      - heatmap: 0~1 2&#52264;&#50896; heatmap
+      - alpha: heatmap &#53804;&#47749;&#46020; (0~1, &#53364;&#49688;&#47197; &#51652;&#54616;&#44172;)
+    &#48152;&#54872;:
+      - &#44217;&#52432;&#51652; &#52972;&#47084; &#51060;&#48120;&#51648; (0~255 uint8)
+    """</span>
+    <span style="color: #dcaeea;">g</span> <span style="color: #51afef;">=</span> np.array(gray_img).reshape(28, 28)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#55121;&#48177;&#51012; 3 channel&#47196; &#47564;&#46308;&#50612; &#49353;&#51012; &#51077;&#55184; &#48148;&#53461;&#51004;&#47196; &#49324;&#50857;
+</span>    <span style="color: #dcaeea;">base</span> <span style="color: #51afef;">=</span> np.stack([g, g, g], axis<span style="color: #51afef;">=-</span>1)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">heatmap&#51012; &#50896;&#48376; &#53356;&#44592;&#47196; &#54869;&#45824;
+</span>    <span style="color: #dcaeea;">hm</span> <span style="color: #51afef;">=</span> tf.image.resize(heatmap[..., np.newaxis], (28, 28)).numpy()[..., 0]
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">jet colormap&#51004;&#47196; &#49353; &#51077;&#55176;&#44592;
+</span>    <span style="color: #dcaeea;">jet</span> <span style="color: #51afef;">=</span> cm.get_cmap(<span style="color: #98be65;">"jet"</span>)(hm)[..., :3] <span style="color: #51afef;">*</span> 255
+    <span style="color: #dcaeea;">overlaid</span> <span style="color: #51afef;">=</span> (1 <span style="color: #51afef;">-</span> alpha) <span style="color: #51afef;">*</span> base <span style="color: #51afef;">+</span> alpha <span style="color: #51afef;">*</span> jet
+    <span style="color: #51afef;">return</span> np.clip(overlaid, 0, 255).astype(<span style="color: #98be65;">"uint8"</span>)
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org62a4094" class="outline-3">
+<h3 id="org62a4094"><span class="section-number-3">11.6.</span> 9-1. 한 장 들여다보기 (원본 + heatmap)</h3>
+<div class="outline-text-3" id="text-11-6">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">validation&#50640;&#49436; &#52395; &#51060;&#48120;&#51648;&#47484; &#48516;&#49437;
+</span><span style="color: #dcaeea;">sample</span> <span style="color: #51afef;">=</span> X_val[0]                       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(28,28,1)
+</span><span style="color: #dcaeea;">true_label</span> <span style="color: #51afef;">=</span> class_names[y_val[0]]
+<span style="color: #dcaeea;">arr</span> <span style="color: #51afef;">=</span> sample[np.newaxis, ...]           <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(1,28,28,1)
+</span>
+<span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> make_gradcam_heatmap(arr, explain_model, last_conv_name)
+<span style="color: #dcaeea;">pred</span> <span style="color: #51afef;">=</span> class_names[np.argmax(explain_model.predict(arr, verbose<span style="color: #51afef;">=</span>0)[0])]
+
+<span style="color: #dcaeea;">fig</span>, <span style="color: #dcaeea;">ax</span> <span style="color: #51afef;">=</span> plt.subplots(1, 2, figsize<span style="color: #51afef;">=</span>(8, 4))
+ax[0].imshow(sample.reshape(28, 28), cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">'gray'</span>)
+ax[0].set_title(f<span style="color: #98be65;">"&#50896;&#48376; (&#51221;&#45813;:</span>{true_label}<span style="color: #98be65;">)"</span>)
+ax[1].imshow(overlay_heatmap(sample, heatmap))
+ax[1].set_title(f<span style="color: #98be65;">"Grad-CAM (&#50696;&#52769;:</span>{pred}<span style="color: #98be65;">)"</span>)
+<span style="color: #51afef;">for</span> a <span style="color: #51afef;">in</span> ax: a.axis(<span style="color: #98be65;">'off'</span>)
+plt.tight_layout(); plt.show()
+</code></pre>
+</div>
+
+<pre class="example" id="orgc337796">
+---------------------------------------------------------------------------
+AttributeError                            Traceback (most recent call last)
+Cell In[99], line 8
+      5 true_label = class_names[y_val[0]]
+      6 arr = sample[np.newaxis, ...]           # (1,28,28,1)
+----&gt; 8 heatmap = make_gradcam_heatmap(arr, explain_model, last_conv_name)
+      9 pred = class_names[np.argmax(explain_model.predict(arr, verbose=0)[0])]
+     11 fig, ax = plt.subplots(1, 2, figsize=(8, 4))
+
+Cell In[97], line 17, in make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index)
+      5 """한 이미지에 대한 Grad-CAM heatmap을 계산한다.
+      6 인자:
+      7   - img_array: (1, 28, 28, 1) 형태의 입력 이미지 batch
+   (...)     12   - 0~1로 정규화된 2차원 heatmap (numpy array)
+     13 """
+     14 # 입력 -&gt; (마지막 conv 출력, 최종 예측) 두 가지를 함께 내보내는 model
+     15 grad_model = tf.keras.models.Model(
+     16     model.inputs,
+---&gt; 17     [model.get_layer(last_conv_layer_name).output, model.output])
+     19 # GradientTape: 연산 과정을 기록해 gradient(미분)를 자동 계산
+     20 with tf.GradientTape() as tape:
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:349, in Operation.output(self)
+    339 @property
+    340 def output(self):
+    341     """Retrieves the output tensor(s) of a layer.
+    342 
+    343     Only returns the tensor(s) corresponding to the *first time*
+   (...)    347         Output tensor or list of output tensors.
+    348     """
+--&gt; 349     return self._get_node_attribute_at_index(0, "output_tensors", "output")
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:368, in Operation._get_node_attribute_at_index(self, node_index, attr, attr_name)
+    352 """Private utility to retrieves an attribute (e.g. inputs) from a node.
+    353 
+    354 This is used to implement the properties:
+   (...)    365     The operation's attribute `attr` at the node of index `node_index`.
+    366 """
+    367 if not self._inbound_nodes:
+--&gt; 368     raise AttributeError(
+    369         f"The layer {self.name} has never been called "
+    370         f"and thus has no defined {attr_name}."
+    371     )
+    372 if not len(self._inbound_nodes) &gt; node_index:
+    373     raise ValueError(
+    374         f"Asked to get {attr_name} at node "
+    375         f"{node_index}, but the operation has only "
+    376         f"{len(self._inbound_nodes)} inbound nodes."
+    377     )
+
+AttributeError: The layer sequential_13 has never been called and thus has no defined output.
+</pre>
+</div>
+</div>
+<div id="outline-container-orgf7b71ae" class="outline-3">
+<h3 id="orgf7b71ae"><span class="section-number-3">11.7.</span> 9-2. 여러 글자 격자 비교</h3>
+<div class="outline-text-3" id="text-11-7">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50668;&#47084; &#51060;&#48120;&#51648;&#47484; &#47784;&#50500; &#44544;&#51088;&#48324;&#47196; model&#51060; &#51452;&#47785;&#54616;&#45716; &#48512;&#50948;&#47484; &#48708;&#44368;&#54620;&#45796;.
+</span>plt.figure(figsize<span style="color: #51afef;">=</span>(12, 6))
+<span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(8):
+    <span style="color: #dcaeea;">sample</span> <span style="color: #51afef;">=</span> X_val[i]
+    <span style="color: #dcaeea;">arr</span> <span style="color: #51afef;">=</span> sample[np.newaxis, ...]
+    <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> make_gradcam_heatmap(arr, explain_model, last_conv_name)
+    plt.subplot(2, 4, i <span style="color: #51afef;">+</span> 1)
+    plt.imshow(overlay_heatmap(sample, heatmap))
+    plt.title(class_names[y_val[i]]); plt.axis(<span style="color: #98be65;">'off'</span>)
+plt.tight_layout(); plt.show()
+</code></pre>
+</div>
+
+<pre class="example" id="org8a28e43">
+---------------------------------------------------------------------------
+AttributeError                            Traceback (most recent call last)
+Cell In[100], line 6
+      4 sample = X_val[i]
+      5 arr = sample[np.newaxis, ...]
+----&gt; 6 heatmap = make_gradcam_heatmap(arr, explain_model, last_conv_name)
+      7 plt.subplot(2, 4, i + 1)
+      8 plt.imshow(overlay_heatmap(sample, heatmap))
+
+Cell In[97], line 17, in make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index)
+      5 """한 이미지에 대한 Grad-CAM heatmap을 계산한다.
+      6 인자:
+      7   - img_array: (1, 28, 28, 1) 형태의 입력 이미지 batch
+   (...)     12   - 0~1로 정규화된 2차원 heatmap (numpy array)
+     13 """
+     14 # 입력 -&gt; (마지막 conv 출력, 최종 예측) 두 가지를 함께 내보내는 model
+     15 grad_model = tf.keras.models.Model(
+     16     model.inputs,
+---&gt; 17     [model.get_layer(last_conv_layer_name).output, model.output])
+     19 # GradientTape: 연산 과정을 기록해 gradient(미분)를 자동 계산
+     20 with tf.GradientTape() as tape:
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:349, in Operation.output(self)
+    339 @property
+    340 def output(self):
+    341     """Retrieves the output tensor(s) of a layer.
+    342 
+    343     Only returns the tensor(s) corresponding to the *first time*
+   (...)    347         Output tensor or list of output tensors.
+    348     """
+--&gt; 349     return self._get_node_attribute_at_index(0, "output_tensors", "output")
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:368, in Operation._get_node_attribute_at_index(self, node_index, attr, attr_name)
+    352 """Private utility to retrieves an attribute (e.g. inputs) from a node.
+    353 
+    354 This is used to implement the properties:
+   (...)    365     The operation's attribute `attr` at the node of index `node_index`.
+    366 """
+    367 if not self._inbound_nodes:
+--&gt; 368     raise AttributeError(
+    369         f"The layer {self.name} has never been called "
+    370         f"and thus has no defined {attr_name}."
+    371     )
+    372 if not len(self._inbound_nodes) &gt; node_index:
+    373     raise ValueError(
+    374         f"Asked to get {attr_name} at node "
+    375         f"{node_index}, but the operation has only "
+    376         f"{len(self._inbound_nodes)} inbound nodes."
+    377     )
+
+AttributeError: The layer sequential_13 has never been called and thus has no defined output.
+</pre>
+<pre class="example">
+&lt;Figure size 1200x600 with 0 Axes&gt;
+</pre>
+</div>
+</div>
+<div id="outline-container-orgdc4db1d" class="outline-3">
+<h3 id="orgdc4db1d"><span class="section-number-3">11.8.</span> 9-3. 맞힘 vs 틀림 비교</h3>
+<div class="outline-text-3" id="text-11-8">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50696;&#52769;&#51060; &#47582;&#51008; &#44221;&#50864;&#50752; &#53952;&#47536; &#44221;&#50864;&#47484; &#45208;&#45600; heatmap&#51012; &#48708;&#44368;&#54620;&#45796;.
+</span><span style="color: #dcaeea;">preds_all</span> <span style="color: #51afef;">=</span> explain_model.predict(X_val[:300], verbose<span style="color: #51afef;">=</span>0)
+<span style="color: #dcaeea;">pred_idx</span> <span style="color: #51afef;">=</span> np.argmax(preds_all, axis<span style="color: #51afef;">=</span>1)
+
+<span style="color: #dcaeea;">correct_idx</span> <span style="color: #51afef;">=</span> [i <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(300) <span style="color: #51afef;">if</span> pred_idx[i] <span style="color: #51afef;">==</span> y_val[i]]
+<span style="color: #dcaeea;">wrong_idx</span>   <span style="color: #51afef;">=</span> [i <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(300) <span style="color: #51afef;">if</span> pred_idx[i] <span style="color: #51afef;">!=</span> y_val[i]]
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">show_row</span>(idx_list, title):
+    <span style="color: #dcaeea;">n</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">min</span>(4, <span style="color: #c678dd;">len</span>(idx_list))
+    <span style="color: #51afef;">if</span> n <span style="color: #51afef;">==</span> 0:
+        <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"(</span>{title}<span style="color: #98be65;">: &#54644;&#45817; &#49324;&#47168; &#50630;&#51020; -- model&#51060; &#45320;&#47924; &#51221;&#54869;&#54632;)"</span>); <span style="color: #51afef;">return</span>
+    plt.figure(figsize<span style="color: #51afef;">=</span>(12, 3.2))
+    <span style="color: #51afef;">for</span> j <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(n):
+        <span style="color: #dcaeea;">i</span> <span style="color: #51afef;">=</span> idx_list[j]
+        <span style="color: #dcaeea;">sample</span> <span style="color: #51afef;">=</span> X_val[i]
+        <span style="color: #dcaeea;">arr</span> <span style="color: #51afef;">=</span> sample[np.newaxis, ...]
+        <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> make_gradcam_heatmap(arr, explain_model, last_conv_name)
+        plt.subplot(1, n, j <span style="color: #51afef;">+</span> 1)
+        plt.imshow(overlay_heatmap(sample, heatmap))
+        plt.title(f<span style="color: #98be65;">"</span>{title}<span style="color: #a9a1e1;">\n</span><span style="color: #98be65;">&#51221;&#45813;:</span>{class_names[y_val[i]]}<span style="color: #98be65;"> "</span>
+                  f<span style="color: #98be65;">"&#50696;&#52769;:</span>{class_names[pred_idx[i]]}<span style="color: #98be65;">"</span>, fontsize<span style="color: #51afef;">=</span>9)
+        plt.axis(<span style="color: #98be65;">'off'</span>)
+    plt.tight_layout(); plt.show()
+
+show_row(correct_idx, <span style="color: #98be65;">"&#47582;&#55192;"</span>)
+show_row(wrong_idx, <span style="color: #98be65;">"&#53952;&#47548;"</span>)
+</code></pre>
+</div>
+
+<pre class="example" id="org8883bb5">
+---------------------------------------------------------------------------
+AttributeError                            Traceback (most recent call last)
+Cell In[101], line 25
+     22         plt.axis('off')
+     23     plt.tight_layout(); plt.show()
+---&gt; 25 show_row(correct_idx, "맞힘")
+     26 show_row(wrong_idx, "틀림")
+
+Cell In[101], line 17, in show_row(idx_list, title)
+     15 sample = X_val[i]
+     16 arr = sample[np.newaxis, ...]
+---&gt; 17 heatmap = make_gradcam_heatmap(arr, explain_model, last_conv_name)
+     18 plt.subplot(1, n, j + 1)
+     19 plt.imshow(overlay_heatmap(sample, heatmap))
+
+Cell In[97], line 17, in make_gradcam_heatmap(img_array, model, last_conv_layer_name, pred_index)
+      5 """한 이미지에 대한 Grad-CAM heatmap을 계산한다.
+      6 인자:
+      7   - img_array: (1, 28, 28, 1) 형태의 입력 이미지 batch
+   (...)     12   - 0~1로 정규화된 2차원 heatmap (numpy array)
+     13 """
+     14 # 입력 -&gt; (마지막 conv 출력, 최종 예측) 두 가지를 함께 내보내는 model
+     15 grad_model = tf.keras.models.Model(
+     16     model.inputs,
+---&gt; 17     [model.get_layer(last_conv_layer_name).output, model.output])
+     19 # GradientTape: 연산 과정을 기록해 gradient(미분)를 자동 계산
+     20 with tf.GradientTape() as tape:
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:349, in Operation.output(self)
+    339 @property
+    340 def output(self):
+    341     """Retrieves the output tensor(s) of a layer.
+    342 
+    343     Only returns the tensor(s) corresponding to the *first time*
+   (...)    347         Output tensor or list of output tensors.
+    348     """
+--&gt; 349     return self._get_node_attribute_at_index(0, "output_tensors", "output")
+
+File ~/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/ops/operation.py:368, in Operation._get_node_attribute_at_index(self, node_index, attr, attr_name)
+    352 """Private utility to retrieves an attribute (e.g. inputs) from a node.
+    353 
+    354 This is used to implement the properties:
+   (...)    365     The operation's attribute `attr` at the node of index `node_index`.
+    366 """
+    367 if not self._inbound_nodes:
+--&gt; 368     raise AttributeError(
+    369         f"The layer {self.name} has never been called "
+    370         f"and thus has no defined {attr_name}."
+    371     )
+    372 if not len(self._inbound_nodes) &gt; node_index:
+    373     raise ValueError(
+    374         f"Asked to get {attr_name} at node "
+    375         f"{node_index}, but the operation has only "
+    376         f"{len(self._inbound_nodes)} inbound nodes."
+    377     )
+
+AttributeError: The layer sequential_13 has never been called and thus has no defined output.
+</pre>
+<pre class="example">
+&lt;Figure size 1200x320 with 0 Axes&gt;
+</pre>
+
+<p>
+틀린 경우의 heatmap에서는 model이 손 모양의 핵심이 아니라 가장자리나
+배경 쪽을 보는 경우가 종종 보입니다. 이것이 &ldquo;데이터셋과 실제 입력의
+차이(domain gap)&rdquo;를 보여주는 단서입니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-step10" class="outline-2">
+<h2 id="step10"><span class="section-number-2">12.</span> 10단계: 종합 Interactive Demo (Gradio)</h2>
+<div class="outline-text-2" id="text-step10">
+</div>
+<div id="outline-container-orgd4bdc80" class="outline-3">
+<h3 id="orgd4bdc80"><span class="section-number-3">12.1.</span> 학습 목표</h3>
+<div class="outline-text-3" id="text-12-1">
+<ul class="org-ul">
+<li>예측 결과(숫자), 주목 영역(heatmap), 실시간 입력(webcam)을 한 화면에서
+통합 체험한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org12b8232" class="outline-3">
+<h3 id="org12b8232"><span class="section-number-3">12.2.</span> 왜 Gradio인가</h3>
+<div class="outline-text-3" id="text-12-2">
+<p>
+Gradio는 machine learning demo 전용 library로, Colab에서 안정적으로
+동작하고 webcam 입력을 자체 지원합니다. 설치 후 몇 줄이면 &ldquo;이미지 입력 -&gt;
+예측 + Grad-CAM&rdquo; 웹 interface가 만들어집니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">Colab&#50640;&#49436; Gradio &#49444;&#52824;
+</span>!pip install <span style="color: #51afef;">-</span>q gradio
+</code></pre>
+</div>
+
+<pre class="example">
+
+[notice] A new release of pip is available: 26.0.1 -&gt; 26.1.1
+[notice] To update, run: pip install --upgrade pip
+</pre>
+</div>
+</div>
+<div id="outline-container-org7aba093" class="outline-3">
+<h3 id="org7aba093"><span class="section-number-3">12.3.</span> 입력 흑백 변환 + 예측 + Grad-CAM 함수</h3>
+<div class="outline-text-3" id="text-12-3">
+<p>
+webcam이나 업로드 이미지는 컬러일 수 있으므로, model 입력에 맞게 흑백
+\(28 \times 28\) 로 변환하는 과정이 필요합니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> gradio <span style="color: #51afef;">as</span> gr
+<span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">predict_and_explain</span>(image):
+    <span style="color: #83898d;">"""&#51077;&#47141; &#51060;&#48120;&#51648;&#47484; &#48155;&#50500; &#50696;&#52769; &#44544;&#51088;&#50752; Grad-CAM &#51060;&#48120;&#51648;&#47484; &#48152;&#54872;&#54620;&#45796;.
+    &#51064;&#51088;:
+      - image: Gradio&#44032; &#51204;&#45804;&#54616;&#45716; (H, W, 3) &#46608;&#45716; (H, W) numpy &#51060;&#48120;&#51648; (0~255)
+    &#48152;&#54872;:
+      - (label &#54869;&#47456; dict, Grad-CAM overlay &#51060;&#48120;&#51648;)
+    """</span>
+    <span style="color: #51afef;">if</span> image <span style="color: #51afef;">is</span> <span style="color: #a9a1e1;">None</span>:
+        <span style="color: #51afef;">return</span> {}, <span style="color: #a9a1e1;">None</span>
+
+    <span style="color: #dcaeea;">img</span> <span style="color: #51afef;">=</span> tf.convert_to_tensor(image, dtype<span style="color: #51afef;">=</span>tf.float32)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#52972;&#47084;&#47732; &#55121;&#48177;&#51004;&#47196; &#48320;&#54872; (channel 3 -&gt; 1)
+</span>    <span style="color: #51afef;">if</span> img.shape.rank <span style="color: #51afef;">==</span> 3 <span style="color: #51afef;">and</span> img.shape[<span style="color: #51afef;">-</span>1] <span style="color: #51afef;">==</span> 3:
+        <span style="color: #dcaeea;">img</span> <span style="color: #51afef;">=</span> tf.image.rgb_to_grayscale(img)
+    <span style="color: #51afef;">elif</span> img.shape.rank <span style="color: #51afef;">==</span> 2:
+        <span style="color: #dcaeea;">img</span> <span style="color: #51afef;">=</span> img[..., tf.newaxis]
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">model &#51077;&#47141; &#53356;&#44592; 28x28&#47196; resize
+</span>    <span style="color: #dcaeea;">img</span> <span style="color: #51afef;">=</span> tf.image.resize(img, (28, 28)).numpy()   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(28,28,1)
+</span>    <span style="color: #dcaeea;">arr</span> <span style="color: #51afef;">=</span> img[np.newaxis, ...].astype(<span style="color: #98be65;">"float32"</span>)    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(1,28,28,1)
+</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50696;&#52769; &#54869;&#47456;
+</span>    <span style="color: #dcaeea;">probs</span> <span style="color: #51afef;">=</span> explain_model.predict(arr, verbose<span style="color: #51afef;">=</span>0)[0]
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">{&#44544;&#51088;: &#54869;&#47456;} &#54805;&#53468; (Gradio Label&#51060; &#51088;&#46041; &#54364;&#49884;)
+</span>    <span style="color: #dcaeea;">confidences</span> <span style="color: #51afef;">=</span> {class_names[i]: <span style="color: #c678dd;">float</span>(probs[i]) <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(NUM_CLASSES)}
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Grad-CAM heatmap &#44228;&#49328; &#48143; overlay
+</span>    <span style="color: #dcaeea;">heatmap</span> <span style="color: #51afef;">=</span> make_gradcam_heatmap(arr, explain_model, last_conv_name)
+    <span style="color: #dcaeea;">overlay</span> <span style="color: #51afef;">=</span> overlay_heatmap(img, heatmap)
+    <span style="color: #51afef;">return</span> confidences, overlay
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3f93fa0" class="outline-3">
+<h3 id="org3f93fa0"><span class="section-number-3">12.4.</span> Gradio interface 구성과 실행</h3>
+<div class="outline-text-3" id="text-12-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">gr.Interface(fn, inputs, outputs, ...):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- fn: &#51077;&#47141;&#51012; &#48155;&#50500; &#52636;&#47141;&#51012; &#47564;&#46300;&#45716; &#54632;&#49688;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- inputs: &#51077;&#47141; component (&#50668;&#44592;&#49440; image, webcam/&#50629;&#47196;&#46300; &#47784;&#46160; &#54728;&#50857;)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- outputs: &#52636;&#47141; component (&#50696;&#52769; label + Grad-CAM &#51060;&#48120;&#51648;)
+</span><span style="color: #dcaeea;">demo</span> <span style="color: #51afef;">=</span> gr.Interface(
+    fn<span style="color: #51afef;">=</span>predict_and_explain,
+    inputs<span style="color: #51afef;">=</span>gr.Image(sources<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"upload"</span>, <span style="color: #98be65;">"webcam"</span>], label<span style="color: #51afef;">=</span><span style="color: #98be65;">"&#49552; &#47784;&#50577; &#51077;&#47141;"</span>),
+    outputs<span style="color: #51afef;">=</span>[
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Label(num_top_classes): &#54869;&#47456;&#51060; &#45458;&#51008; &#49345;&#50948; &#47751; &#44060; class&#47484; &#54364;&#49884;
+</span>        gr.Label(num_top_classes<span style="color: #51afef;">=</span>3, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"&#50696;&#52769; &#44208;&#44284;"</span>),
+        gr.Image(label<span style="color: #51afef;">=</span><span style="color: #98be65;">"Grad-CAM (model&#51060; &#48376; &#50689;&#50669;)"</span>),
+    ],
+    title<span style="color: #51afef;">=</span><span style="color: #98be65;">"Sign Language MNIST &#51064;&#49885; + Grad-CAM"</span>,
+    description<span style="color: #51afef;">=</span><span style="color: #98be65;">"&#49552;&#51004;&#47196; ASL alphabet&#51012; &#47564;&#46308;&#50612; &#50629;&#47196;&#46300;&#54616;&#44144;&#45208; webcam&#51004;&#47196; &#52237;&#50612;&#48372;&#49464;&#50836;. "</span>
+                <span style="color: #98be65;">"&#51077;&#47141;&#51008; &#51088;&#46041;&#51004;&#47196; &#55121;&#48177; 28x28&#47196; &#48320;&#54872;&#46121;&#45768;&#45796;."</span>,
+)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">launch(share, debug):
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- share=True: &#50808;&#48512;&#50640;&#49436; &#51217;&#49549; &#44032;&#45733;&#54620; &#44277;&#50976; link &#49373;&#49457; (Colab &#44428;&#51109;)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- debug=True: &#50724;&#47448;&#47484; &#51088;&#49464;&#55176; &#52636;&#47141;
+</span>demo.launch(share<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>, debug<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+* Running on local URL:  http://127.0.0.1:7861
+* Running on public URL: https://4febaf8d65d1af5696.gradio.live
+
+This share link expires in 1 week. For free permanent hosting and GPU upgrades, run `gradio deploy` from the terminal in the working directory to deploy to Hugging Face Spaces (https://huggingface.co/spaces)
+</pre>
+</div>
+</div>
+<div id="outline-container-org3991191" class="outline-3">
+<h3 id="org3991191"><span class="section-number-3">12.5.</span> 종합 이해 포인트</h3>
+<div class="outline-text-3" id="text-12-5">
+<p>
+이 demo 한 화면에서 세 가지가 만납니다. 예측 글자(정확도라는 숫자),
+Grad-CAM(model이 주목한 영역), 그리고 webcam으로 넣는 실시간 입력입니다.
+학생은 &ldquo;내 손을 model이 어떻게 읽고, 어디를 보고 판단했는가&rdquo;를 직접
+경험하며 CNN의 동작을 통합적으로 이해하게 됩니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-step11" class="outline-2">
+<h2 id="step11"><span class="section-number-2">13.</span> 11단계: 마무리 &ndash; 한계와 다음 단계</h2>
+<div class="outline-text-2" id="text-step11">
+</div>
+<div id="outline-container-orgaee245c" class="outline-3">
+<h3 id="orgaee245c"><span class="section-number-3">13.1.</span> Domain gap</h3>
+<div class="outline-text-3" id="text-13-1">
+<p>
+흑백 dataset에서 정확도가 99%에 가까워도, webcam 실제 입력에서는 자주
+틀립니다. dataset의 이미지는 배경이 깔끔하고 손 위치/조명이 통제되어
+있지만, 교실에서 찍은 손은 배경이 복잡하고 흑백으로 변환하며 정보가
+손실되기 때문입니다. 이 차이를 domain gap이라 합니다.
+</p>
+
+<p>
+이것은 흑백 dataset을 선택한 대가이기도 합니다. 가볍고 빠른 대신, 실제
+환경과의 거리가 큽니다. &ldquo;왜 데이터셋에선 잘 맞는데 내 손은 틀릴까?&rdquo;라는
+질문은 그 자체로 훌륭한 토론거리이며, 더 다양한 augmentation이나 실제
+환경 데이터 추가가 해법이 될 수 있습니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org7c44b78" class="outline-3">
+<h3 id="org7c44b78"><span class="section-number-3">13.2.</span> 성능 개선 기법 정리</h3>
+<div class="outline-text-3" id="text-13-2">
+<p>
+이번 실습에서 누적한 기법은 Data Augmentation, Batch Normalization,
+Dropout, Transfer Learning이었습니다. 핵심은 기법의 개수가 아니라,
+<b>한 번에 하나씩 적용하고 그 효과를 측정하는 실험 태도</b> 입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org3ba181c" class="outline-3">
+<h3 id="org3ba181c"><span class="section-number-3">13.3.</span> 다음 단계: 움직이는 수어 (CNN + LSTM)</h3>
+<div class="outline-text-3" id="text-13-3">
+<p>
+Sign Language MNIST는 정지 이미지지만, 실제 수어 단어는 손의 <b>움직임</b> 을
+포함합니다(이 dataset에서 J, Z가 빠진 것도 그 때문입니다). 움직임을
+다루려면 각 frame을 CNN으로 특징 추출하고, 그 특징들의 순서를 LSTM(Long
+Short-Term Memory)으로 읽는 CNN+LSTM 구조가 필요합니다. 이것이 이 강의의
+자연스러운 다음 주제입니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd4d71dc" class="outline-2">
+<h2 id="orgd4d71dc"><span class="section-number-2">14.</span> 부록: 차시 운영 제안</h2>
+<div class="outline-text-2" id="text-14">
+<p>
+분량을 고려한 3개 묶음 구성입니다.
+</p>
+
+<ul class="org-ul">
+<li><b>1차시</b>: 0~3단계 (도입 / CNN 복습 / 데이터 준비 / baseline 구축)</li>
+<li><b>2차시</b>: 4~8단계 (기법 누적 추가와 비교 / 종합 비교)</li>
+<li><b>3차시</b>: 9~11단계 (Grad-CAM 해석 / Gradio 통합 demo / 마무리)</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: minwook Han</p>
+<p class="date">Created: 2026-05-28 Thu 22:18</p>
+</div>
+</body>
+</html>
