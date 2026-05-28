@@ -1,0 +1,1414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-05-28 Thu 22:54 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>심장병 예측으로 배우는 머신러닝</title>
+<meta name="author" content="머신러닝 실습 교안" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">심장병 예측으로 배우는 머신러닝
+<br />
+<span class="subtitle">데이터 하나로 끝까지 — 전처리부터 해석까지</span>
+</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgfae6c0e">1. 들어가기 전에</a>
+<ul>
+<li><a href="#orgc89013c">1.1. 전체 구성 (3레벨 8막)</a></li>
+<li><a href="#org740dba2">1.2. 준비물</a></li>
+</ul>
+</li>
+<li><a href="#org0e2bc7c">2. 워밍업 — 도구 미리 만져보기</a>
+<ul>
+<li><a href="#org83683e9">2.1. 0-1. 연습용 데이터 만들기 / 불러오기</a></li>
+<li><a href="#orgf38ab2a">2.2. 0-2. 데이터 들여다보기 (pandas 핵심)</a></li>
+<li><a href="#orga26dd15">2.3. 0-3. seaborn 주요 그래프 4종 연습</a></li>
+<li><a href="#org4d1f49c">2.4. 0-4. 데이터 나누기 &amp; 교차검증 연습 (sklearn)</a></li>
+<li><a href="#org331abd4">2.5. 0-5. 평가 지표 연습 (sklearn.metrics)</a></li>
+</ul>
+</li>
+<li><a href="#orgcf2657b">3. 레벨 1 — 데이터와 친해지기: &ldquo;심장병 데이터, 너는 누구냐&rdquo;</a>
+<ul>
+<li><a href="#org206ef39">3.1. 1막. 문제 정의 — &ldquo;무엇을 예측하는가&rdquo;</a></li>
+<li><a href="#org9ff5e64">3.2. 2막. 탐색적 분석 — &ldquo;그림으로 데이터 읽기&rdquo;</a></li>
+<li><a href="#org7097550">3.3. 3막. 전처리 — &ldquo;더러운 데이터 길들이기&rdquo;</a></li>
+</ul>
+</li>
+<li><a href="#org5c96d69">4. 레벨 2 — 모델 세우고 제대로 평가하기: &ldquo;예측을 넘어 신뢰로&rdquo;</a>
+<ul>
+<li><a href="#org57ebffc">4.1. 4막. 기준선 모델 — &ldquo;바닥선을 긋다&rdquo;</a></li>
+<li><a href="#org54d2e40">4.2. 5막. 평가지표 — &ldquo;정확도의 함정&rdquo;</a></li>
+</ul>
+</li>
+<li><a href="#org9ee60c3">5. 레벨 3 — 성능과 해석으로 완성하기: &ldquo;더 강하게, 더 투명하게&rdquo;</a>
+<ul>
+<li><a href="#org2650ce5">5.1. 6막. 특성공학과 규제 — &ldquo;특성을 다루는 손맛&rdquo;</a></li>
+<li><a href="#orgcbddc7d">5.2. 7막. 앙상블 — &ldquo;트리들의 힘을 모으다&rdquo;</a></li>
+<li><a href="#orgc573cb9">5.3. 8막. 해석과 마무리 — &ldquo;모델이 본 위험 요인&rdquo;</a></li>
+</ul>
+</li>
+<li><a href="#orgc411934">6. 부록: 단계별 자가 점검</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfae6c0e" class="outline-2">
+<h2 id="orgfae6c0e"><span class="section-number-2">1.</span> 들어가기 전에</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+이 교안은 「혼자 공부하는 머신러닝+딥러닝」을 마친 학생이, 배운 내용을
+*실무에 가까운 데이터 하나*에 끝까지 적용해 보는 연습입니다.
+</p>
+
+<p>
+여러 데이터를 얕게 훑는 대신, 심장병 데이터 *하나*를 가지고
+전처리 → 탐색 → 모델링 → 평가 → 해석까지 한 줄기로 꿰어 봅니다.
+이렇게 하면 &ldquo;머신러닝 프로젝트는 실제로 이렇게 흘러간다&rdquo;를 한 호흡에
+익힐 수 있습니다.
+</p>
+</div>
+<div id="outline-container-orgc89013c" class="outline-3">
+<h3 id="orgc89013c"><span class="section-number-3">1.1.</span> 전체 구성 (3레벨 8막)</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li><b>레벨 1 — 데이터와 친해지기</b>: 1막 문제 정의 / 2막 탐색 / 3막 전처리</li>
+<li><b>레벨 2 — 모델 세우고 제대로 평가하기</b>: 4막 기준선 모델 / 5막 평가지표</li>
+<li><b>레벨 3 — 성능과 해석으로 완성하기</b>: 6막 특성공학·규제 / 7막 앙상블 / 8막 해석</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org740dba2" class="outline-3">
+<h3 id="org740dba2"><span class="section-number-3">1.2.</span> 준비물</h3>
+<div class="outline-text-3" id="text-1-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060; &#49892;&#49845;&#50640; &#54596;&#50836;&#54620; &#46972;&#51060;&#48652;&#47084;&#47532;&#47484; &#54620; &#48264;&#50640; &#48520;&#47084;&#50741;&#45768;&#45796;.
+</span><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np                 <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49688;&#52824; &#44228;&#49328; (&#48176;&#50676;, &#54665;&#47148;)
+</span><span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd                <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54364; &#54805;&#53468; &#45936;&#51060;&#53552; &#45796;&#47336;&#44592; (&#50641;&#49472; &#44057;&#51008; &#44163;)
+</span><span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532; &#44536;&#47532;&#44592;
+</span><span style="color: #51afef;">import</span> seaborn <span style="color: #51afef;">as</span> sns              <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532;&#47484; &#45908; &#50696;&#49240;&#44172; + &#53685;&#44228; &#44536;&#47000;&#54532;
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">scikit-learn: &#47672;&#49888;&#47084;&#45789; &#46020;&#44396; &#47784;&#51020;
+</span><span style="color: #51afef;">from</span> sklearn.model_selection <span style="color: #51afef;">import</span> train_test_split, cross_val_score, GridSearchCV
+<span style="color: #51afef;">from</span> sklearn.preprocessing <span style="color: #51afef;">import</span> StandardScaler
+<span style="color: #51afef;">from</span> sklearn.linear_model <span style="color: #51afef;">import</span> LogisticRegression
+<span style="color: #51afef;">from</span> sklearn.ensemble <span style="color: #51afef;">import</span> RandomForestClassifier, GradientBoostingClassifier
+<span style="color: #51afef;">from</span> sklearn.metrics <span style="color: #51afef;">import</span> (confusion_matrix, classification_report,
+                             roc_curve, roc_auc_score, precision_recall_curve)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532;&#44032; &#45432;&#53944;&#48513; &#50504;&#50640; &#48148;&#47196; &#48372;&#51060;&#46020;&#47197; &#49444;&#51221;
+</span><span style="color: #51afef;">%</span>matplotlib inline
+sns.set_style(<span style="color: #98be65;">"whitegrid"</span>)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#55152; &#48176;&#44221;&#50640; &#44201;&#51088; &#49828;&#53440;&#51068;
+</span>
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51456;&#48708; &#50756;&#47308;"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+준비 완료
+</pre>
+
+<blockquote>
+<p>
+<b>참고</b>: 그래프의 제목과 축 이름은 모두 영어로 적습니다.
+matplotlib 기본 설정에서는 한글이 깨질 수 있기 때문입니다.
+한글 설명은 그래프 *바깥*(이 교안의 본문)에서 합니다.
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+<div id="outline-container-org0e2bc7c" class="outline-2">
+<h2 id="org0e2bc7c"><span class="section-number-2">2.</span> 워밍업 — 도구 미리 만져보기</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+본 실습에 들어가기 전에, 앞으로 계속 쓸 *주요 함수들*을 작은 장난감
+데이터로 한 번씩 연습합니다. 여기서 손에 익혀두면 본 실습에서 같은
+함수가 나와도 당황하지 않습니다. 이 섹션의 데이터는 심장병과 무관한
+*연습용*이니 부담 없이 돌려보세요.
+</p>
+</div>
+<div id="outline-container-org83683e9" class="outline-3">
+<h3 id="org83683e9"><span class="section-number-3">2.1.</span> 0-1. 연습용 데이터 만들기 / 불러오기</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+seaborn에는 연습용 데이터가 내장돼 있습니다. 가장 유명한 =tips=(식당
+팁) 데이터를 씁니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">sns.load_dataset: seaborn &#45236;&#51109; &#50672;&#49845;&#50857; &#45936;&#51060;&#53552;&#47484; &#48520;&#47084;&#50740;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#51064;&#51088;: &#45936;&#51060;&#53552; &#51060;&#47492; (&#50696;: "tips", "iris", "titanic")
+</span><span style="color: #dcaeea;">tips</span> <span style="color: #51afef;">=</span> sns.load_dataset(<span style="color: #98be65;">"tips"</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50612;&#46500; &#52972;&#47100;&#51060; &#51080;&#45716;&#51648; &#48120;&#47532;&#48372;&#44592;
+</span>tips.head()
+</code></pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51649;&#51217; &#51089;&#51008; &#54364;&#47484; &#47564;&#46308; &#49688;&#46020; &#51080;&#49845;&#45768;&#45796; (pd.DataFrame)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#46357;&#49492;&#45320;&#47532;&#51032; key&#44032; &#52972;&#47100; &#51060;&#47492;, value&#44032; &#44536; &#52972;&#47100;&#51032; &#44050;&#46308;
+</span><span style="color: #dcaeea;">toy</span> <span style="color: #51afef;">=</span> pd.DataFrame({
+    <span style="color: #98be65;">"score"</span>: [50, 60, 70, 80, 90],
+    <span style="color: #98be65;">"pass"</span>:  [0,  0,  1,  1,  1]
+})
+toy
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf38ab2a" class="outline-3">
+<h3 id="orgf38ab2a"><span class="section-number-3">2.2.</span> 0-2. 데이터 들여다보기 (pandas 핵심)</h3>
+<div class="outline-text-3" id="text-2-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">shape: (&#54665; &#49688;, &#50676; &#49688;)
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#53356;&#44592;:"</span>, tips.shape)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">info(): &#52972;&#47100;&#48324; &#51088;&#47308;&#54805;&#44284; &#48712; &#44050; &#50668;&#48512;
+</span>tips.info()
+</code></pre>
+</div>
+
+<pre class="example" id="org17cd946">
+크기: (244, 7)
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 244 entries, 0 to 243
+Data columns (total 7 columns):
+ #   Column      Non-Null Count  Dtype   
+---  ------      --------------  -----   
+ 0   total_bill  244 non-null    float64 
+ 1   tip         244 non-null    float64 
+ 2   sex         244 non-null    category
+ 3   smoker      244 non-null    category
+ 4   day         244 non-null    category
+ 5   time        244 non-null    category
+ 6   size        244 non-null    int64   
+dtypes: category(4), float64(2), int64(1)
+memory usage: 7.4 KB
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">describe(): &#49707;&#51088; &#52972;&#47100;&#51032; &#53685;&#44228; &#50836;&#50557; (&#54217;&#44512;, &#52572;&#49548;/&#52572;&#45824; &#46321;)
+</span>tips.describe()
+</code></pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">value_counts(): &#54620; &#52972;&#47100;&#50640;&#49436; &#44033; &#44050;&#51060; &#47751; &#48264; &#45208;&#50724;&#45716;&#51648;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">&#48276;&#51452;&#54805;(&#50836;&#51068;, &#49457;&#48324; &#46321;)&#50640;&#49436; &#53945;&#55176; &#50976;&#50857;
+</span><span style="color: #c678dd;">print</span>(tips[<span style="color: #98be65;">"day"</span>].value_counts())
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">isnull().sum(): &#52972;&#47100;&#48324; &#48712; &#44050; &#44060;&#49688; &#8594; &#44208;&#52769;&#52824; &#51216;&#44160;&#51032; &#44592;&#48376;
+</span><span style="color: #c678dd;">print</span>(tips.isnull().<span style="color: #c678dd;">sum</span>())
+</code></pre>
+</div>
+
+<pre class="example" id="org0e1523a">
+day
+Sat     87
+Sun     76
+Thur    62
+Fri     19
+Name: count, dtype: int64
+total_bill    0
+tip           0
+sex           0
+smoker        0
+day           0
+time          0
+size          0
+dtype: int64
+</pre>
+</div>
+</div>
+<div id="outline-container-orga26dd15" class="outline-3">
+<h3 id="orga26dd15"><span class="section-number-3">2.3.</span> 0-3. seaborn 주요 그래프 4종 연습</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+본 실습에서 쓰는 그래프 함수들을 여기서 미리 그려봅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">(1) countplot: &#44033; &#44050;&#51032; '&#44060;&#49688;'&#47484; &#47561;&#45824;&#47196;
+</span><span style="color: #5B6268;">#     </span><span style="color: #5B6268;">&#48376; &#49892;&#49845;&#50640;&#49436; &#54872;&#51088;/&#51221;&#49345; &#44060;&#49688; &#49472; &#46412; &#49324;&#50857;
+</span>plt.figure(figsize<span style="color: #51afef;">=</span>(5, 4))
+sns.countplot(x<span style="color: #51afef;">=</span><span style="color: #98be65;">"day"</span>, data<span style="color: #51afef;">=</span>tips)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">x: &#49472; &#52972;&#47100;, data: &#45936;&#51060;&#53552;
+</span>plt.title(<span style="color: #98be65;">"Count by Day"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org9c572f7" class="figure">
+<p><img src="images/dcb3e3bee12c6c42da6c82ea1240522d2c84634c.png" alt="dcb3e3bee12c6c42da6c82ea1240522d2c84634c.png" />
+</p>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">(2) histplot: &#48516;&#54252;&#47484; &#47561;&#45824;(&#55176;&#49828;&#53664;&#44536;&#47016;)&#47196;
+</span><span style="color: #5B6268;">#     </span><span style="color: #5B6268;">hue&#47196; &#44536;&#47353;&#51012; &#49353;&#44628;&#47196; &#45208;&#45600; &#48708;&#44368; &#8594; &#48376; &#49892;&#49845;&#50640;&#49436; &#54872;&#51088;/&#51221;&#49345; &#48516;&#54252; &#48708;&#44368;&#50640; &#49324;&#50857;
+</span>plt.figure(figsize<span style="color: #51afef;">=</span>(6, 4))
+sns.histplot(data<span style="color: #51afef;">=</span>tips, x<span style="color: #51afef;">=</span><span style="color: #98be65;">"total_bill"</span>, hue<span style="color: #51afef;">=</span><span style="color: #98be65;">"sex"</span>, kde<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)
+<span style="color: #5B6268;">#   </span><span style="color: #5B6268;">x: &#48516;&#54252;&#47484; &#48380; &#52972;&#47100; / hue: &#49353;&#51004;&#47196; &#45208;&#45580; &#44536;&#47353; / kde: &#47588;&#45124;&#47084;&#50868; &#44257;&#49440; &#52628;&#44032;
+</span>plt.title(<span style="color: #98be65;">"Total Bill Distribution by Sex"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org660e3ae" class="figure">
+<p><img src="images/7b02b3f786ece4dd78201da30fb6b237eabcba2c.png" alt="7b02b3f786ece4dd78201da30fb6b237eabcba2c.png" />
+</p>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">(3) heatmap: &#49707;&#51088; &#54364;&#47484; &#49353;&#51004;&#47196; &#8594; &#48376; &#49892;&#49845;&#50640;&#49436; &#49345;&#44288;&#44288;&#44228;, &#54844;&#46041;&#54665;&#47148;&#50640; &#49324;&#50857;
+</span>plt.figure(figsize<span style="color: #51afef;">=</span>(6, 5))
+<span style="color: #dcaeea;">corr</span> <span style="color: #51afef;">=</span> tips.corr(numeric_only<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49707;&#51088; &#52972;&#47100;&#45180;&#47532; &#49345;&#44288;&#44228;&#49688;
+</span>sns.heatmap(corr, annot<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>, fmt<span style="color: #51afef;">=</span><span style="color: #98be65;">".2f"</span>, cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">"coolwarm"</span>)
+<span style="color: #5B6268;">#   </span><span style="color: #5B6268;">annot: &#52856;&#50640; &#49707;&#51088; &#54364;&#49884; / fmt: &#49707;&#51088; &#54805;&#49885; / cmap: &#49353; &#48176;&#54633;
+</span>plt.title(<span style="color: #98be65;">"Correlation Heatmap (practice)"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="orgffd8a47" class="figure">
+<p><img src="images/aadd8e95503997b820d1cdbff8b3306842372868.png" alt="aadd8e95503997b820d1cdbff8b3306842372868.png" />
+</p>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">(4) barplot: &#44536;&#47353;&#48324; '&#54217;&#44512;&#44050;'&#51012; &#47561;&#45824;&#47196; (&#44060;&#49688;&#44032; &#50500;&#45784;&#50640; &#51452;&#51032;!)
+</span><span style="color: #5B6268;">#     </span><span style="color: #5B6268;">&#48376; &#49892;&#49845;&#50640;&#49436; &#53945;&#49457; &#51473;&#50836;&#46020;&#47484; &#44536;&#47540; &#46412; &#49324;&#50857;
+</span>plt.figure(figsize<span style="color: #51afef;">=</span>(5, 4))
+sns.barplot(x<span style="color: #51afef;">=</span><span style="color: #98be65;">"day"</span>, y<span style="color: #51afef;">=</span><span style="color: #98be65;">"total_bill"</span>, data<span style="color: #51afef;">=</span>tips)
+<span style="color: #5B6268;">#   </span><span style="color: #5B6268;">x: &#44536;&#47353; / y: &#54217;&#44512; &#45244; &#44050; &#8594; &#50836;&#51068;&#48324; &#54217;&#44512; &#44208;&#51228;&#50529;
+</span>plt.title(<span style="color: #98be65;">"Average Bill by Day"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="orge2eb071" class="figure">
+<p><img src="images/986ab50c3d2e10354d6bea75505b281442a4e363.png" alt="986ab50c3d2e10354d6bea75505b281442a4e363.png" />
+</p>
+</div>
+
+<blockquote>
+<p>
+<b>countplot vs barplot 헷갈리지 않기</b>: <code>countplot</code> 은 *개수*를 세고,
+<code>barplot</code> 은 그룹별 *평균*을 냅니다. &ldquo;몇 개?&rdquo;면 countplot, &ldquo;평균 얼마?&rdquo;면
+barplot입니다.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org4d1f49c" class="outline-3">
+<h3 id="org4d1f49c"><span class="section-number-3">2.4.</span> 0-4. 데이터 나누기 &amp; 교차검증 연습 (sklearn)</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+본 실습의 핵심 도구인 분할·교차검증을 장난감 데이터로 맛봅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> sklearn.model_selection <span style="color: #51afef;">import</span> train_test_split, cross_val_score
+<span style="color: #51afef;">from</span> sklearn.linear_model <span style="color: #51afef;">import</span> LogisticRegression
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50672;&#49845;&#50857; &#51077;&#47141; X&#50752; &#51221;&#45813; y
+</span><span style="color: #dcaeea;">X_toy</span> <span style="color: #51afef;">=</span> tips[[<span style="color: #98be65;">"total_bill"</span>, <span style="color: #98be65;">"size"</span>]]            <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51077;&#47141;: &#44208;&#51228;&#50529;, &#51064;&#50896;&#49688;
+</span><span style="color: #dcaeea;">y_toy</span> <span style="color: #51afef;">=</span> (tips[<span style="color: #98be65;">"tip"</span>] <span style="color: #51afef;">&gt;</span> 3).astype(<span style="color: #c678dd;">int</span>)           <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51221;&#45813;: &#54017;&#51060; 3 &#52488;&#44284;&#47732; 1
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">train_test_split: &#54984;&#47144;&#50857;/&#49884;&#54744;&#50857;&#51004;&#47196; &#45208;&#45588;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- test_size=0.25: 25%&#47484; &#49884;&#54744;&#50857;&#51004;&#47196;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- random_state: &#44208;&#44284; &#44256;&#51221;(&#51116;&#54788;&#49457;)
+</span><span style="color: #dcaeea;">X_tr</span>, <span style="color: #dcaeea;">X_te</span>, <span style="color: #dcaeea;">y_tr</span>, <span style="color: #dcaeea;">y_te</span> <span style="color: #51afef;">=</span> train_test_split(
+    X_toy, y_toy, test_size<span style="color: #51afef;">=</span>0.25, random_state<span style="color: #51afef;">=</span>0)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54984;&#47144; &#53356;&#44592;:"</span>, X_tr.shape, <span style="color: #98be65;">" &#49884;&#54744; &#53356;&#44592;:"</span>, X_te.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+훈련 크기: (183, 2)  시험 크기: (61, 2)
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">cross_val_score: &#44368;&#52264;&#44160;&#51613;&#51004;&#47196; &#47784;&#45944; &#49457;&#45733;&#51012; &#50668;&#47084; &#48264; &#52769;&#51221;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#52395; &#51064;&#51088;: &#47784;&#45944;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#44536;&#45796;&#51020; X, y: &#45936;&#51060;&#53552;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- cv=5: 5&#51312;&#44033;&#51004;&#47196; &#45208;&#45600; 5&#48264; &#44160;&#51613;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#48152;&#54872;&#44050;: 5&#44060;&#51032; &#51216;&#49688; &#48176;&#50676;
+</span><span style="color: #dcaeea;">scores</span> <span style="color: #51afef;">=</span> cross_val_score(LogisticRegression(max_iter<span style="color: #51afef;">=</span>1000),
+                         X_toy, y_toy, cv<span style="color: #51afef;">=</span>5)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#44368;&#52264;&#44160;&#51613; &#51216;&#49688; 5&#44060;:"</span>, scores.<span style="color: #c678dd;">round</span>(3))
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54217;&#44512;:"</span>, scores.mean().<span style="color: #c678dd;">round</span>(3))   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48372;&#53685; &#54217;&#44512;&#51012; &#45824;&#54364;&#44050;&#51004;&#47196; &#48388;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+교차검증 점수 5개: [0.673 0.755 0.714 0.837 0.646]
+평균: 0.725
+</pre>
+
+<blockquote>
+<p>
+<b>왜 교차검증?</b> 한 번만 나눠 측정하면 &ldquo;운 좋게/나쁘게&rdquo; 나뉜 것일 수
+있습니다. 여러 번 나눠 평균을 내면 더 <b>믿을 만한</b> 성능 추정이 됩니다.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org331abd4" class="outline-3">
+<h3 id="org331abd4"><span class="section-number-3">2.5.</span> 0-5. 평가 지표 연습 (sklearn.metrics)</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+본 실습에서 가장 중요한 *혼동행렬*과 *지표 보고서*를 미리 봅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> sklearn.metrics <span style="color: #51afef;">import</span> confusion_matrix, classification_report
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50500;&#51452; &#51089;&#51008; &#50696;&#49884;: &#49892;&#51228; &#51221;&#45813;&#44284; &#47784;&#45944; &#50696;&#52769;
+</span><span style="color: #dcaeea;">y_true</span> <span style="color: #51afef;">=</span> [1, 1, 0, 0, 1, 0]   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51652;&#51676;
+</span><span style="color: #dcaeea;">y_hat</span>  <span style="color: #51afef;">=</span> [1, 0, 0, 0, 1, 1]   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50696;&#52769; (2&#44060; &#53952;&#47548;)
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">confusion_matrix: &#47582;&#52644;/&#53952;&#47548;&#51012; 4&#52856; &#54364;&#47196;
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54844;&#46041;&#54665;&#47148;:"</span>)
+<span style="color: #c678dd;">print</span>(confusion_matrix(y_true, y_hat))
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">classification_report: &#51221;&#48128;&#46020;/&#51116;&#54788;&#50984;/F1&#51012; &#54620; &#48264;&#50640;
+</span><span style="color: #c678dd;">print</span>(classification_report(y_true, y_hat))
+</code></pre>
+</div>
+
+<pre class="example" id="orge56b10f">
+혼동행렬:
+[[2 1]
+ [1 2]]
+              precision    recall  f1-score   support
+
+           0       0.67      0.67      0.67         3
+           1       0.67      0.67      0.67         3
+
+    accuracy                           0.67         6
+   macro avg       0.67      0.67      0.67         6
+weighted avg       0.67      0.67      0.67         6
+</pre>
+
+<p>
+이 지표들의 *의미*는 본 실습 5막에서 의료 맥락으로 자세히 다룹니다.
+지금은 &ldquo;이런 함수가 이런 표를 내놓는다&rdquo;만 눈에 익히면 충분합니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcf2657b" class="outline-2">
+<h2 id="orgcf2657b"><span class="section-number-2">3.</span> 레벨 1 — 데이터와 친해지기: &ldquo;심장병 데이터, 너는 누구냐&rdquo;</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+머신러닝에서 가장 흔한 실수는 데이터를 이해하기도 전에 모델부터 돌리는
+것입니다. 레벨 1에서는 <b>모델을 한 줄도 쓰지 않습니다</b>. 대신 데이터가
+무엇인지 충분히 친해집니다.
+</p>
+</div>
+<div id="outline-container-org206ef39" class="outline-3">
+<h3 id="org206ef39"><span class="section-number-3">3.1.</span> 1막. 문제 정의 — &ldquo;무엇을 예측하는가&rdquo;</h3>
+<div class="outline-text-3" id="text-3-1">
+</div>
+<div id="outline-container-org336da20" class="outline-4">
+<h4 id="org336da20"><span class="section-number-4">3.1.1.</span> 무슨 문제인가</h4>
+<div class="outline-text-4" id="text-3-1-1">
+<p>
+우리가 가진 데이터는 환자 약 303명의 건강 기록입니다. 각 사람마다 나이,
+혈압, 콜레스테롤 같은 13가지 정보가 있고, 마지막에 *심장병이 있는지
+없는지*가 적혀 있습니다.
+</p>
+
+<p>
+우리의 목표는 이겁니다: <b>13가지 정보를 보고, 이 사람이 심장병이 있는지
+맞히는 모델 만들기.</b> 정답이 &ldquo;있다/없다&rdquo; 둘 중 하나이므로 이것은
+<b>이진 분류(binary classification)</b> 문제입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org270b489" class="outline-4">
+<h4 id="org270b489"><span class="section-number-4">3.1.2.</span> 데이터 불러오기</h4>
+<div class="outline-text-4" id="text-3-1-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">UCI &#49900;&#51109;&#48337; &#45936;&#51060;&#53552;&#47484; &#51064;&#53552;&#45367;&#50640;&#49436; &#48148;&#47196; &#48520;&#47084;&#50741;&#45768;&#45796;.
+</span><span style="color: #dcaeea;">url</span> <span style="color: #51afef;">=</span> (<span style="color: #98be65;">"https://archive.ics.uci.edu/ml/machine-learning-databases/"</span>
+       <span style="color: #98be65;">"heart-disease/processed.cleveland.data"</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060; &#45936;&#51060;&#53552; &#54028;&#51068;&#50640;&#45716; &#52972;&#47100; &#51060;&#47492;&#51060; &#50630;&#51004;&#48064;&#47196; &#51649;&#51217; &#48537;&#50668;&#51469;&#45768;&#45796;.
+</span><span style="color: #dcaeea;">columns</span> <span style="color: #51afef;">=</span> [<span style="color: #98be65;">"age"</span>, <span style="color: #98be65;">"sex"</span>, <span style="color: #98be65;">"cp"</span>, <span style="color: #98be65;">"trestbps"</span>, <span style="color: #98be65;">"chol"</span>, <span style="color: #98be65;">"fbs"</span>, <span style="color: #98be65;">"restecg"</span>,
+           <span style="color: #98be65;">"thalach"</span>, <span style="color: #98be65;">"exang"</span>, <span style="color: #98be65;">"oldpeak"</span>, <span style="color: #98be65;">"slope"</span>, <span style="color: #98be65;">"ca"</span>, <span style="color: #98be65;">"thal"</span>, <span style="color: #98be65;">"target"</span>]
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">pd.read_csv: &#49788;&#54364;&#47196; &#44396;&#48516;&#46108; &#53581;&#49828;&#53944; &#54028;&#51068;&#51012; &#54364;&#47196; &#51069;&#45716; &#54632;&#49688;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- &#52395; &#48264;&#51704; &#51064;&#51088;(url): &#51069;&#50612;&#50732; &#54028;&#51068;&#51032; &#50948;&#52824;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- names: &#52972;&#47100;(&#50676;) &#51060;&#47492; &#47785;&#47197;&#51012; &#51649;&#51217; &#51648;&#51221;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- na_values: &#51060; &#44592;&#54840;&#44032; &#48372;&#51060;&#47732; '&#44208;&#52769;&#52824;(&#48712; &#44050;)'&#47196; &#52376;&#47532;&#54616;&#46972;&#45716; &#46907;. &#50668;&#44592;&#49440; "?"
+</span><span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.read_csv(url, names<span style="color: #51afef;">=</span>columns, na_values<span style="color: #51afef;">=</span><span style="color: #98be65;">"?"</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">df.head(): &#54364;&#51032; &#47592; &#50948; &#47751; &#51460;&#51012; &#48120;&#47532;&#48372;&#44592; (&#44592;&#48376; 5&#51460;)
+</span>df.head()
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org35ed057" class="outline-4">
+<h4 id="org35ed057"><span class="section-number-4">3.1.3.</span> 각 컬럼이 무슨 뜻일까</h4>
+<div class="outline-text-4" id="text-3-1-3">
+<p>
+컬럼 이름이 줄임말이라 낯설 겁니다. 하나씩 뜻을 알아야 데이터에 애착이
+생깁니다.
+</p>
+
+<ul class="org-ul">
+<li><code>age</code>: 나이</li>
+<li><code>sex</code>: 성별 (1 = 남성, 0 = 여성)</li>
+<li><code>cp</code>: 흉통(가슴 통증) 유형 — 숫자지만 사실은 4가지 *종류*를 나타냄</li>
+<li><code>trestbps</code>: 안정 시 혈압</li>
+<li><code>chol</code>: 콜레스테롤 수치</li>
+<li><code>fbs</code>: 공복 혈당이 120을 넘는지 (1/0)</li>
+<li><code>restecg</code>: 안정 시 심전도 결과 — 종류</li>
+<li><code>thalach</code>: 운동 중 최대 심박수</li>
+<li><code>exang</code>: 운동 중 협심증(가슴 통증) 발생 여부 (1/0)</li>
+<li><code>oldpeak</code>: 운동 후 심전도 변화 정도</li>
+<li><code>slope</code>: 심전도 곡선의 기울기 — 종류</li>
+<li><code>ca</code>: 색조 검사로 보이는 주요 혈관 수 (0~3)</li>
+<li><code>thal</code>: 지중해빈혈 검사 결과 — 종류</li>
+<li><code>target</code>: <b>정답.</b> 0 = 심장병 없음, 1~4 = 심장병 있음</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0e0a622" class="outline-4">
+<h4 id="org0e0a622"><span class="section-number-4">3.1.4.</span> 정답을 0과 1로 정리하기</h4>
+<div class="outline-text-4" id="text-3-1-4">
+<p>
+원래 target은 0,1,2,3,4 다섯 값입니다. 0은 &ldquo;없음&rdquo;, 나머지는 모두 &ldquo;있음&rdquo;의
+정도입니다. 우리는 &ldquo;있다/없다&rdquo;만 맞히면 되므로 1 이상을 전부 1로 합칩니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">(df["target"] &gt; 0): &#44033; &#44050;&#51060; 0&#48372;&#45796; &#53360;&#51648; &#44160;&#49324; &#8594; True/False &#44208;&#44284;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">.astype(int): True&#47484; 1, False&#47484; 0&#51004;&#47196; &#48148;&#45000;
+</span><span style="color: #dcaeea;">df</span>[<span style="color: #98be65;">"target"</span>] <span style="color: #51afef;">=</span> (df[<span style="color: #98be65;">"target"</span>] <span style="color: #51afef;">&gt;</span> 0).astype(<span style="color: #c678dd;">int</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">value_counts(): &#44033; &#44050;&#51060; &#47751; &#48264; &#45208;&#50724;&#45716;&#51648; &#49464;&#50612;&#51468;
+</span><span style="color: #c678dd;">print</span>(df[<span style="color: #98be65;">"target"</span>].value_counts())
+</code></pre>
+</div>
+
+<pre class="example">
+target
+0    164
+1    139
+Name: count, dtype: int64
+</pre>
+</div>
+</div>
+<div id="outline-container-orgc0e53a5" class="outline-4">
+<h4 id="orgc0e53a5"><span class="section-number-4">3.1.5.</span> 나의 가설 세우기</h4>
+<div class="outline-text-4" id="text-3-1-5">
+<p>
+모델을 돌리기 전에, *직접 추측*해 봅시다. 어떤 특성이 심장병과 관계가
+깊을까요? 예를 들어 &ldquo;나이가 많을수록&rdquo;, &ldquo;콜레스테롤이 높을수록&rdquo;,
+&ldquo;운동 중 가슴 통증이 있으면&rdquo; 위험할 것 같다고 적어 둡니다.
+</p>
+
+<p>
+이 가설은 8막에서 모델이 내놓은 결과와 *대조*할 것입니다. 내 직관이
+맞았는지 확인하는 재미가 이 프로젝트의 마지막 즐거움입니다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org9ff5e64" class="outline-3">
+<h3 id="org9ff5e64"><span class="section-number-3">3.2.</span> 2막. 탐색적 분석 — &ldquo;그림으로 데이터 읽기&rdquo;</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+숫자만 보면 머리에 안 들어옵니다. <b>그림으로</b> 봐야 데이터가 보입니다.
+이 단계를 EDA(Exploratory Data Analysis, 탐색적 데이터 분석)라고 합니다.
+</p>
+</div>
+<div id="outline-container-orgdc125bc" class="outline-4">
+<h4 id="orgdc125bc"><span class="section-number-4">3.2.1.</span> 먼저 전체를 훑어보기</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">df.info(): &#44033; &#52972;&#47100;&#51032; &#51088;&#47308;&#54805;&#44284; '&#48708;&#50612; &#51080;&#51648; &#50506;&#51008; &#44050;&#51032; &#44060;&#49688;'&#47484; &#48372;&#50668;&#51468;
+</span><span style="color: #5B6268;">#            </span><span style="color: #5B6268;">&#8594; &#44208;&#52769;&#52824;(&#48712; &#44050;)&#44032; &#50612;&#46356; &#51080;&#45716;&#51648; &#54620;&#45576;&#50640; &#54028;&#50501;
+</span>df.info()
+</code></pre>
+</div>
+
+<pre class="example" id="org4e3d294">
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 303 entries, 0 to 302
+Data columns (total 14 columns):
+ #   Column    Non-Null Count  Dtype  
+---  ------    --------------  -----  
+ 0   age       303 non-null    float64
+ 1   sex       303 non-null    float64
+ 2   cp        303 non-null    float64
+ 3   trestbps  303 non-null    float64
+ 4   chol      303 non-null    float64
+ 5   fbs       303 non-null    float64
+ 6   restecg   303 non-null    float64
+ 7   thalach   303 non-null    float64
+ 8   exang     303 non-null    float64
+ 9   oldpeak   303 non-null    float64
+ 10  slope     303 non-null    float64
+ 11  ca        299 non-null    float64
+ 12  thal      301 non-null    float64
+ 13  target    303 non-null    int64  
+dtypes: float64(13), int64(1)
+memory usage: 33.3 KB
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">df.describe(): &#49707;&#51088; &#52972;&#47100;&#46308;&#51032; &#53685;&#44228; &#50836;&#50557;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">&#54217;&#44512;(mean), &#54364;&#51456;&#54200;&#52264;(std), &#52572;&#49548;/&#52572;&#45824;, &#49324;&#48516;&#50948;&#49688; &#46321;&#51012; &#54364;&#47196;
+</span>df.describe()
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org717b5c7" class="outline-4">
+<h4 id="org717b5c7"><span class="section-number-4">3.2.2.</span> 정답은 균형 잡혀 있나 (불균형 확인)</h4>
+<div class="outline-text-4" id="text-3-2-2">
+<p>
+환자와 정상인의 수가 비슷한지 봅니다. 한쪽이 압도적으로 많으면(불균형)
+나중에 평가 방법을 신경 써야 합니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>plt.figure(figsize<span style="color: #51afef;">=</span>(5, 4))   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532; &#53356;&#44592; (&#44032;&#47196;, &#49464;&#47196; &#51064;&#52824;)
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">sns.countplot: &#44033; &#44050;&#51032; &#44060;&#49688;&#47484; &#47561;&#45824;&#47196; &#44536;&#47548;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- x: &#50612;&#46500; &#52972;&#47100;&#51012; &#49472;&#51648;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- data: &#45936;&#51060;&#53552; &#52636;&#52376;
+</span>sns.countplot(x<span style="color: #51afef;">=</span><span style="color: #98be65;">"target"</span>, data<span style="color: #51afef;">=</span>df)
+
+plt.title(<span style="color: #98be65;">"Target Distribution (0=No Disease, 1=Disease)"</span>)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51228;&#47785;(&#50689;&#50612;)
+</span>plt.xlabel(<span style="color: #98be65;">"Target"</span>)
+plt.ylabel(<span style="color: #98be65;">"Count"</span>)
+plt.show()   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532; &#54868;&#47732;&#50640; &#52636;&#47141;</span>
+</code></pre>
+</div>
+
+
+<div id="org633f730" class="figure">
+<p><img src="images/ff7108d9f03d4086d7e4682c950fc56e31faf30b.png" alt="ff7108d9f03d4086d7e4682c950fc56e31faf30b.png" />
+</p>
+</div>
+
+<p>
+심장병 데이터는 환자와 정상인이 대략 반반이라 크게 불균형하지 않습니다.
+그래도 &ldquo;균형을 먼저 확인한다&rdquo;는 습관 자체가 중요합니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org2c144e3" class="outline-4">
+<h4 id="org2c144e3"><span class="section-number-4">3.2.3.</span> 특성 하나하나가 환자/정상을 가르나</h4>
+<div class="outline-text-4" id="text-3-2-3">
+<p>
+연속형 특성(나이, 콜레스테롤 등)을 환자 그룹과 정상 그룹으로 나눠
+분포를 겹쳐 그립니다. 두 분포가 <b>많이 겹치면</b> 그 특성은 구별에 큰 도움이
+안 되고, <b>뚜렷이 갈라지면</b> 예측에 유용합니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50672;&#49549;&#54805; &#53945;&#49457; 4&#44060;&#47484; &#44264;&#46972; &#54620; &#54868;&#47732;&#50640; 2x2&#47196; &#44536;&#47549;&#45768;&#45796;.
+</span><span style="color: #dcaeea;">features</span> <span style="color: #51afef;">=</span> [<span style="color: #98be65;">"age"</span>, <span style="color: #98be65;">"thalach"</span>, <span style="color: #98be65;">"chol"</span>, <span style="color: #98be65;">"oldpeak"</span>]
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">plt.subplots: &#50668;&#47084; &#44536;&#47000;&#54532;&#47484; &#44201;&#51088;&#47196; &#48176;&#52824;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- 2, 2: 2&#54665; 2&#50676;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- figsize: &#51204;&#52404; &#53356;&#44592;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- axes: &#44033; &#52856;&#51012; &#44032;&#47532;&#53412;&#45716; &#48176;&#50676;
+</span><span style="color: #dcaeea;">fig</span>, <span style="color: #dcaeea;">axes</span> <span style="color: #51afef;">=</span> plt.subplots(2, 2, figsize<span style="color: #51afef;">=</span>(11, 8))
+
+<span style="color: #51afef;">for</span> feature, ax <span style="color: #51afef;">in</span> <span style="color: #c678dd;">zip</span>(features, axes.flatten()):
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">sns.histplot: &#55176;&#49828;&#53664;&#44536;&#47016;(&#48516;&#54252; &#47561;&#45824;&#44536;&#47000;&#54532;)
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- hue="target": &#51221;&#45813; &#44050;&#50640; &#46384;&#46972; &#49353;&#51012; &#45796;&#47476;&#44172;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- kde=True: &#48516;&#54252;&#47484; &#47588;&#45124;&#47084;&#50868; &#44257;&#49440;&#51004;&#47196;&#46020; &#54364;&#49884;
+</span>    <span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- ax: &#50612;&#45712; &#52856;&#50640; &#44536;&#47540;&#51648; &#51648;&#51221;
+</span>    sns.histplot(data<span style="color: #51afef;">=</span>df, x<span style="color: #51afef;">=</span>feature, hue<span style="color: #51afef;">=</span><span style="color: #98be65;">"target"</span>, kde<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>, ax<span style="color: #51afef;">=</span>ax)
+    ax.set_title(f<span style="color: #98be65;">"</span>{feature}<span style="color: #98be65;"> by Target"</span>)
+
+plt.tight_layout()   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536;&#47000;&#54532;&#45180;&#47532; &#44217;&#52824;&#51648; &#50506;&#44172; &#44036;&#44201; &#51088;&#46041; &#51312;&#51221;
+</span>plt.show()
+</code></pre>
+</div>
+
+
+<div id="org9c48bcb" class="figure">
+<p><img src="images/271715ebb7f0b579320cc8a814039bd81cb779aa.png" alt="271715ebb7f0b579320cc8a814039bd81cb779aa.png" />
+</p>
+</div>
+
+<p>
+여기서 무엇이 보이는지 직접 관찰하세요. 예를 들어 최대 심박수(<code>thalach</code>)는
+환자와 정상이 꽤 갈라져 보일 수 있습니다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgb7cdab2" class="outline-4">
+<h4 id="orgb7cdab2"><span class="section-number-4">3.2.4.</span> 특성끼리의 관계 (상관 히트맵)</h4>
+<div class="outline-text-4" id="text-3-2-4">
+<p>
+어떤 특성들이 서로 비슷하게 움직이는지 봅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>plt.figure(figsize<span style="color: #51afef;">=</span>(11, 9))
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">df.corr(): &#47784;&#46304; &#49707;&#51088; &#52972;&#47100; &#49933;&#51032; &#49345;&#44288;&#44228;&#49688; &#44228;&#49328; (-1 ~ +1)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">+1&#50640; &#44032;&#44620;&#50864;&#47732; &#44057;&#51060; &#52964;&#51648;&#44256;, -1&#51060;&#47732; &#48152;&#45824;&#47196; &#50880;&#51649;&#51076;
+</span><span style="color: #dcaeea;">corr</span> <span style="color: #51afef;">=</span> df.corr()
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">sns.heatmap: &#49707;&#51088; &#54364;&#47484; &#49353;&#51004;&#47196; &#54364;&#54788;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- annot=True: &#52856; &#50504;&#50640; &#49707;&#51088;&#46020; &#54364;&#49884;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- fmt=".2f": &#49707;&#51088;&#47484; &#49548;&#49688;&#51216; 2&#51088;&#47532;&#47196;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- cmap: &#49353; &#48176;&#54633;
+</span>sns.heatmap(corr, annot<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>, fmt<span style="color: #51afef;">=</span><span style="color: #98be65;">".2f"</span>, cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">"coolwarm"</span>)
+plt.title(<span style="color: #98be65;">"Correlation Heatmap"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="orga73f9b6" class="figure">
+<p><img src="images/9067ed59a95247cca37b108a84d34db69dc77f75.png" alt="9067ed59a95247cca37b108a84d34db69dc77f75.png" />
+</p>
+</div>
+
+<p>
+맨 아래 <code>target</code> 줄을 보면, 각 특성이 심장병과 얼마나 관련 있는지
+숫자로 확인할 수 있습니다. 1막에서 세운 가설과 비교해 보세요.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org7097550" class="outline-3">
+<h3 id="org7097550"><span class="section-number-3">3.3.</span> 3막. 전처리 — &ldquo;더러운 데이터 길들이기&rdquo;</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+실무 데이터는 깨끗하지 않습니다. 빈 값이 있고, 숫자처럼 보이지만 사실은
+&rsquo;종류&rsquo;인 값도 있습니다. 모델에 넣기 전에 다듬어야 합니다.
+</p>
+</div>
+<div id="outline-container-orgff7d458" class="outline-4">
+<h4 id="orgff7d458"><span class="section-number-4">3.3.1.</span> 결측치 찾고 채우기</h4>
+<div class="outline-text-4" id="text-3-3-1">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">df.isnull(): &#44033; &#52856;&#51060; &#48708;&#50632;&#51004;&#47732; True
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">.sum(): &#52972;&#47100;&#48324;&#47196; True(=&#48712; &#44050;) &#44060;&#49688;&#47484; &#45908;&#54632;
+</span><span style="color: #c678dd;">print</span>(df.isnull().<span style="color: #c678dd;">sum</span>())
+</code></pre>
+</div>
+
+<pre class="example" id="org5dcc845">
+age         0
+sex         0
+cp          0
+trestbps    0
+chol        0
+fbs         0
+restecg     0
+thalach     0
+exang       0
+oldpeak     0
+slope       0
+ca          4
+thal        2
+target      0
+dtype: int64
+</pre>
+
+<p>
+=ca=와 =thal=에 빈 값이 몇 개 있을 겁니다. 행을 통째로 버릴 수도 있지만,
+데이터가 적으니 <b>대표값으로 채우는</b> 방법을 씁니다. 이 두 컬럼은 &rsquo;종류&rsquo;를
+나타내므로 평균보다 <b>최빈값(가장 자주 나오는 값)</b> 으로 채우는 것이
+자연스럽습니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">for</span> col <span style="color: #51afef;">in</span> [<span style="color: #98be65;">"ca"</span>, <span style="color: #98be65;">"thal"</span>]:
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">df[col].mode(): &#52572;&#48712;&#44050;(&#46308;)&#51012; &#48152;&#54872; &#8594; [0]&#51004;&#47196; &#52395; &#48264;&#51704; &#44050; &#49440;&#53469;
+</span>    <span style="color: #dcaeea;">mode_value</span> <span style="color: #51afef;">=</span> df[col].mode()[0]
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">fillna: &#48712; &#44050;&#51012; &#51648;&#51221;&#54620; &#44050;&#51004;&#47196; &#52292;&#50880;
+</span>    <span style="color: #dcaeea;">df</span>[col] <span style="color: #51afef;">=</span> df[col].fillna(mode_value)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#44208;&#52769;&#52824; &#52376;&#47532; &#54980;:"</span>)
+<span style="color: #c678dd;">print</span>(df.isnull().<span style="color: #c678dd;">sum</span>().<span style="color: #c678dd;">sum</span>(), <span style="color: #98be65;">"&#44060; &#45224;&#51020;"</span>)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51204;&#52404; &#48712; &#44050; &#44060;&#49688;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+결측치 처리 후:
+0 개 남음
+</pre>
+
+<blockquote>
+<p>
+<b>왜 평균이 아니라 최빈값?</b> <code>ca</code>, =thal=은 &ldquo;1번 종류, 2번 종류&rdquo;처럼
+*분류*입니다. 종류의 평균(예: 1.7번 종류)은 의미가 없습니다. 그래서
+가장 흔한 종류로 채웁니다. 반대로 나이·혈압 같은 *연속형*이라면
+평균이나 중앙값이 적절합니다.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org73a259c" class="outline-4">
+<h4 id="org73a259c"><span class="section-number-4">3.3.2.</span> 범주형 인코딩 — 숫자의 함정</h4>
+<div class="outline-text-4" id="text-3-3-2">
+<p>
+<code>cp</code>, <code>restecg</code>, <code>slope</code>, =thal=은 숫자로 적혀 있지만 *크기 비교가 무의미한
+종류*입니다. 흉통 &rsquo;3번 유형&rsquo;이 &rsquo;1번 유형&rsquo;보다 3배 크거나 위험한 게 아니죠.
+이런 값을 그대로 두면 모델이 &ldquo;3 &gt; 1&rdquo;이라고 오해합니다.
+</p>
+
+<p>
+해결책은 <b>원-핫 인코딩(one-hot encoding)</b>: 각 종류마다 별도의 0/1 컬럼을
+만들어 줍니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50896;-&#54635; &#51064;&#53076;&#46377;&#54624; '&#51333;&#47448;&#54805;' &#52972;&#47100; &#47785;&#47197;
+</span><span style="color: #dcaeea;">categorical</span> <span style="color: #51afef;">=</span> [<span style="color: #98be65;">"cp"</span>, <span style="color: #98be65;">"restecg"</span>, <span style="color: #98be65;">"slope"</span>, <span style="color: #98be65;">"thal"</span>]
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">pd.get_dummies: &#48276;&#51452;&#54805;&#51012; 0/1 &#52972;&#47100; &#50668;&#47084; &#44060;&#47196; &#54204;&#52840;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- columns: &#50612;&#46500; &#52972;&#47100;&#51012; &#54204;&#52832;&#51648;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- drop_first=True: &#51333;&#47448;&#44032; n&#44060;&#47732; n-1&#44060; &#52972;&#47100;&#47564; &#49373;&#49457;
+</span><span style="color: #5B6268;">#                      </span><span style="color: #5B6268;">(&#51221;&#48372; &#49552;&#49892; &#50630;&#51060; &#52972;&#47100; &#49688;&#47484; &#51460;&#50668; &#51473;&#48373;&#51012; &#54588;&#54632;)
+</span><span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.get_dummies(df, columns<span style="color: #51afef;">=</span>categorical, drop_first<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51064;&#53076;&#46377; &#54980; &#52972;&#47100; &#49688;:"</span>, <span style="color: #ECBE7B;">df</span>.<span style="color: #ECBE7B;">shape</span>[1])   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">shape = (&#54665; &#49688;, &#50676; &#49688;)
+</span>df.head()
+</code></pre>
+</div>
+
+<pre class="example">
+인코딩 후 컬럼 수: 19
+</pre>
+</div>
+</div>
+<div id="outline-container-org08a335f" class="outline-4">
+<h4 id="org08a335f"><span class="section-number-4">3.3.3.</span> 입력(X)과 정답(y) 나누기, 그리고 훈련/테스트 분리</h4>
+<div class="outline-text-4" id="text-3-3-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">X: &#51221;&#45813;&#51012; &#48768; &#45208;&#47672;&#51648; &#51204;&#48512; (&#47784;&#45944;&#51032; &#51077;&#47141;)
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">y: &#51221;&#45813; &#52972;&#47100;&#47564;
+</span><span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> df.drop(<span style="color: #98be65;">"target"</span>, axis<span style="color: #51afef;">=</span>1)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">axis=1 &#51008; '&#50676;'&#51012; &#46907;&#54632;
+</span><span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"target"</span>]
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">train_test_split: &#45936;&#51060;&#53552;&#47484; &#54984;&#47144;&#50857;/&#49884;&#54744;&#50857;&#51004;&#47196; &#45208;&#45588;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- test_size=0.2: 20%&#47484; &#49884;&#54744;&#50857;&#51004;&#47196;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- random_state=42: &#47588;&#48264; &#44057;&#51008; &#48169;&#49885;&#51004;&#47196; &#45208;&#45572;&#46020;&#47197; &#44256;&#51221;(&#51116;&#54788;&#49457;)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- stratify=y: &#54984;&#47144;/&#49884;&#54744; &#50577;&#51901;&#51032; &#54872;&#51088; &#48708;&#50984;&#51012; &#46609;&#44057;&#51060; &#50976;&#51648;
+</span><span style="color: #dcaeea;">X_train</span>, <span style="color: #dcaeea;">X_test</span>, <span style="color: #dcaeea;">y_train</span>, <span style="color: #dcaeea;">y_test</span> <span style="color: #51afef;">=</span> train_test_split(
+    X, y, test_size<span style="color: #51afef;">=</span>0.2, random_state<span style="color: #51afef;">=</span>42, stratify<span style="color: #51afef;">=</span>y)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54984;&#47144;:"</span>, X_train.shape, <span style="color: #98be65;">" &#49884;&#54744;:"</span>, X_test.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+훈련: (242, 18)  시험: (61, 18)
+</pre>
+
+<blockquote>
+<p>
+<b>왜 나누나?</b> 시험 데이터는 &ldquo;처음 보는 환자&rdquo;를 흉내 냅니다. 시험 데이터로는
+<b>절대 학습하지 않고</b>, 마지막에 성능 측정에만 씁니다. 그래야 실제 새 환자에
+대한 성능을 정직하게 알 수 있습니다.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgadf103e" class="outline-4">
+<h4 id="orgadf103e"><span class="section-number-4">3.3.4.</span> 스케일링 — 단위 맞추기</h4>
+<div class="outline-text-4" id="text-3-3-4">
+<p>
+혈압은 수백 단위, 어떤 값은 0~1 단위입니다. 단위가 들쭉날쭉하면
+로지스틱 회귀 같은 모델이 큰 숫자에 휘둘립니다. 모두 비슷한 크기로
+표준화합니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">StandardScaler: &#44033; &#53945;&#49457;&#51012; &#54217;&#44512; 0, &#54364;&#51456;&#54200;&#52264; 1&#47196; &#48320;&#54872;
+</span><span style="color: #dcaeea;">scaler</span> <span style="color: #51afef;">=</span> StandardScaler()
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">fit_transform: &#54984;&#47144; &#45936;&#51060;&#53552;&#47196; '&#44592;&#51456;'(&#54217;&#44512;&#183;&#54364;&#51456;&#54200;&#52264;)&#51012; &#48176;&#50864;&#44256;(fit) &#48320;&#54872;(transform)
+</span><span style="color: #dcaeea;">X_train_scaled</span> <span style="color: #51afef;">=</span> scaler.fit_transform(X_train)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">transform: &#49884;&#54744; &#45936;&#51060;&#53552;&#45716; '&#48176;&#50864;&#51648; &#50506;&#44256;' &#54984;&#47144;&#50640;&#49436; &#48176;&#50868; &#44592;&#51456;&#51004;&#47196;&#47564; &#48320;&#54872;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">&#8594; &#49884;&#54744; &#51221;&#48372;&#44032; &#49352;&#50612; &#46308;&#50612;&#44032;&#45716; &#44163;&#51012; &#47561;&#51020;
+</span><span style="color: #dcaeea;">X_test_scaled</span> <span style="color: #51afef;">=</span> scaler.transform(X_test)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#49828;&#52992;&#51068;&#47553; &#50756;&#47308;"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+스케일링 완료
+</pre>
+
+<blockquote>
+<p>
+<b>중요</b>: 시험 데이터에는 <code>fit</code> 을 쓰지 않고 <code>transform</code> 만 씁니다.
+시험 데이터의 평균을 미리 들여다보면 &rsquo;시험지를 미리 본&rsquo; 셈이 되기 때문입니다.
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org5c96d69" class="outline-2">
+<h2 id="org5c96d69"><span class="section-number-2">4.</span> 레벨 2 — 모델 세우고 제대로 평가하기: &ldquo;예측을 넘어 신뢰로&rdquo;</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+이제 모델을 만듭니다. 하지만 핵심은 &ldquo;성능 숫자 하나&rdquo;가 아니라
+*그 숫자를 어떻게 읽느냐*입니다. 특히 의료에서는 더더욱 그렇습니다.
+</p>
+</div>
+<div id="outline-container-org57ebffc" class="outline-3">
+<h3 id="org57ebffc"><span class="section-number-3">4.1.</span> 4막. 기준선 모델 — &ldquo;바닥선을 긋다&rdquo;</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+화려한 모델로 바로 가지 않습니다. 먼저 가장 단순한 모델로 점수를 내고,
+&ldquo;이게 우리의 바닥선&rdquo;이라고 정해 둡니다. 나중에 복잡한 모델이 <b>정말 더
+나은지</b> 비교할 기준이 필요하기 때문입니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">LogisticRegression: &#48516;&#47448;&#50857; &#44592;&#48376; &#47784;&#45944; (&#52293;&#50640;&#49436; &#48176;&#50868; &#44536;&#44163;)
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- max_iter=1000: &#54617;&#49845; &#48152;&#48373; &#54943;&#49688; &#49345;&#54620; (&#49688;&#47156; &#44221;&#44256; &#48169;&#51648;&#50857;&#51004;&#47196; &#45321;&#45321;&#55176;)
+</span><span style="color: #dcaeea;">logreg</span> <span style="color: #51afef;">=</span> LogisticRegression(max_iter<span style="color: #51afef;">=</span>1000)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">fit: &#54984;&#47144; &#45936;&#51060;&#53552;&#47196; &#47784;&#45944; &#54617;&#49845;
+</span>logreg.fit(X_train_scaled, y_train)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">score: &#51221;&#54869;&#46020;(&#47582;&#55180; &#48708;&#50984;) &#44228;&#49328;
+</span><span style="color: #dcaeea;">train_acc</span> <span style="color: #51afef;">=</span> logreg.score(X_train_scaled, y_train)
+<span style="color: #dcaeea;">test_acc</span> <span style="color: #51afef;">=</span> logreg.score(X_test_scaled, y_test)
+
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#54984;&#47144; &#51221;&#54869;&#46020;: </span>{train_acc:.3f}<span style="color: #98be65;">"</span>)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#49884;&#54744; &#51221;&#54869;&#46020;: </span>{test_acc:.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+훈련 정확도: 0.855
+시험 정확도: 0.820
+</pre>
+
+<p>
+훈련과 시험 정확도가 비슷하면 과대적합이 심하지 않다는 신호입니다.
+이 시험 정확도가 우리의 *기준선*입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org54d2e40" class="outline-3">
+<h3 id="org54d2e40"><span class="section-number-3">4.2.</span> 5막. 평가지표 — &ldquo;정확도의 함정&rdquo;</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+이 막이 이 예제의 *심장부*입니다. 의료에서는 &ldquo;정확도 85%&rdquo;라는 말만으로는
+모델이 좋은지 알 수 없습니다.
+</p>
+</div>
+<div id="outline-container-org3ac7209" class="outline-4">
+<h4 id="org3ac7209"><span class="section-number-4">4.2.1.</span> 정확도의 함정</h4>
+<div class="outline-text-4" id="text-4-2-1">
+<p>
+생각해 봅시다. 만약 환자가 전체의 10%뿐이라면, <b>모두 정상이라고 찍는</b>
+바보 모델도 정확도 90%가 나옵니다. 하지만 이 모델은 환자를 단 한 명도
+못 잡아냅니다. 정확도가 우리를 속인 것이죠.
+</p>
+</div>
+</div>
+<div id="outline-container-orgddb7705" class="outline-4">
+<h4 id="orgddb7705"><span class="section-number-4">4.2.2.</span> 혼동행렬 — 네 칸의 의미</h4>
+<div class="outline-text-4" id="text-4-2-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49884;&#54744; &#45936;&#51060;&#53552;&#50640; &#45824;&#54620; &#50696;&#52769;
+</span><span style="color: #dcaeea;">y_pred</span> <span style="color: #51afef;">=</span> logreg.predict(X_test_scaled)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">confusion_matrix: &#50696;&#52769;&#44284; &#49892;&#51228;&#47484; 4&#52856; &#54364;&#47196; &#51221;&#47532;
+</span><span style="color: #dcaeea;">cm</span> <span style="color: #51afef;">=</span> confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(5, 4))
+sns.heatmap(cm, annot<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>, fmt<span style="color: #51afef;">=</span><span style="color: #98be65;">"d"</span>, cmap<span style="color: #51afef;">=</span><span style="color: #98be65;">"Blues"</span>,
+            xticklabels<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"Pred 0"</span>, <span style="color: #98be65;">"Pred 1"</span>],
+            yticklabels<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"True 0"</span>, <span style="color: #98be65;">"True 1"</span>])
+plt.title(<span style="color: #98be65;">"Confusion Matrix"</span>)
+plt.ylabel(<span style="color: #98be65;">"Actual"</span>)
+plt.xlabel(<span style="color: #98be65;">"Predicted"</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org3a5fae6" class="figure">
+<p><img src="images/4048eaf5ce2182350b64275c6f6b00c9900b5449.png" alt="4048eaf5ce2182350b64275c6f6b00c9900b5449.png" />
+</p>
+</div>
+
+<p>
+네 칸의 뜻:
+</p>
+<ul class="org-ul">
+<li><b>True 0 / Pred 0</b>: 정상을 정상이라 함 (정답)</li>
+<li><b>True 1 / Pred 1</b>: 환자를 환자라 함 (정답)</li>
+<li><b>True 1 / Pred 0</b>: 환자를 정상이라 함 → <b>거짓 음성</b>. 가장 위험!
+환자를 집에 돌려보내는 셈입니다.</li>
+<li><b>True 0 / Pred 1</b>: 정상을 환자라 함 → <b>거짓 양성</b>. 정밀 검사를 더 하는
+비용은 들지만, 위 경우보다는 덜 위험합니다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd614565" class="outline-4">
+<h4 id="orgd614565"><span class="section-number-4">4.2.3.</span> 정밀도·재현율·F1</h4>
+<div class="outline-text-4" id="text-4-2-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">classification_report: &#51221;&#48128;&#46020;/&#51116;&#54788;&#50984;/F1&#51012; &#54620; &#48264;&#50640; &#54364;&#47196;
+</span><span style="color: #c678dd;">print</span>(classification_report(y_test, y_pred))
+</code></pre>
+</div>
+
+<pre class="example">
+              precision    recall  f1-score   support
+
+           0       0.84      0.82      0.83        33
+           1       0.79      0.82      0.81        28
+
+    accuracy                           0.82        61
+   macro avg       0.82      0.82      0.82        61
+weighted avg       0.82      0.82      0.82        61
+
+</pre>
+
+<p>
+용어 정리:
+</p>
+<ul class="org-ul">
+<li><b>정밀도(precision)</b>: &ldquo;환자라고 예측한 사람 중 진짜 환자 비율&rdquo;</li>
+<li><b>재현율(recall)</b>: &ldquo;진짜 환자 중에서 우리가 잡아낸 비율&rdquo; → 의료에서 핵심!</li>
+<li><b>F1</b>: 정밀도와 재현율의 균형 점수</li>
+</ul>
+
+<p>
+의료에서는 보통 *재현율*이 가장 중요합니다. 환자를 놓치는 것(거짓 음성)이
+가장 큰 사고이기 때문입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org83abe6d" class="outline-4">
+<h4 id="org83abe6d"><span class="section-number-4">4.2.4.</span> 임계값 조정 — 재현율을 끌어올리기</h4>
+<div class="outline-text-4" id="text-4-2-4">
+<p>
+모델은 기본적으로 &ldquo;환자일 확률 50% 이상&rdquo;이면 환자로 판정합니다. 이 기준을
+낮추면 더 적극적으로 환자를 잡아냅니다 (재현율↑, 대신 정밀도↓).
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">predict_proba: &#44033; &#49324;&#46988;&#51060; &#54872;&#51088;&#51068; '&#54869;&#47456;'&#51012; &#48152;&#54872;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">[:, 1] &#8594; '&#54872;&#51088;(1)&#51068; &#54869;&#47456;' &#50676;&#47564; &#49440;&#53469;
+</span><span style="color: #dcaeea;">y_proba</span> <span style="color: #51afef;">=</span> logreg.predict_proba(X_test_scaled)[:, 1]
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44592;&#51456;&#44050;&#51012; 0.5 &#45824;&#49888; 0.3&#51004;&#47196; &#45230;&#52656;&#49436; &#45796;&#49884; &#54032;&#51221;
+</span><span style="color: #dcaeea;">threshold</span> <span style="color: #51afef;">=</span> 0.3
+<span style="color: #dcaeea;">y_pred_low</span> <span style="color: #51afef;">=</span> (y_proba <span style="color: #51afef;">&gt;=</span> threshold).astype(<span style="color: #c678dd;">int</span>)
+
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#51076;&#44228;&#44050; </span>{threshold}<span style="color: #98be65;">&#51068; &#46412;:"</span>)
+<span style="color: #c678dd;">print</span>(classification_report(y_test, y_pred_low))
+</code></pre>
+</div>
+
+<pre class="example">
+임계값 0.3일 때:
+              precision    recall  f1-score   support
+
+           0       0.96      0.70      0.81        33
+           1       0.73      0.96      0.83        28
+
+    accuracy                           0.82        61
+   macro avg       0.84      0.83      0.82        61
+weighted avg       0.85      0.82      0.82        61
+
+</pre>
+
+<p>
+임계값을 낮추면 재현율이 오르는 대신 정밀도가 떨어지는 *트레이드오프*를
+직접 확인하세요. &ldquo;정답&rdquo;은 없고, 문제 상황에 따라 선택하는 것입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4e85029" class="outline-4">
+<h4 id="org4e85029"><span class="section-number-4">4.2.5.</span> ROC 곡선과 AUC</h4>
+<div class="outline-text-4" id="text-4-2-5">
+<p>
+모든 임계값에서의 성능을 한 곡선으로 요약한 것이 ROC 곡선이고,
+그 아래 넓이가 AUC입니다. 1에 가까울수록 좋고, 0.5는 동전 던지기 수준.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">roc_curve: &#50668;&#47084; &#51076;&#44228;&#44050;&#50640;&#49436;&#51032; (&#44144;&#51667;&#50577;&#49457;&#48708;&#50984;, &#52280;&#50577;&#49457;&#48708;&#50984;)&#51012; &#44228;&#49328;
+</span><span style="color: #dcaeea;">fpr</span>, <span style="color: #dcaeea;">tpr</span>, <span style="color: #dcaeea;">thresholds</span> <span style="color: #51afef;">=</span> roc_curve(y_test, y_proba)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">roc_auc_score: &#44257;&#49440; &#50500;&#47000; &#45331;&#51060;(AUC)&#47484; &#54616;&#45208;&#51032; &#49707;&#51088;&#47196;
+</span><span style="color: #dcaeea;">auc</span> <span style="color: #51afef;">=</span> roc_auc_score(y_test, y_proba)
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(6, 5))
+plt.plot(fpr, tpr, label<span style="color: #51afef;">=</span>f<span style="color: #98be65;">"Logistic (AUC=</span>{auc:.3f}<span style="color: #98be65;">)"</span>)
+plt.plot([0, 1], [0, 1], <span style="color: #98be65;">"--"</span>, color<span style="color: #51afef;">=</span><span style="color: #98be65;">"gray"</span>, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"Random"</span>)
+plt.title(<span style="color: #98be65;">"ROC Curve"</span>)
+plt.xlabel(<span style="color: #98be65;">"False Positive Rate"</span>)
+plt.ylabel(<span style="color: #98be65;">"True Positive Rate"</span>)
+plt.legend()
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="orgceee42f" class="figure">
+<p><img src="images/b8e163b3260f71706f4d2513257783602e725f71.png" alt="b8e163b3260f71706f4d2513257783602e725f71.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org9ee60c3" class="outline-2">
+<h2 id="org9ee60c3"><span class="section-number-2">5.</span> 레벨 3 — 성능과 해석으로 완성하기: &ldquo;더 강하게, 더 투명하게&rdquo;</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+기준선을 세웠으니, 이제 성능을 끌어올리고 <b>모델이 왜 그렇게
+판단하는지</b> 들여다봅니다.
+</p>
+</div>
+<div id="outline-container-org2650ce5" class="outline-3">
+<h3 id="org2650ce5"><span class="section-number-3">5.1.</span> 6막. 특성공학과 규제 — &ldquo;특성을 다루는 손맛&rdquo;</h3>
+<div class="outline-text-3" id="text-5-1">
+</div>
+<div id="outline-container-orgc5eb9ad" class="outline-4">
+<h4 id="orgc5eb9ad"><span class="section-number-4">5.1.1.</span> 새 특성 만들기</h4>
+<div class="outline-text-4" id="text-5-1-1">
+<p>
+가진 정보를 조합해 새 특성을 만들면 모델이 더 잘 배울 때가 있습니다.
+예를 들어 나이를 구간으로 묶어 봅니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">pd.cut: &#50672;&#49549;&#54805; &#44050;&#51012; &#44396;&#44036;&#51004;&#47196; &#45208;&#45600; '&#44396;&#44036; &#46972;&#48296;'&#51012; &#48537;&#51076;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- bins: &#44396;&#44036; &#44221;&#44228;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- labels: &#44033; &#44396;&#44036; &#51060;&#47492;
+</span><span style="color: #dcaeea;">age_group</span> <span style="color: #51afef;">=</span> pd.cut(X_train[<span style="color: #98be65;">"age"</span>],
+                   bins<span style="color: #51afef;">=</span>[0, 40, 55, 100],
+                   labels<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"young"</span>, <span style="color: #98be65;">"middle"</span>, <span style="color: #98be65;">"old"</span>])
+
+<span style="color: #c678dd;">print</span>(age_group.value_counts())
+</code></pre>
+</div>
+
+<pre class="example">
+age
+old       122
+middle    107
+young      13
+Name: count, dtype: int64
+</pre>
+
+<blockquote>
+<p>
+<b>참고</b>: 새 특성이 항상 도움이 되는 건 아닙니다. 만들어 보고 성능을
+*비교*해서 판단합니다. &ldquo;만들면 무조건 좋다&rdquo;가 아니라 &ldquo;실험해 본다&rdquo;가
+특성공학의 태도입니다.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org82fac35" class="outline-4">
+<h4 id="org82fac35"><span class="section-number-4">5.1.2.</span> 규제 — 모델이 특성에 휘둘리지 않게</h4>
+<div class="outline-text-4" id="text-5-1-2">
+<p>
+규제(regularization)는 모델이 특정 특성에 *지나치게 의존하는 것*을 억제해
+과대적합을 막습니다. 로지스틱 회귀에서 규제 강도는 <code>C</code> 로 조절합니다.
+</p>
+
+<ul class="org-ul">
+<li><code>C</code> 가 <b>작으면</b> → 규제 강함 → 계수를 강하게 누름 (단순한 모델)</li>
+<li><code>C</code> 가 <b>크면</b> → 규제 약함 → 데이터에 더 맞춤 (복잡한 모델)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">penalty="l1": L1 &#44508;&#51228;(&#46972;&#50136;) &#8594; &#45916; &#51473;&#50836;&#54620; &#53945;&#49457;&#51032; &#44228;&#49688;&#47484; &#50500;&#50696; 0&#51004;&#47196; &#47564;&#46310;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">solver="liblinear": L1 &#44508;&#51228;&#47484; &#51648;&#50896;&#54616;&#45716; &#44228;&#49328; &#48169;&#49885;
+</span><span style="color: #51afef;">for</span> C <span style="color: #51afef;">in</span> [0.01, 0.1, 1, 10]:
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> LogisticRegression(penalty<span style="color: #51afef;">=</span><span style="color: #98be65;">"l1"</span>, solver<span style="color: #51afef;">=</span><span style="color: #98be65;">"liblinear"</span>, C<span style="color: #51afef;">=</span>C)
+    model.fit(X_train_scaled, y_train)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44228;&#49688;&#44032; 0&#51060; &#50500;&#45772; &#53945;&#49457;&#51032; &#44060;&#49688; = &#47784;&#45944;&#51060; '&#49332;&#47140;&#46164;' &#53945;&#49457; &#49688;
+</span>    <span style="color: #dcaeea;">n_used</span> <span style="color: #51afef;">=</span> np.<span style="color: #c678dd;">sum</span>(model.coef_[0] <span style="color: #51afef;">!=</span> 0)
+    <span style="color: #dcaeea;">acc</span> <span style="color: #51afef;">=</span> model.score(X_test_scaled, y_test)
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"C=</span>{C:<span style="color: #51afef;">&lt;</span>5}<span style="color: #98be65;"> &#49324;&#50857;&#54620; &#53945;&#49457; &#49688;=</span>{n_used:<span style="color: #51afef;">&lt;</span>3}<span style="color: #98be65;"> &#49884;&#54744; &#51221;&#54869;&#46020;=</span>{acc:.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+C=0.01  사용한 특성 수=0   시험 정확도=0.541
+C=0.1   사용한 특성 수=9   시험 정확도=0.869
+C=1     사용한 특성 수=15  시험 정확도=0.852
+C=10    사용한 특성 수=17  시험 정확도=0.836
+</pre>
+
+<p>
+<code>C</code> 를 줄일수록 살아남는 특성이 줄어드는 걸 관찰하세요. L1 규제가
+*특성 선택*처럼 작동하는 것입니다. &ldquo;정말 중요한 특성만 남기기&rdquo;인 셈이죠.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcbddc7d" class="outline-3">
+<h3 id="orgcbddc7d"><span class="section-number-3">5.2.</span> 7막. 앙상블 — &ldquo;트리들의 힘을 모으다&rdquo;</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+나무(결정트리) 하나는 약하지만, 여러 그루를 모으면 강해집니다. 이것이
+앙상블입니다.
+</p>
+</div>
+<div id="outline-container-org6d26fc9" class="outline-4">
+<h4 id="org6d26fc9"><span class="section-number-4">5.2.1.</span> 랜덤포레스트</h4>
+<div class="outline-text-4" id="text-5-2-1">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">RandomForestClassifier: &#44208;&#51221;&#53944;&#47532; &#50668;&#47084; &#44060;&#47484; &#47564;&#46308;&#50612; &#45796;&#49688;&#44208;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- n_estimators=100: &#45208;&#47924; 100&#44536;&#47336;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- random_state=42: &#44208;&#44284; &#44256;&#51221;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">&#51452;&#51032;: &#53944;&#47532; &#47784;&#45944;&#51008; &#49828;&#52992;&#51068;&#47553;&#51060; &#54596;&#50836; &#50630;&#50612; '&#50896;&#48376;' X_train&#51012; &#50433;&#45768;&#45796;.
+</span><span style="color: #dcaeea;">rf</span> <span style="color: #51afef;">=</span> RandomForestClassifier(n_estimators<span style="color: #51afef;">=</span>100, random_state<span style="color: #51afef;">=</span>42)
+rf.fit(X_train, y_train)
+
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#47004;&#45924;&#54252;&#47112;&#49828;&#53944; &#49884;&#54744; &#51221;&#54869;&#46020;: </span>{rf.score(X_test, y_test):.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+랜덤포레스트 시험 정확도: 0.869
+</pre>
+</div>
+</div>
+<div id="outline-container-org9dff3b9" class="outline-4">
+<h4 id="org9dff3b9"><span class="section-number-4">5.2.2.</span> 그래디언트 부스팅</h4>
+<div class="outline-text-4" id="text-5-2-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">GradientBoostingClassifier: &#53952;&#47536; &#48512;&#48516;&#51012; &#45796;&#51020; &#45208;&#47924;&#44032; &#48372;&#50756;&#54616;&#47728; &#52264;&#47168;&#47196; &#54617;&#49845;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- learning_rate: &#54620; &#48264;&#50640; &#50620;&#47560;&#45208; &#48372;&#50756;&#54624;&#51648; (&#51089;&#51012;&#49688;&#47197; &#49888;&#51473;)
+</span><span style="color: #dcaeea;">gb</span> <span style="color: #51afef;">=</span> GradientBoostingClassifier(n_estimators<span style="color: #51afef;">=</span>100,
+                                learning_rate<span style="color: #51afef;">=</span>0.1,
+                                random_state<span style="color: #51afef;">=</span>42)
+gb.fit(X_train, y_train)
+
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#44536;&#47000;&#46356;&#50616;&#53944; &#48512;&#49828;&#54021; &#49884;&#54744; &#51221;&#54869;&#46020;: </span>{gb.score(X_test, y_test):.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+그래디언트 부스팅 시험 정확도: 0.885
+</pre>
+</div>
+</div>
+<div id="outline-container-org4ae22cf" class="outline-4">
+<h4 id="org4ae22cf"><span class="section-number-4">5.2.3.</span> 교차검증과 하이퍼파라미터 튜닝</h4>
+<div class="outline-text-4" id="text-5-2-3">
+<p>
+시험 데이터를 반복해서 쓰면 거기에 맞춰버릴 위험이 있습니다. 그래서
+훈련 데이터를 여러 조각으로 나눠 돌려가며 검증합니다(교차검증).
+그리고 여러 설정값을 자동으로 시험해 가장 좋은 것을 찾습니다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49884;&#54744;&#54644; &#48380; &#49444;&#51221;&#44050;&#46308;&#51032; &#51312;&#54633;
+</span><span style="color: #dcaeea;">param_grid</span> <span style="color: #51afef;">=</span> {
+    <span style="color: #98be65;">"n_estimators"</span>: [100, 200],      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45208;&#47924; &#49688;
+</span>    <span style="color: #98be65;">"max_depth"</span>: [3, 5, <span style="color: #a9a1e1;">None</span>],       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45208;&#47924; &#44618;&#51060; (None=&#51228;&#54620; &#50630;&#51020;)
+</span>    <span style="color: #98be65;">"min_samples_split"</span>: [2, 5]      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44032;&#51648;&#47484; &#45208;&#45572;&#45716; &#52572;&#49548; &#49368;&#54540; &#49688;
+</span>}
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">GridSearchCV: &#47784;&#46304; &#51312;&#54633;&#51012; &#44368;&#52264;&#44160;&#51613;&#51004;&#47196; &#49884;&#54744;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- cv=5: &#45936;&#51060;&#53552;&#47484; 5&#51312;&#44033;&#51004;&#47196; &#45208;&#45600; &#44160;&#51613;
+</span><span style="color: #5B6268;">#   </span><span style="color: #5B6268;">- scoring="recall": '&#51116;&#54788;&#50984;'&#51012; &#44592;&#51456;&#51004;&#47196; &#52572;&#44256;&#47484; &#44256;&#47492; (&#51032;&#47308;&#45768;&#44620;!)
+</span><span style="color: #dcaeea;">grid</span> <span style="color: #51afef;">=</span> GridSearchCV(RandomForestClassifier(random_state<span style="color: #51afef;">=</span>42),
+                    param_grid, cv<span style="color: #51afef;">=</span>5, scoring<span style="color: #51afef;">=</span><span style="color: #98be65;">"recall"</span>)
+grid.fit(X_train, y_train)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#52572;&#44256; &#49444;&#51221;:"</span>, grid.best_params_)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#52572;&#44256; &#51116;&#54788;&#50984;(&#44368;&#52264;&#44160;&#51613;): </span>{grid.best_score_:.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+최고 설정: {'max_depth': 5, 'min_samples_split': 5, 'n_estimators': 100}
+최고 재현율(교차검증): 0.774
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc573cb9" class="outline-3">
+<h3 id="orgc573cb9"><span class="section-number-3">5.3.</span> 8막. 해석과 마무리 — &ldquo;모델이 본 위험 요인&rdquo;</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+이 프로젝트의 클라이맥스입니다. 모델을 점수 기계가 아니라 *현실을 설명하는
+렌즈*로 바라봅니다.
+</p>
+</div>
+<div id="outline-container-orgc0d403a" class="outline-4">
+<h4 id="orgc0d403a"><span class="section-number-4">5.3.1.</span> 특성 중요도 뽑기</h4>
+<div class="outline-text-4" id="text-5-3-1">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53916;&#45789;&#51004;&#47196; &#52286;&#51008; &#52572;&#44256; &#47784;&#45944; &#49324;&#50857;
+</span><span style="color: #dcaeea;">best_rf</span> <span style="color: #51afef;">=</span> grid.best_estimator_
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">feature_importances_: &#44033; &#53945;&#49457;&#51060; &#50696;&#52769;&#50640; &#44592;&#50668;&#54620; &#51221;&#46020; (&#53944;&#47532; &#47784;&#45944; &#51228;&#44277;)
+</span><span style="color: #dcaeea;">importances</span> <span style="color: #51afef;">=</span> best_rf.feature_importances_
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53945;&#49457; &#51060;&#47492;&#44284; &#51473;&#50836;&#46020;&#47484; &#54364;&#47196; &#47926;&#44256; &#53360; &#49692;&#49436;&#47196; &#51221;&#47148;
+</span><span style="color: #dcaeea;">feat_imp</span> <span style="color: #51afef;">=</span> pd.DataFrame({
+    <span style="color: #98be65;">"feature"</span>: X_train.columns,
+    <span style="color: #98be65;">"importance"</span>: importances
+}).sort_values(<span style="color: #98be65;">"importance"</span>, ascending<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>)
+
+<span style="color: #c678dd;">print</span>(feat_imp)
+</code></pre>
+</div>
+
+<pre class="example" id="orged283c4">
+        feature  importance
+17     thal_7.0    0.175470
+11       cp_4.0    0.128491
+8            ca    0.119640
+5       thalach    0.111262
+7       oldpeak    0.097713
+6         exang    0.060185
+3          chol    0.058995
+0           age    0.058557
+2      trestbps    0.057040
+1           sex    0.041718
+14    slope_2.0    0.033243
+10       cp_3.0    0.018189
+13  restecg_2.0    0.012299
+9        cp_2.0    0.009083
+16     thal_6.0    0.007240
+4           fbs    0.007129
+15    slope_3.0    0.003745
+12  restecg_1.0    0.000000
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>plt.figure(figsize<span style="color: #51afef;">=</span>(8, 6))
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49345;&#50948; 10&#44060;&#47564; &#44032;&#47196; &#47561;&#45824;&#47196;
+</span>sns.barplot(data<span style="color: #51afef;">=</span>feat_imp.head(10), x<span style="color: #51afef;">=</span><span style="color: #98be65;">"importance"</span>, y<span style="color: #51afef;">=</span><span style="color: #98be65;">"feature"</span>)
+plt.title(<span style="color: #98be65;">"Top 10 Feature Importances"</span>)
+plt.xlabel(<span style="color: #98be65;">"Importance"</span>)
+plt.ylabel(<span style="color: #98be65;">"Feature"</span>)
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org35f7be9" class="figure">
+<p><img src="images/4df629ebb4db5feba181bc46df0e5803195edc1b.png" alt="4df629ebb4db5feba181bc46df0e5803195edc1b.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdd8af1b" class="outline-4">
+<h4 id="orgdd8af1b"><span class="section-number-4">5.3.2.</span> 가설과 대조하기</h4>
+<div class="outline-text-4" id="text-5-3-2">
+<p>
+이제 1막에서 적어 둔 *나의 가설*을 꺼냅니다. 그리고 묻습니다:
+</p>
+
+<ul class="org-ul">
+<li>내가 중요하다고 본 특성이 정말 상위에 있는가?</li>
+<li>의외로 높은 순위에 오른 특성이 있는가?</li>
+<li>의외로 낮은 특성은? 왜 그럴까?</li>
+</ul>
+
+<p>
+이 대조가 학습의 핵심입니다. 맞았으면 직관이 데이터로 *검증*된 것이고,
+틀렸으면 데이터가 *새로운 사실*을 알려준 것입니다. 둘 다 값진 배움입니다.
+</p>
+</div>
+</div>
+<div id="outline-container-org714880f" class="outline-4">
+<h4 id="org714880f"><span class="section-number-4">5.3.3.</span> 마무리 — 무엇을 배웠나</h4>
+<div class="outline-text-4" id="text-5-3-3">
+<p>
+이 프로젝트 하나로 우리는 머신러닝의 전 과정을 거쳤습니다:
+</p>
+
+<ol class="org-ol">
+<li>문제를 정의하고 (이진 분류)</li>
+<li>데이터를 그림으로 이해하고 (EDA)</li>
+<li>더러운 데이터를 다듬고 (전처리)</li>
+<li>단순한 기준선을 세우고 (로지스틱 회귀)</li>
+<li>정확도의 함정을 넘어 제대로 평가하고 (재현율, ROC-AUC)</li>
+<li>특성을 다루고 규제로 다듬고 (특성공학, L1/L2)</li>
+<li>앙상블로 성능을 올리고 (랜덤포레스트, 부스팅)</li>
+<li>모델을 해석했습니다 (특성 중요도)</li>
+</ol>
+
+<p>
+가장 중요한 교훈은 이것입니다: <b>모델 성능보다 문제 이해가 먼저다.</b>
+좋은 머신러닝은 화려한 모델이 아니라, 데이터와 문제를 깊이 이해하고
+결과를 정직하게 해석하는 데서 나옵니다.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc411934" class="outline-2">
+<h2 id="orgc411934"><span class="section-number-2">6.</span> 부록: 단계별 자가 점검</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+각 막을 <b>남에게 설명할 수 있으면</b> 통과입니다. 코드는 검색하면 나오지만,
+&ldquo;왜 그렇게 했는지&rdquo;는 이해한 사람만 말할 수 있습니다.
+</p>
+
+<ul class="org-ul">
+<li>3막: &ldquo;이 전처리를 안 했다면 모델에 어떤 문제가 생겼을까?&rdquo;</li>
+<li>5막: &ldquo;재현율 100%는 모두를 환자라 찍으면 쉽게 된다. 왜 그게 좋은
+모델이 아닐까?&rdquo;</li>
+<li>6막: &ldquo;규제 강도 C를 줄이면 모델이 어떻게 변할지 예측할 수 있는가?&rdquo;</li>
+<li>8막: &ldquo;이 프로젝트를 처음 보는 사람에게 5분 안에 설명한다면 무엇을
+했고 무엇을 알아냈다고 말할까?&rdquo;</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: 머신러닝 실습 교안</p>
+<p class="date">Created: 2026-05-28 Thu 22:54</p>
+</div>
+</body>
+</html>
