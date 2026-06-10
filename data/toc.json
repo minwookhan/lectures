@@ -79,16 +79,7 @@
     {
       "slug": "ai와미래사회",
       "title": "AI와미래사회",
-      "chapters": [
-        {
-          "title": "google sheet with ai",
-          "path": "courses/ai와미래사회/google-sheet-with-ai/",
-          "tags": [
-            "gemini",
-            "googlesheet"
-          ]
-        }
-      ]
+      "chapters": []
     }
   ]
 }
