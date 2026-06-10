@@ -1,0 +1,1116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-06-10 Wed 18:52 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>radar 초음파</title>
+<meta name="author" content="minwook Han" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">radar 초음파</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orga4d84e1">1. 프로젝트 개요</a>
+<ul>
+<li><a href="#org56af653">1.1. 사용 부품</a></li>
+<li><a href="#org3de5c62">1.2. 핀 배선 (모든 챕터 공통)</a></li>
+</ul>
+</li>
+<li><a href="#org35fcb84">2. Chapter 1 : 프로젝트 준비와 연결 점검</a>
+<ul>
+<li><a href="#org767ee4a">2.1. 1.1 이 챕터의 목표</a></li>
+<li><a href="#orgae29c8e">2.2. 1.2 필요한 라이브러리</a></li>
+<li><a href="#orgda7c2a3">2.3. 1.3 예제 코드 (독립 실행)</a></li>
+<li><a href="#orgf7d58ec">2.4. 1.4 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#orgce5ab6f">3. Chapter 2 : 센서·모터 개별 동작 확인</a>
+<ul>
+<li><a href="#org5164995">3.1. 2.1 초음파 거리 측정 (시리얼 모니터로 확인)</a>
+<ul>
+<li><a href="#org84f5d86">3.1.1. 원리</a></li>
+<li><a href="#org1dd855c">3.1.2. 예제 코드 (독립 실행)</a></li>
+<li><a href="#org3f7c174">3.1.3. 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#org445a1ef">3.2. 2.2 서보모터 좌우 회전 (스윕)</a>
+<ul>
+<li><a href="#org31184a4">3.2.1. 예제 코드 (독립 실행)</a></li>
+<li><a href="#org8b4be1e">3.2.2. 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#org26ceefb">3.3. 2.3 디스플레이 도형 그리기 테스트</a>
+<ul>
+<li><a href="#org570ffdd">3.3.1. 예제 코드 (독립 실행)</a></li>
+<li><a href="#orgab2bdc7">3.3.2. 주요 함수 설명</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#org887a37d">4. Chapter 3 : 레이더 화면(UI) 설계</a>
+<ul>
+<li><a href="#org0488d4b">4.1. 3.1 이 챕터의 목표</a></li>
+<li><a href="#orge1a8f11">4.2. 3.2 핵심 아이디어 : 극좌표 → 화면좌표 변환</a></li>
+<li><a href="#orgca9eb1a">4.3. 3.3 예제 코드 (독립 실행)</a></li>
+<li><a href="#orga8a3d58">4.4. 3.4 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#org9b40a73">5. Chapter 4 : 스캐닝 애니메이션</a>
+<ul>
+<li><a href="#orgb9d2932">5.1. 4.1 이 챕터의 목표</a></li>
+<li><a href="#org6b8d736">5.2. 4.2 한 가지 문제와 해결</a></li>
+<li><a href="#orgd23e608">5.3. 4.3 예제 코드 (독립 실행)</a></li>
+<li><a href="#orgf4308ba">5.4. 4.4 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#org3db5050">6. Chapter 5 : 장애물 표시 및 거리 출력 (완성)</a>
+<ul>
+<li><a href="#orga8ee500">6.1. 5.1 이 챕터의 목표</a></li>
+<li><a href="#org4e4b0df">6.2. 5.2 동작 흐름</a></li>
+<li><a href="#org881838b">6.3. 5.3 예제 코드 (독립 실행 · 최종본)</a></li>
+<li><a href="#orgc15898b">6.4. 5.4 주요 함수 설명</a></li>
+</ul>
+</li>
+<li><a href="#org535090a">7. Chapter 6 : 통합 및 마무리 (다듬기)</a>
+<ul>
+<li><a href="#org63e197f">7.1. 6.1 거리 값 안정화 (값이 튈 때)</a></li>
+<li><a href="#orgc2237a6">7.2. 6.2 스캔 속도 조절</a></li>
+<li><a href="#org3601a5d">7.3. 6.3 전원 주의</a></li>
+<li><a href="#org62b8aab">7.4. 6.4 자주 겪는 문제</a></li>
+<li><a href="#orgdd8bab1">7.5. 6.5 마무리 (발표 준비)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga4d84e1" class="outline-2">
+<h2 id="orga4d84e1"><span class="section-number-2">1.</span> 프로젝트 개요</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+초음파 센서를 서보모터 위에 올려 좌우로 돌리면서 거리를 재고, 그 결과를
+ST7735 화면에 &ldquo;레이더 화면&rdquo;처럼 그려주는 프로젝트다.
+</p>
+
+<p>
+전체를 한 번에 만들면 어디서 고장 났는지 찾기 어렵다. 그래서 *큰 챕터마다
+그 챕터만 따로 업로드해서 돌려보고 결과를 확인*할 수 있도록 만들었다. 각
+챕터 코드는 그 자체로 완성된 스케치라서, 복사해서 바로 컴파일/업로드하면 된다.
+</p>
+
+<p>
+진행 순서는 이렇다.
+</p>
+<ol class="org-ol">
+<li>Chapter 1 : 준비와 연결 점검 (화면이 켜지는지 확인)</li>
+<li>Chapter 2 : 부품 3개를 하나씩 따로 동작 확인</li>
+<li>Chapter 3 : 레이더 배경(반원 눈금판) 그리기</li>
+<li>Chapter 4 : 빔이 좌우로 움직이는 스캔 애니메이션</li>
+<li>Chapter 5 : 초음파로 장애물을 찾아 점과 거리로 표시 (완성)</li>
+<li>Chapter 6 : 다듬기 (값 안정화, 속도/전원 조정, 문제 해결)</li>
+</ol>
+
+
+<div id="org56a195b" class="figure">
+<p><img src="images/20260610_184934_screenshot.png" alt="20260610_184934_screenshot.png" />
+</p>
+</div>
+</div>
+<div id="outline-container-org56af653" class="outline-3">
+<h3 id="org56af653"><span class="section-number-3">1.1.</span> 사용 부품</h3>
+<div class="outline-text-3" id="text-1-1">
+<ul class="org-ul">
+<li>아두이노 Uno</li>
+<li>ST7735 1.8인치 TFT (128 x 160, SPI 방식)</li>
+<li>HC-SR04 초음파 센서</li>
+<li>SG90 서보모터</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3de5c62" class="outline-3">
+<h3 id="org3de5c62"><span class="section-number-3">1.2.</span> 핀 배선 (모든 챕터 공통)</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+SPI 통신선(11, 13번)을 디스플레이가 쓰기 때문에, 센서와 서보는 그 핀을
+피해서 연결한다.
+</p>
+
+<p>
+<b>ST7735 디스플레이</b>
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">모듈 핀</th>
+<th scope="col" class="org-left">아두이노 Uno</th>
+<th scope="col" class="org-left">비고</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">VCC</td>
+<td class="org-left">5V 또는 3.3V</td>
+<td class="org-left">모듈 사양 확인</td>
+</tr>
+
+<tr>
+<td class="org-left">GND</td>
+<td class="org-left">GND</td>
+<td class="org-left">둘 중 하나만 연결해도 됨</td>
+</tr>
+
+<tr>
+<td class="org-left">CLK(SCK)</td>
+<td class="org-left">D13</td>
+<td class="org-left">하드웨어 SPI 고정</td>
+</tr>
+
+<tr>
+<td class="org-left">SDA(MOSI)</td>
+<td class="org-left">D11</td>
+<td class="org-left">하드웨어 SPI 고정</td>
+</tr>
+
+<tr>
+<td class="org-left">CS</td>
+<td class="org-left">D10</td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">RS(DC)</td>
+<td class="org-left">D9</td>
+<td class="org-left">&nbsp;</td>
+</tr>
+
+<tr>
+<td class="org-left">RST</td>
+<td class="org-left">D8</td>
+<td class="org-left">또는 RESET·3.3V에 묶고 생략</td>
+</tr>
+
+<tr>
+<td class="org-left">BLK(LED)</td>
+<td class="org-left">3.3V/5V 등</td>
+<td class="org-left">모듈에 따라 생략 가능</td>
+</tr>
+
+<tr>
+<td class="org-left">NC</td>
+<td class="org-left">연결 안 함</td>
+<td class="org-left">&nbsp;</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+<b>초음파·서보 (레이더용)</b>
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">부품</th>
+<th scope="col" class="org-left">부품 핀</th>
+<th scope="col" class="org-left">아두이노 Uno</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">HC-SR04</td>
+<td class="org-left">VCC</td>
+<td class="org-left">5V</td>
+</tr>
+
+<tr>
+<td class="org-left">HC-SR04</td>
+<td class="org-left">TRIG</td>
+<td class="org-left">D7</td>
+</tr>
+
+<tr>
+<td class="org-left">HC-SR04</td>
+<td class="org-left">ECHO</td>
+<td class="org-left">D6</td>
+</tr>
+
+<tr>
+<td class="org-left">SG90 서보</td>
+<td class="org-left">신호선</td>
+<td class="org-left">D5</td>
+</tr>
+
+<tr>
+<td class="org-left">SG90 서보</td>
+<td class="org-left">VCC</td>
+<td class="org-left">5V</td>
+</tr>
+
+<tr>
+<td class="org-left">(공통)</td>
+<td class="org-left">GND</td>
+<td class="org-left">GND</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<p>
+주의: Adafruit 라이브러리 버전에 따라 색상 상수가 <code>ST77XX_BLACK</code> 또는
+<code>ST7735_BLACK</code> 으로 다르다. 최신 버전 기준으로 <code>ST77XX_</code> 를 썼다. 화면이
+안 켜지거나 색이 반대로 보이면 <code>initR(INITR_BLACKTAB)</code> 을 <code>INITR_GREENTAB</code>
+이나 <code>INITR_REDTAB</code> 으로 바꿔본다.
+</p>
+</blockquote>
+</div>
+</div>
+</div>
+<div id="outline-container-org35fcb84" class="outline-2">
+<h2 id="org35fcb84"><span class="section-number-2">2.</span> Chapter 1 : 프로젝트 준비와 연결 점검</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-org767ee4a" class="outline-3">
+<h3 id="org767ee4a"><span class="section-number-3">2.1.</span> 1.1 이 챕터의 목표</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+ST7735는 이미 다룰 줄 안다고 했으니, 여기서는 <b>앞으로 쓸 핀 배치대로 배선이
+제대로 됐는지</b> 만 확인한다. 화면에 제목과 &ldquo;준비 완료&rdquo; 글자가 뜨면 디스플레이
+배선과 라이브러리 설정이 정상이라는 뜻이다. 가장 단순한 것부터 확인하는 게 원칙이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgae29c8e" class="outline-3">
+<h3 id="orgae29c8e"><span class="section-number-3">2.2.</span> 1.2 필요한 라이브러리</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+아두이노 IDE의 &ldquo;라이브러리 매니저&rdquo;에서 두 개를 설치한다.
+</p>
+<ul class="org-ul">
+<li><code>Adafruit GFX Library</code></li>
+<li><code>Adafruit ST7735 and ST7789 Library</code></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgda7c2a3" class="outline-3">
+<h3 id="orgda7c2a3"><span class="section-number-3">2.3.</span> 1.3 예제 코드 (독립 실행)</h3>
+<div class="outline-text-3" id="text-2-3">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_GFX.h&gt;</span>      <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#46020;&#54805;/&#44544;&#51088; &#44536;&#47532;&#44592; &#44277;&#53685; &#44592;&#45733;
+</span><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_ST7735.h&gt;</span>   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">ST7735 &#51204;&#50857; &#44592;&#45733;
+</span><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;SPI.h&gt;</span>               <span style="color: #5B6268;">// </span><span style="color: #5B6268;">SPI &#53685;&#49888;
+</span>
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_CS</span>   10
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_RST</span>   8
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_DC</span>    9
+
+<span style="color: #ECBE7B;">Adafruit_ST7735</span> <span style="color: #dcaeea;">tft</span> = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  tft.initR(INITR_BLACKTAB);   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54868;&#47732; &#52488;&#44592;&#54868;
+</span>  tft.setRotation(1);          <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#44032;&#47196; &#48169;&#54693; -&gt; 160(&#44032;&#47196;) x 128(&#49464;&#47196;)
+</span>  tft.fillScreen(ST77XX_BLACK);
+
+  tft.setTextColor(ST77XX_GREEN);
+  tft.setTextSize(2);
+  tft.setCursor(20, 25);
+  tft.print(<span style="color: #98be65;">"RADAR"</span>);
+
+  tft.setTextSize(1);
+  tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(20, 70);
+  tft.print(<span style="color: #98be65;">"Display OK"</span>);
+  tft.setCursor(20, 85);
+  tft.print(<span style="color: #98be65;">"Ready to start"</span>);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() {
+  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54620; &#48264;&#47564; &#44536;&#47532;&#47732; &#46104;&#48064;&#47196; &#48152;&#48373;&#54624; &#45236;&#50857; &#50630;&#51020;
+</span>}
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 검은 화면에 초록색 &ldquo;RADAR&rdquo;, 흰색 &ldquo;Display OK / Ready to start&rdquo;가
+보이면 성공. 안 보이면 배선(CS, DC, RST, MOSI, SCK)과 전원부터 다시 본다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf7d58ec" class="outline-3">
+<h3 id="orgf7d58ec"><span class="section-number-3">2.4.</span> 1.4 주요 함수 설명</h3>
+<div class="outline-text-3" id="text-2-4">
+<ul class="org-ul">
+<li><code>initR(옵션)</code> : 화면을 켜고 초기화. 옵션은 모듈 종류(탭 색)에 맞춘다.
+<ul class="org-ul">
+<li>예: <code>tft.initR(INITR_BLACKTAB);</code></li>
+</ul></li>
+<li><code>setRotation(n)</code> : 화면 방향을 돌린다(0~3). 가로로 쓰려고 1을 넣었다.
+<ul class="org-ul">
+<li>예: <code>tft.setRotation(1);</code> → 160 x 128</li>
+</ul></li>
+<li><code>fillScreen(색)</code> : 화면 전체를 한 색으로 칠한다.
+<ul class="org-ul">
+<li>예: <code>tft.fillScreen(ST77XX_BLACK);</code></li>
+</ul></li>
+<li><code>setTextColor(색)</code> / <code>setTextSize(배율)</code> : 글자 색과 크기.
+<ul class="org-ul">
+<li>예: <code>tft.setTextColor(ST77XX_GREEN); tft.setTextSize(2);</code></li>
+</ul></li>
+<li><code>setCursor(x, y)</code> : 글자 시작 위치(왼쪽 위가 0,0).
+<ul class="org-ul">
+<li>예: <code>tft.setCursor(20, 25);</code></li>
+</ul></li>
+<li><code>print("글자")</code> : 정한 위치/색/크기로 글자 출력.
+<ul class="org-ul">
+<li>예: <code>tft.print("RADAR");</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgce5ab6f" class="outline-2">
+<h2 id="orgce5ab6f"><span class="section-number-2">3.</span> Chapter 2 : 센서·모터 개별 동작 확인</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+부품 3개(초음파, 서보, 화면)를 <b>하나씩 따로</b> 돌려보고 정상인지 확인한다.
+아래 2.1, 2.2, 2.3은 각각 독립 실행되는 별도 스케치다.
+</p>
+</div>
+<div id="outline-container-org5164995" class="outline-3">
+<h3 id="org5164995"><span class="section-number-3">3.1.</span> 2.1 초음파 거리 측정 (시리얼 모니터로 확인)</h3>
+<div class="outline-text-3" id="text-3-1">
+</div>
+<div id="outline-container-org84f5d86" class="outline-4">
+<h4 id="org84f5d86"><span class="section-number-4">3.1.1.</span> 원리</h4>
+<div class="outline-text-4" id="text-3-1-1">
+<p>
+TRIG 핀으로 짧은 신호를 보내면 초음파가 발사되고, 물체에 맞고 돌아온 시간을
+ECHO 핀이 받는다. 소리는 1초에 약 343m(= 0.0343 cm/마이크로초)를 가므로, 갔다
+온 시간을 거리로 바꾼다. 왕복이니까 2로 나눈다.
+</p>
+</div>
+</div>
+<div id="outline-container-org1dd855c" class="outline-4">
+<h4 id="org1dd855c"><span class="section-number-4">3.1.2.</span> 예제 코드 (독립 실행)</h4>
+<div class="outline-text-4" id="text-3-1-2">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TRIG_PIN</span> 7
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">ECHO_PIN</span> 6
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  Serial.begin(9600);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+<span style="color: #ECBE7B;">float</span> <span style="color: #c678dd;">readDistance</span>() {
+  digitalWrite(TRIG_PIN, LOW);  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  <span style="color: #ECBE7B;">long</span> <span style="color: #dcaeea;">duration</span> = pulseIn(ECHO_PIN, HIGH, 30000); <span style="color: #5B6268;">// </span><span style="color: #5B6268;">30ms &#53440;&#51076;&#50500;&#50883;
+</span>  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">distance</span> = duration * 0.0343 / 2.0;       <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49884;&#44036; -&gt; &#44144;&#47532;(cm)
+</span>  <span style="color: #51afef;">return</span> distance;
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() {
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">d</span> = readDistance();
+  Serial.print(<span style="color: #98be65;">"Distance: "</span>); Serial.print(d); Serial.println(<span style="color: #98be65;">" cm"</span>);
+  delay(200);
+}
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 시리얼 모니터(9600)를 열고 손을 멀리/가까이 움직이면 숫자가 따라
+변하면 정상. 0만 나오면 TRIG/ECHO 배선을 확인한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org3f7c174" class="outline-4">
+<h4 id="org3f7c174"><span class="section-number-4">3.1.3.</span> 주요 함수 설명</h4>
+<div class="outline-text-4" id="text-3-1-3">
+<ul class="org-ul">
+<li><code>pulseIn(핀, 상태, 타임아웃)</code> : 핀이 지정 상태로 있는 시간을 마이크로초로
+잰다. 타임아웃 안에 신호가 없으면 0 반환.
+<ul class="org-ul">
+<li>예: <code>long t = pulseIn(ECHO_PIN, HIGH, 30000);</code></li>
+</ul></li>
+<li><code>delayMicroseconds(us)</code> : 아주 짧은 시간(마이크로초) 멈춤.
+<ul class="org-ul">
+<li>예: <code>delayMicroseconds(10);</code></li>
+</ul></li>
+<li><code>readDistance()</code> (직접 만든 함수) : 인자 없음, 거리(cm)를 반환.
+<ul class="org-ul">
+<li>예: <code>float d = readDistance();</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org445a1ef" class="outline-3">
+<h3 id="org445a1ef"><span class="section-number-3">3.2.</span> 2.2 서보모터 좌우 회전 (스윕)</h3>
+<div class="outline-text-3" id="text-3-2">
+</div>
+<div id="outline-container-org31184a4" class="outline-4">
+<h4 id="org31184a4"><span class="section-number-4">3.2.1.</span> 예제 코드 (독립 실행)</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Servo.h&gt;</span>
+
+<span style="color: #ECBE7B;">Servo</span> <span style="color: #dcaeea;">myServo</span>;
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">SERVO_PIN</span> 5
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  myServo.attach(SERVO_PIN);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span> = 0;   angle &lt;= 180; angle++) { myServo.write(angle); delay(15); }
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span> = 180; angle &gt;= 0;   angle--) { myServo.write(angle); delay(15); }
+}
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 서보가 좌우로 천천히 왕복하면 정상. <code>delay</code> 값을 줄이면 빨라지고
+키우면 느려진다. 이 값이 곧 레이더 스캔 속도가 된다.
+</p>
+</div>
+</div>
+<div id="outline-container-org8b4be1e" class="outline-4">
+<h4 id="org8b4be1e"><span class="section-number-4">3.2.2.</span> 주요 함수 설명</h4>
+<div class="outline-text-4" id="text-3-2-2">
+<ul class="org-ul">
+<li><code>attach(핀)</code> : 서보를 어느 핀에 연결할지 지정.
+<ul class="org-ul">
+<li>예: <code>myServo.attach(6);</code></li>
+</ul></li>
+<li><code>write(각도)</code> : 서보를 0~180도 중 원하는 각도로 돌림.
+<ul class="org-ul">
+<li>예: <code>myServo.write(90);</code> → 가운데</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org26ceefb" class="outline-3">
+<h3 id="org26ceefb"><span class="section-number-3">3.3.</span> 2.3 디스플레이 도형 그리기 테스트</h3>
+<div class="outline-text-3" id="text-3-3">
+</div>
+<div id="outline-container-org570ffdd" class="outline-4">
+<h4 id="org570ffdd"><span class="section-number-4">3.3.1.</span> 예제 코드 (독립 실행)</h4>
+<div class="outline-text-4" id="text-3-3-1">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_GFX.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_ST7735.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;SPI.h&gt;</span>
+
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_CS</span> 10
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_RST</span> 8
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_DC</span> 9
+
+<span style="color: #ECBE7B;">Adafruit_ST7735</span> <span style="color: #dcaeea;">tft</span> = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);                 <span style="color: #5B6268;">// </span><span style="color: #5B6268;">160 x 128
+</span>  tft.fillScreen(ST77XX_BLACK);
+
+  tft.drawLine(0, 0, 159, 127, ST77XX_RED);     <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#45824;&#44033;&#49440;
+</span>  tft.drawRect(10, 10, 50, 30, ST77XX_GREEN);   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#48712; &#49324;&#44033;&#54805;
+</span>  tft.fillCircle(120, 60, 20, ST77XX_BLUE);     <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#44873; &#52268; &#50896;
+</span>  tft.drawCircle(80, 64, 40, ST77XX_YELLOW);    <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#48712; &#50896;
+</span>  tft.drawPixel(80, 64, ST77XX_WHITE);          <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51216; &#54616;&#45208;
+</span>}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() { }
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 선/사각형/원이 각각 색을 가지고 그려진다. 화면 좌표(왼쪽 위가
+0,0, 오른쪽·아래로 갈수록 숫자가 커짐)에 익숙해지는 게 목적이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgab2bdc7" class="outline-4">
+<h4 id="orgab2bdc7"><span class="section-number-4">3.3.2.</span> 주요 함수 설명</h4>
+<div class="outline-text-4" id="text-3-3-2">
+<ul class="org-ul">
+<li><code>drawLine(x1,y1,x2,y2,색)</code> : 두 점을 잇는 선. (스캔 빔에 사용)
+<ul class="org-ul">
+<li>예: <code>tft.drawLine(80,118,150,50,ST77XX_GREEN);</code></li>
+</ul></li>
+<li><code>drawRect / fillRect(x,y,w,h,색)</code> : 빈/채운 사각형. (화면 일부 지우기에 사용)
+<ul class="org-ul">
+<li>예: <code>tft.fillRect(0,0,159,12,ST77XX_BLACK);</code></li>
+</ul></li>
+<li><code>drawCircle / fillCircle(x,y,r,색)</code> : 빈/채운 원. (장애물 점에 사용)
+<ul class="org-ul">
+<li>예: <code>tft.fillCircle(120,60,3,ST77XX_RED);</code></li>
+</ul></li>
+<li><code>drawPixel(x,y,색)</code> : 점 하나. (반원 눈금을 점으로 찍을 때 사용)
+<ul class="org-ul">
+<li>예: <code>tft.drawPixel(80,64,ST77XX_WHITE);</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org887a37d" class="outline-2">
+<h2 id="org887a37d"><span class="section-number-2">4.</span> Chapter 3 : 레이더 화면(UI) 설계</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-org0488d4b" class="outline-3">
+<h3 id="org0488d4b"><span class="section-number-3">4.1.</span> 3.1 이 챕터의 목표</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+센서 값 없이, <b>레이더 배경 화면만</b> 먼저 그린다. 가운데 아래를 중심으로 삼은
+반원형 눈금판을 그리는 것이 목표다. 여기서 만드는 좌표 변환과 배경이 이후
+모든 챕터의 토대가 된다.
+</p>
+</div>
+</div>
+<div id="outline-container-orge1a8f11" class="outline-3">
+<h3 id="orge1a8f11"><span class="section-number-3">4.2.</span> 3.2 핵심 아이디어 : 극좌표 → 화면좌표 변환</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+레이더는 &ldquo;각도 + 거리&rdquo;로 위치를 말한다(극좌표). 하지만 화면은 &ldquo;x, y&rdquo;로
+그린다. 그래서 둘을 바꿔주는 식이 필요하다.
+</p>
+<ul class="org-ul">
+<li><code>x = 중심x + 반지름 * cos(각도)</code></li>
+<li><code>y = 중심y - 반지름 * sin(각도)</code></li>
+</ul>
+
+<p>
+화면은 위로 갈수록 y가 <b>작아지기</b> 때문에 sin 앞에 빼기(-)를 붙인다. 각도는
+0도가 오른쪽, 90도가 위, 180도가 왼쪽이 되도록 했다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgca9eb1a" class="outline-3">
+<h3 id="orgca9eb1a"><span class="section-number-3">4.3.</span> 3.3 예제 코드 (독립 실행)</h3>
+<div class="outline-text-3" id="text-4-3">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_GFX.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_ST7735.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;SPI.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;math.h&gt;</span>
+
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_CS</span> 10
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_RST</span> 8
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_DC</span> 9
+
+<span style="color: #ECBE7B;">Adafruit_ST7735</span> <span style="color: #dcaeea;">tft</span> = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+<span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">CX</span> = 80;    <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51473;&#49900; x (&#44032;&#47196; &#44032;&#50868;&#45936;)
+</span><span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">CY</span> = 118;   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51473;&#49900; y (&#54868;&#47732; &#48148;&#45797; &#44540;&#52376;)
+</span><span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">R</span>  = 70;    <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#52572;&#45824; &#48152;&#51648;&#47492;(&#54589;&#49472;)
+</span>
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#44537;&#51340;&#54364;(&#44033;&#46020;&#176;, &#48152;&#51648;&#47492;) -&gt; &#54868;&#47732;&#51340;&#54364;(px, py)
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">polarToXY</span>(<span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">angleDeg</span>, <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">radius</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">px</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">py</span>) {
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">rad</span> = angleDeg * PI / 180.0;   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#46020; -&gt; &#46972;&#46356;&#50504;
+</span>  *px = CX + radius * cos(rad);
+  *py = CY - radius * sin(rad);        <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54868;&#47732; y&#45716; &#50500;&#47000;&#47196; &#44040;&#49688;&#47197; &#52964;&#51648;&#48064;&#47196; &#48764;&#44592;
+</span>}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawRadarBackground</span>() {
+  tft.fillScreen(ST77XX_BLACK);
+
+  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">(1) &#44144;&#47532; &#45576;&#44552;&#50857; &#48152;&#50896; 4&#44060;&#47484; &#51216;&#51004;&#47196; &#52237;&#45716;&#45796;
+</span>  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 1; i &lt;= 4; i++) {
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">rr</span> = R * i / 4;
+    <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 2) {
+      <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>, <span style="color: #dcaeea;">y</span>; polarToXY(a, rr, &amp;x, &amp;y);
+      tft.drawPixel(x, y, ST77XX_GREEN);
+    }
+  }
+  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">(2) &#44033;&#46020; &#44592;&#51456;&#49440; (0,45,90,135,180&#46020;)
+</span>  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 45) {
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>, <span style="color: #dcaeea;">y</span>; polarToXY(a, R, &amp;x, &amp;y);
+    tft.drawLine(CX, CY, x, y, ST77XX_GREEN);
+  }
+  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">(3) &#44033;&#46020; &#46972;&#48296;
+</span>  tft.setTextSize(1); tft.setTextColor(ST77XX_WHITE);
+  tft.setCursor(CX + R - 10, CY - 2); tft.print(<span style="color: #98be65;">"0"</span>);
+  tft.setCursor(CX - 4, CY - R - 10); tft.print(<span style="color: #98be65;">"90"</span>);
+  tft.setCursor(CX - R, CY - 2);      tft.print(<span style="color: #98be65;">"180"</span>);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  drawRadarBackground();
+
+  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">(&#54869;&#51064;&#50857;) 60&#46020; &#50948;&#52824;&#50640; &#50696;&#49884; &#49440; &#54616;&#45208;
+</span>  <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>, <span style="color: #dcaeea;">y</span>; polarToXY(60, R, &amp;x, &amp;y);
+  tft.drawLine(CX, CY, x, y, ST77XX_RED);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() { }
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 화면 아래 가운데를 중심으로 한 반원 눈금판이 초록색으로 그려지고,
+0/90/180 글자와 빨간 예시 선(60도)이 보이면 성공. 좌표 변환식이 맞게 동작한다는
+뜻이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orga8a3d58" class="outline-3">
+<h3 id="orga8a3d58"><span class="section-number-3">4.4.</span> 3.4 주요 함수 설명</h3>
+<div class="outline-text-3" id="text-4-4">
+<ul class="org-ul">
+<li><code>polarToXY(각도, 반지름, &amp;px, &amp;py)</code> (직접 만든 함수) — 레이더의 심장
+<ul class="org-ul">
+<li>기능: &ldquo;각도 + 거리&rdquo;를 화면 &ldquo;x, y&rdquo;로 변환.</li>
+<li>인자: 각도(0~180°), 반지름(픽셀), 결과를 담을 변수 두 개의 주소.</li>
+<li>예: <code>int x,y; polarToXY(90, 70, &amp;x, &amp;y);</code> → 화면 맨 위쪽 점</li>
+</ul></li>
+<li><code>drawRadarBackground()</code> (직접 만든 함수) : 눈금·기준선·라벨을 한 번에 그림.
+<ul class="org-ul">
+<li>예: <code>drawRadarBackground();</code></li>
+</ul></li>
+<li><code>cos() / sin()</code> (math.h) : 라디안 각도의 코사인/사인.
+<ul class="org-ul">
+<li>예: <code>float v = cos(60 * PI / 180.0);</code></li>
+</ul></li>
+<li><code>PI</code> : 원주율(약 3.14159). 도→라디안 변환에 사용.
+<ul class="org-ul">
+<li>예: <code>float rad = 45 * PI / 180.0;</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org9b40a73" class="outline-2">
+<h2 id="org9b40a73"><span class="section-number-2">5.</span> Chapter 4 : 스캐닝 애니메이션</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-orgb9d2932" class="outline-3">
+<h3 id="orgb9d2932"><span class="section-number-3">5.1.</span> 4.1 이 챕터의 목표</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+Chapter 3의 빨간 선을 서보 각도에 맞춰 0~180도로 움직이게 만든다. 핵심은
+<b>이전 빔만 검은색으로 지우고 새 빔을 그리는</b> 것이다. 화면 전체를 다시 그리면
+깜빡이지만, 한 줄만 지우면 부드럽게 움직인다.
+</p>
+</div>
+</div>
+<div id="outline-container-org6b8d736" class="outline-3">
+<h3 id="org6b8d736"><span class="section-number-3">5.2.</span> 4.2 한 가지 문제와 해결</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+빔을 검은색으로 지우면, 그 선이 지나간 자리의 거리 눈금(반원 점)도 같이
+지워진다. 그래서 빔을 지운 뒤에는 <b>그 각도에 있던 눈금 점을 다시 찍어주는</b>
+<code>patchArcs</code> 함수로 메워준다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd23e608" class="outline-3">
+<h3 id="orgd23e608"><span class="section-number-3">5.3.</span> 4.3 예제 코드 (독립 실행)</h3>
+<div class="outline-text-3" id="text-5-3">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_GFX.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_ST7735.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;SPI.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Servo.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;math.h&gt;</span>
+
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_CS</span> 10
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_RST</span> 8
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_DC</span> 9
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">SERVO_PIN</span> 5
+
+<span style="color: #ECBE7B;">Adafruit_ST7735</span> <span style="color: #dcaeea;">tft</span> = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+<span style="color: #ECBE7B;">Servo</span> <span style="color: #dcaeea;">myServo</span>;
+
+<span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">CX</span> = 80, <span style="color: #dcaeea;">CY</span> = 118, <span style="color: #dcaeea;">R</span> = 70;
+<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">sweep</span> = 0, <span style="color: #dcaeea;">dir</span> = 1, <span style="color: #dcaeea;">prevSweep</span> = 0;   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54788;&#51116;&#44033;, &#48169;&#54693;(+1/-1), &#51649;&#51204;&#44033;
+</span>
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">polarToXY</span>(<span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">angleDeg</span>, <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">radius</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">px</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">py</span>) {
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">rad</span> = angleDeg * PI / 180.0;
+  *px = CX + radius * cos(rad);
+  *py = CY - radius * sin(rad);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawGrid</span>() {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 1; i &lt;= 4; i++) {
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">rr</span> = R * i / 4;
+    <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 2) { <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(a,rr,&amp;x,&amp;y); tft.drawPixel(x,y,ST77XX_GREEN); }
+  }
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 45) { <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(a,R,&amp;x,&amp;y); tft.drawLine(CX,CY,x,y,ST77XX_GREEN); }
+}
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#53945;&#51221; &#44033;&#46020;&#51032; &#48724;(&#51473;&#49900;-&gt;&#45149;) &#44536;&#47532;&#44592; &#46608;&#45716; &#51648;&#50864;&#44592;
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawBeam</span>(<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span>, <span style="color: #ECBE7B;">uint16_t</span> <span style="color: #dcaeea;">color</span>) {
+  <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>, <span style="color: #dcaeea;">y</span>; polarToXY(angle, R, &amp;x, &amp;y);
+  tft.drawLine(CX, CY, x, y, color);
+}
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#48724;&#51012; &#51648;&#50868; &#51088;&#47532;&#50640; &#44144;&#47532; &#45576;&#44552;(&#51216;)&#51012; &#45796;&#49884; &#52237;&#50612; &#45130;&#44608; &#48169;&#51648;
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">patchArcs</span>(<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span>) {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 1; i &lt;= 4; i++) {
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">rr</span> = R * i / 4; <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(angle, rr, &amp;x, &amp;y);
+    tft.drawPixel(x, y, ST77XX_GREEN);
+  }
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+  drawGrid();
+  myServo.attach(SERVO_PIN);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() {
+  myServo.write(sweep);            <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49436;&#48372;&#47484; &#54788;&#51116; &#44033;&#46020;&#47196;
+</span>
+  drawBeam(prevSweep, ST77XX_BLACK); <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51060;&#51204; &#48724; &#51648;&#50864;&#44592;
+</span>  patchArcs(prevSweep);              <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51648;&#50892;&#51652; &#45576;&#44552; &#48373;&#44396;
+</span>
+  drawBeam(sweep, ST77XX_GREEN);     <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49352; &#48724; &#44536;&#47532;&#44592;
+</span>
+  prevSweep = sweep;
+  sweep += dir;
+  <span style="color: #51afef;">if</span> (sweep &gt;= 180) { sweep = 180; dir = -1; }  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#45149;&#50640;&#49436; &#48169;&#54693; &#51204;&#54872;
+</span>  <span style="color: #51afef;">if</span> (sweep &lt;= 0)   { sweep = 0;   dir = 1;  }
+
+  delay(15);                         <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49828;&#52884; &#49549;&#46020;
+</span>}
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 초록 빔이 반원 눈금판 위를 좌우로 부드럽게 왕복하면 성공. 눈금이
+끊기지 않고 유지되는지 본다. <code>delay</code> 를 키우면 천천히, 줄이면 빠르게 돈다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf4308ba" class="outline-3">
+<h3 id="orgf4308ba"><span class="section-number-3">5.4.</span> 4.4 주요 함수 설명</h3>
+<div class="outline-text-3" id="text-5-4">
+<ul class="org-ul">
+<li><code>drawBeam(각도, 색)</code> (직접 만든 함수) : 중심에서 그 각도 방향으로 선을 그림.
+색을 검은색으로 주면 &ldquo;지우기&rdquo;가 된다.
+<ul class="org-ul">
+<li>예: <code>drawBeam(90, ST77XX_GREEN);</code> / <code>drawBeam(90, ST77XX_BLACK);</code></li>
+</ul></li>
+<li><code>patchArcs(각도)</code> (직접 만든 함수) : 빔이 지나가며 지운 눈금 점을 복구.
+<ul class="org-ul">
+<li>예: <code>patchArcs(prevSweep);</code></li>
+</ul></li>
+<li><code>sweep / dir / prevSweep</code> : 각각 현재 각도, 진행 방향, 직전 각도를 기억하는 변수.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org3db5050" class="outline-2">
+<h2 id="org3db5050"><span class="section-number-2">6.</span> Chapter 5 : 장애물 표시 및 거리 출력 (완성)</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-orga8ee500" class="outline-3">
+<h3 id="orga8ee500"><span class="section-number-3">6.1.</span> 5.1 이 챕터의 목표</h3>
+<div class="outline-text-3" id="text-6-1">
+<p>
+이제 초음파 센서를 더해 *진짜 레이더*를 완성한다. 빔이 향하는 각도마다 거리를
+재고, 일정 범위 안에 물체가 있으면 그 자리에 점을 찍고 거리를 화면에 보여준다.
+가까우면 빨강, 중간이면 노랑, 멀면 초록으로 표시한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4e4b0df" class="outline-3">
+<h3 id="org4e4b0df"><span class="section-number-3">6.2.</span> 5.2 동작 흐름</h3>
+<div class="outline-text-3" id="text-6-2">
+<ol class="org-ol">
+<li>빔을 한쪽 끝(0도/180도)에서 시작할 때마다 레이더 영역을 한 번 지우고 다시 그린다.</li>
+<li>빔이 향하는 각도에서 거리를 잰다.</li>
+<li>측정 범위(여기선 40cm) 안이면 장애물 목록에 (각도, 거리)를 저장한다.</li>
+<li>저장된 장애물을 매 프레임 다시 그려, 빔이 지나가도 점이 남아 있게 한다.</li>
+<li>화면 위쪽에 현재 각도와 거리를 글자로 보여준다.</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org881838b" class="outline-3">
+<h3 id="org881838b"><span class="section-number-3">6.3.</span> 5.3 예제 코드 (독립 실행 · 최종본)</h3>
+<div class="outline-text-3" id="text-6-3">
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_GFX.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Adafruit_ST7735.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;SPI.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;Servo.h&gt;</span>
+<span style="color: #51afef; font-weight: bold;">#include</span> <span style="color: #98be65;">&lt;math.h&gt;</span>
+
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_CS</span> 10
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_RST</span> 8
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TFT_DC</span> 9
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">SERVO_PIN</span> 5
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">TRIG_PIN</span> 7
+<span style="color: #51afef; font-weight: bold;">#define</span> <span style="color: #dcaeea;">ECHO_PIN</span> 6
+
+<span style="color: #ECBE7B;">Adafruit_ST7735</span> <span style="color: #dcaeea;">tft</span> = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+<span style="color: #ECBE7B;">Servo</span> <span style="color: #dcaeea;">myServo</span>;
+
+<span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">CX</span> = 80, <span style="color: #dcaeea;">CY</span> = 118, <span style="color: #dcaeea;">R</span> = 70;
+<span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">MAXD</span> = 40;             <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#52769;&#51221; &#52572;&#45824; &#44144;&#47532;(cm)
+</span><span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">sweep</span> = 0, <span style="color: #dcaeea;">dir</span> = 1, <span style="color: #dcaeea;">prevSweep</span> = 0;
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51060;&#48264; &#49828;&#52884;&#50640;&#49436; &#52286;&#51008; &#51109;&#50528;&#47932; &#51200;&#51109;
+</span><span style="color: #51afef;">const</span> <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">MAXOBS</span> = 60;
+<span style="color: #ECBE7B;">int</span>   <span style="color: #dcaeea;">obsAng</span>[MAXOBS];
+<span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">obsDist</span>[MAXOBS];
+<span style="color: #ECBE7B;">int</span>   <span style="color: #dcaeea;">obsCount</span> = 0;
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">polarToXY</span>(<span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">angleDeg</span>, <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">radius</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">px</span>, <span style="color: #ECBE7B;">int</span> *<span style="color: #dcaeea;">py</span>) {
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">rad</span> = angleDeg * PI / 180.0;
+  *px = CX + radius * cos(rad);
+  *py = CY - radius * sin(rad);
+}
+
+<span style="color: #ECBE7B;">float</span> <span style="color: #c678dd;">readDistance</span>() {
+  digitalWrite(TRIG_PIN, LOW);  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  <span style="color: #ECBE7B;">long</span> <span style="color: #dcaeea;">dur</span> = pulseIn(ECHO_PIN, HIGH, 25000);
+  <span style="color: #51afef;">if</span> (dur == 0) <span style="color: #51afef;">return</span> -1;                 <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49888;&#54840; &#47803; &#48155;&#51020;
+</span>  <span style="color: #51afef;">return</span> dur * 0.0343 / 2.0;
+}
+
+<span style="color: #ECBE7B;">uint16_t</span> <span style="color: #c678dd;">colorFor</span>(<span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">d</span>) {
+  <span style="color: #51afef;">if</span> (d &lt; 15) <span style="color: #51afef;">return</span> ST77XX_RED;
+  <span style="color: #51afef;">if</span> (d &lt; 30) <span style="color: #51afef;">return</span> ST77XX_ORANGE;        <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#50630;&#51004;&#47732; ST77XX_YELLOW
+</span>  <span style="color: #51afef;">return</span> ST77XX_GREEN;
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawGrid</span>() {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 1; i &lt;= 4; i++) {
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">rr</span> = R * i / 4;
+    <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 2) { <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(a,rr,&amp;x,&amp;y); tft.drawPixel(x,y,ST77XX_GREEN); }
+  }
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">a</span> = 0; a &lt;= 180; a += 45) { <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(a,R,&amp;x,&amp;y); tft.drawLine(CX,CY,x,y,ST77XX_GREEN); }
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawBeam</span>(<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span>, <span style="color: #ECBE7B;">uint16_t</span> <span style="color: #dcaeea;">color</span>) {
+  <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(angle, R, &amp;x, &amp;y);
+  tft.drawLine(CX, CY, x, y, color);
+}
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">patchArcs</span>(<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span>) {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 1; i &lt;= 4; i++) { <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">rr</span>=R*i/4; <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(angle,rr,&amp;x,&amp;y); tft.drawPixel(x,y,ST77XX_GREEN); }
+}
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51200;&#51109;&#46108; &#51109;&#50528;&#47932; &#51216;&#51012; &#45796;&#49884; &#44536;&#47548; (&#48724;&#51060; &#51648;&#45208;&#44032;&#46020; &#45224;&#44172;)
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">drawObstacles</span>() {
+  <span style="color: #51afef;">for</span> (<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">i</span> = 0; i &lt; obsCount; i++) {
+    <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">rr</span> = obsDist[i] / MAXD * R;
+    <span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">x</span>,<span style="color: #dcaeea;">y</span>; polarToXY(obsAng[i], rr, &amp;x, &amp;y);
+    tft.fillCircle(x, y, 2, colorFor(obsDist[i]));
+  }
+}
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#50948;&#51901; &#54620; &#51460;&#50640; &#44033;&#46020;/&#44144;&#47532; &#54364;&#49884;
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">showInfo</span>(<span style="color: #ECBE7B;">int</span> <span style="color: #dcaeea;">angle</span>, <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">d</span>) {
+  tft.fillRect(0, 0, 159, 12, ST77XX_BLACK);
+  tft.setTextSize(1); tft.setTextColor(ST77XX_WHITE); tft.setCursor(2, 2);
+  tft.print(<span style="color: #98be65;">"A:"</span>); tft.print(angle);
+  <span style="color: #51afef;">if</span> (d &gt; 0) { tft.print(<span style="color: #98be65;">" D:"</span>); tft.print((<span style="color: #ECBE7B;">int</span>)d); tft.print(<span style="color: #98be65;">"cm"</span>); }
+  <span style="color: #51afef;">else</span>       { tft.print(<span style="color: #98be65;">" D:--"</span>); }
+}
+
+<span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54620; &#48264; &#50773;&#48373;&#51012; &#49352;&#47196; &#49884;&#51089;&#54624; &#46412; &#47112;&#51060;&#45908; &#50689;&#50669; &#52488;&#44592;&#54868;
+</span><span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">newSweepReset</span>() {
+  tft.fillRect(0, 13, 159, 114, ST77XX_BLACK);
+  drawGrid();
+  obsCount = 0;
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">setup</span>() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+  drawGrid();
+  myServo.attach(SERVO_PIN);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+<span style="color: #ECBE7B;">void</span> <span style="color: #c678dd;">loop</span>() {
+  <span style="color: #51afef;">if</span> (sweep == 0 || sweep == 180) newSweepReset();  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49352; &#50773;&#48373; &#49884;&#51089;
+</span>
+  myServo.write(sweep);
+  delay(20);                          <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49436;&#48372;&#44032; &#51088;&#47532; &#51105;&#51012; &#49884;&#44036;
+</span>
+  drawBeam(prevSweep, ST77XX_BLACK);  <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51060;&#51204; &#48724; &#51648;&#50864;&#44592;
+</span>  patchArcs(prevSweep);               <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#45576;&#44552; &#48373;&#44396;
+</span>
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">d</span> = readDistance();           <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#44144;&#47532; &#52769;&#51221;
+</span>  <span style="color: #51afef;">if</span> (d &gt; 0 &amp;&amp; d &lt; MAXD &amp;&amp; obsCount &lt; MAXOBS) {
+    obsAng[obsCount] = sweep; obsDist[obsCount] = d; obsCount++;
+  }
+
+  drawBeam(sweep, ST77XX_GREEN);      <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49352; &#48724;
+</span>  drawObstacles();                    <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51109;&#50528;&#47932; &#51216; &#50976;&#51648;
+</span>  showInfo(sweep, d);                 <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#51221;&#48372; &#54364;&#49884;
+</span>
+  prevSweep = sweep;
+  sweep += dir;
+  <span style="color: #51afef;">if</span> (sweep &gt;= 180) { sweep = 180; dir = -1; }
+  <span style="color: #51afef;">if</span> (sweep &lt;= 0)   { sweep = 0;   dir = 1;  }
+}
+</code></pre>
+</div>
+
+<p>
+<b>결과 확인</b>: 빔이 돌면서 앞에 물건을 두면, 그 방향·거리에 점이 찍히고 화면
+위에 &ldquo;A:각도 D:거리cm&rdquo;가 뜬다. 가까이 댈수록 점이 안쪽에 찍히고 색이
+빨강으로 바뀌면 완성이다. 맨 앞 HTML 시뮬레이션과 같은 화면이 실물로 나온다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgc15898b" class="outline-3">
+<h3 id="orgc15898b"><span class="section-number-3">6.4.</span> 5.4 주요 함수 설명</h3>
+<div class="outline-text-3" id="text-6-4">
+<ul class="org-ul">
+<li><code>colorFor(거리)</code> (직접 만든 함수) : 거리에 따라 색(빨강/노랑/초록)을 돌려줌.
+<ul class="org-ul">
+<li>예: <code>uint16_t c = colorFor(12.0);</code> → 빨강</li>
+</ul></li>
+<li><code>drawObstacles()</code> (직접 만든 함수) : 저장된 장애물들을 점으로 다시 그림.
+<ul class="org-ul">
+<li>예: <code>drawObstacles();</code></li>
+</ul></li>
+<li><code>showInfo(각도, 거리)</code> (직접 만든 함수) : 화면 위에 현재 값을 글자로 표시.
+<ul class="org-ul">
+<li>예: <code>showInfo(90, 23.0);</code></li>
+</ul></li>
+<li><code>newSweepReset()</code> (직접 만든 함수) : 새 왕복마다 화면을 깨끗이 비우고 눈금 복원.
+<ul class="org-ul">
+<li>예: <code>newSweepReset();</code></li>
+</ul></li>
+<li>배열 <code>obsAng[] / obsDist[]</code> 과 <code>obsCount</code> : 이번 스캔의 장애물 위치를 기억.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org535090a" class="outline-2">
+<h2 id="org535090a"><span class="section-number-2">7.</span> Chapter 6 : 통합 및 마무리 (다듬기)</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+Chapter 5가 완성본이다. 여기서는 더 잘 동작하게 다듬는 방법을 정리한다.
+</p>
+</div>
+<div id="outline-container-org63e197f" class="outline-3">
+<h3 id="org63e197f"><span class="section-number-3">7.1.</span> 6.1 거리 값 안정화 (값이 튈 때)</h3>
+<div class="outline-text-3" id="text-7-1">
+<p>
+초음파는 한 번 측정이 가끔 크게 튄다. 세 번 재서 *중간값*만 쓰면 훨씬
+안정적이다. <code>readDistance()</code> 대신 아래 함수를 쓰면 된다.
+</p>
+<div class="org-src-container">
+<pre class="src src-cpp"><code><span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#49464; &#48264; &#51116;&#49436; &#51473;&#44036;&#44050;&#51012; &#48152;&#54872; (&#51228;&#51068; &#53360; &#44050;&#44284; &#51228;&#51068; &#51089;&#51008; &#44050;&#51012; &#48260;&#47548;)
+</span><span style="color: #ECBE7B;">float</span> <span style="color: #c678dd;">readDistanceStable</span>() {
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">a</span> = readDistance();
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">b</span> = readDistance();
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">c</span> = readDistance();
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">hi</span> = max(a, max(b, c));
+  <span style="color: #ECBE7B;">float</span> <span style="color: #dcaeea;">lo</span> = min(a, min(b, c));
+  <span style="color: #51afef;">return</span> (a + b + c) - hi - lo;   <span style="color: #5B6268;">// </span><span style="color: #5B6268;">&#54633;&#50640;&#49436; &#52572;&#45824;&#183;&#52572;&#49548;&#47484; &#48764;&#47732; &#51473;&#44036;&#44050;
+</span>}
+</code></pre>
+</div>
+<ul class="org-ul">
+<li>사용 예: <code>float d = readDistanceStable();</code></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc2237a6" class="outline-3">
+<h3 id="orgc2237a6"><span class="section-number-3">7.2.</span> 6.2 스캔 속도 조절</h3>
+<div class="outline-text-3" id="text-7-2">
+<ul class="org-ul">
+<li><code>loop()</code> 의 <code>delay(20)</code> 값을 키우면 빔이 느리게 돌아 한 각도를 더 오래
+측정한다(정확↑, 속도↓). 줄이면 반대.</li>
+<li>각도를 1도씩 말고 2도씩 건너뛰면(<code>sweep +</code> dir*2;=) 더 빠르게 돈다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3601a5d" class="outline-3">
+<h3 id="org3601a5d"><span class="section-number-3">7.3.</span> 6.3 전원 주의</h3>
+<div class="outline-text-3" id="text-7-3">
+<p>
+서보가 움직일 때 순간적으로 전류를 많이 먹어서, 아두이노 5V만으로 셋을 다
+돌리면 화면이 깜빡이거나 측정이 흔들릴 수 있다.
+</p>
+<ul class="org-ul">
+<li>서보 전원선과 GND 사이에 470µF 정도의 전해 콘덴서를 달면 안정적이다.</li>
+<li>여유가 되면 서보는 별도 5V 전원을 쓰고 GND만 아두이노와 연결한다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org62b8aab" class="outline-3">
+<h3 id="org62b8aab"><span class="section-number-3">7.4.</span> 6.4 자주 겪는 문제</h3>
+<div class="outline-text-3" id="text-7-4">
+<ul class="org-ul">
+<li>화면이 안 켜짐 → <code>initR</code> 옵션을 <code>INITR_GREENTAB / INITR_REDTAB</code> 으로 바꿔본다.</li>
+<li>색이 이상함 → 위와 동일(탭 종류 문제).</li>
+<li>거리 항상 0 → TRIG/ECHO 핀, 또는 측정 타임아웃(25000) 확인.</li>
+<li>빔이 지나간 자리 눈금이 끊김 → <code>patchArcs</code> 호출이 빠지지 않았는지 확인.</li>
+<li>깜빡임이 심함 → 화면 전체를 매번 지우지 말고, 빔만 지우는 방식인지 확인.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdd8bab1" class="outline-3">
+<h3 id="orgdd8bab1"><span class="section-number-3">7.5.</span> 6.5 마무리 (발표 준비)</h3>
+<div class="outline-text-3" id="text-7-5">
+<ul class="org-ul">
+<li>동작 영상·사진을 남긴다.</li>
+<li>&ldquo;극좌표 → 화면좌표 변환&rdquo;이 이 프로젝트의 핵심 아이디어임을 설명한다.</li>
+<li>맨 앞 HTML 시뮬레이션을 함께 보여주면, 코드를 모르는 사람도 원리를 쉽게 이해한다.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: minwook Han</p>
+<p class="date">Created: 2026-06-10 Wed 18:52</p>
+</div>
+</body>
+</html>
