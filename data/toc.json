@@ -23,14 +23,6 @@
           "tags": [
             "iot"
           ]
-        },
-        {
-          "title": "부스팅 알고리즘:Adaboost, XGBoost",
-          "path": "courses/sample-course/부스팅-알고리즘adaboost-xgboost/",
-          "tags": [
-            "adaboost",
-            "xgboost"
-          ]
         }
       ]
     },
