@@ -1,0 +1,947 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-06-12 Fri 01:40 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>축구예측</title>
+<meta name="author" content="minwook Han" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">축구예측</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org3c8f9e6">1. 1. 배경: 이 논문이 풀려는 문제</a>
+<ul>
+<li><a href="#org49d42bc">1.1. 1.1 스포츠 결과 예측이 어려운 이유</a></li>
+<li><a href="#org34261dd">1.2. 1.2 전통적 방법의 한계</a></li>
+<li><a href="#org081a5ca">1.3. 1.3 머신러닝·딥러닝으로의 전환</a></li>
+<li><a href="#org00f9fe6">1.4. 1.4 논문의 핵심 아이디어</a></li>
+<li><a href="#org4b6c6b4">1.5. 1.5 논문의 기여 한 줄 정리</a></li>
+</ul>
+</li>
+<li><a href="#org09fb452">2. 2. 기본 개념</a>
+<ul>
+<li><a href="#orgefb88d5">2.1. 2.1 승/무/패 3-클래스 분류 문제</a></li>
+<li><a href="#orgaef3d53">2.2. 2.2 연속형 특성과 범주형 특성의 차이</a></li>
+<li><a href="#org4b88477">2.3. 2.3 범주형을 임베딩으로 바꾸는 이유</a></li>
+<li><a href="#org055b7ae">2.4. 2.4 셀프 어텐션의 직관</a></li>
+<li><a href="#org357b16c">2.5. 2.5 평가지표</a></li>
+</ul>
+</li>
+<li><a href="#org8905d6d">3. 3. 알고리즘 설명 (논문 모델 중심)</a>
+<ul>
+<li><a href="#org6ee68e7">3.1. 3.1 전체 구조 한눈에 보기</a></li>
+<li><a href="#org4e1e331">3.2. 3.2 범주형 경로: 컬럼 임베딩 층</a></li>
+<li><a href="#orgc06c22e">3.3. 3.3 Transformer: 셀프 어텐션 수식</a></li>
+<li><a href="#org00ca87a">3.4. 3.4 연속형 경로: 잔차 1D CNN 블록</a></li>
+<li><a href="#org7360dca">3.5. 3.5 두 경로 합치기 → FC → softmax</a></li>
+<li><a href="#orgbea6caf">3.6. 3.6 모델 선택 근거</a></li>
+</ul>
+</li>
+<li><a href="#orgd27ec52">4. 4. 간단 예제</a>
+<ul>
+<li><a href="#org4c9c039">4.1. 4.1 임베딩 층 예제</a></li>
+<li><a href="#orgf935be7">4.2. 4.2 멀티헤드 어텐션 블록 예제</a></li>
+<li><a href="#org9b40f75">4.3. 4.3 잔차 1D CNN 블록 예제</a></li>
+<li><a href="#org2f1e83a">4.4. 4.4 하이브리드 모델 조립 예제</a></li>
+</ul>
+</li>
+<li><a href="#orgf91c27a">5. 5. 고찰: 장단점과 개선 방향</a>
+<ul>
+<li><a href="#org9b09292">5.1. 5.1 하이브리드 모델의 장점</a></li>
+<li><a href="#orgcb8805a">5.2. 5.2 단점과 비용</a></li>
+<li><a href="#orgd89de5d">5.3. 5.3 베이스라인 대비 의미</a></li>
+<li><a href="#org35d9108">5.4. 5.4 개선 방향</a></li>
+</ul>
+</li>
+<li><a href="#org5eab450">6. 6. 실무 데이터 고찰: 데이터 정리와 관찰</a>
+<ul>
+<li><a href="#org22321e1">6.1. 6.1 데이터셋 구조</a></li>
+<li><a href="#orgb6fde24">6.2. 6.2 레이블 만들기</a></li>
+<li><a href="#org8622f67">6.3. 6.3 필드 선정 ① FIFA 평점</a></li>
+<li><a href="#org3a8ec77">6.4. 6.4 필드 선정 ② 팀 과거 성적</a></li>
+<li><a href="#org8e8f6e1">6.5. 6.5 필드 선정 ③ 상대 전적</a></li>
+<li><a href="#orge91126a">6.6. 6.6 필드 선정 ④ 배당률</a></li>
+<li><a href="#orgee9447d">6.7. 6.7 필드 선정 ⑤ 리그 식별자</a></li>
+<li><a href="#orgbd353eb">6.8. 6.8 결측치 처리</a></li>
+<li><a href="#org6aabf13">6.9. 6.9 데이터 관찰: KDE 분포 보기</a></li>
+<li><a href="#org88aa5a6">6.10. 6.10 클래스 불균형 관찰</a></li>
+</ul>
+</li>
+<li><a href="#org301f160">7. 7. 실무 데이터 적용</a>
+<ul>
+<li><a href="#org5916a8d">7.1. 7.1 시간 순서 분할</a></li>
+<li><a href="#orgfb1b42c">7.2. 7.2 전처리 파이프라인</a></li>
+<li><a href="#orgf729bf9">7.3. 7.3 모델 학습</a></li>
+<li><a href="#org9c6a6e8">7.4. 7.4 평가와 베이스라인 비교</a></li>
+<li><a href="#orgfeb8480">7.5. 7.5 결과 해석·한계·마무리</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3c8f9e6" class="outline-2">
+<h2 id="org3c8f9e6"><span class="section-number-2">1.</span> 1. 배경: 이 논문이 풀려는 문제</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-org49d42bc" class="outline-3">
+<h3 id="org49d42bc"><span class="section-number-3">1.1.</span> 1.1 스포츠 결과 예측이 어려운 이유</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+축구 경기 결과는 정해진 공식이 없다. 같은 두 팀이 붙어도 그날의 컨디션,
+날씨, 심리 상태에 따라 결과가 달라진다. 변수는 많고 서로 얽혀 있다.
+그래서 &ldquo;강한 팀이 항상 이긴다&rdquo;는 단순한 규칙으로는 잘 맞지 않는다.
+</p>
+
+<p>
+이 논문은 이 어려운 문제를 데이터로 푼다. 경기 전에 알 수 있는 정보들
+(팀 전력, 과거 성적, 배당률 등)을 모아서, 그 경기의 결과가 홈팀 기준으로
+승(Win) / 무(Draw) / 패(Defeat) 중 무엇일지 예측한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org34261dd" class="outline-3">
+<h3 id="org34261dd"><span class="section-number-3">1.2.</span> 1.2 전통적 방법의 한계</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+예전에는 통계 모델을 많이 썼다. 대표적으로 Elo 평점은 경기 결과로 팀
+점수를 올리고 내리며 다음 경기를 예측한다. 포아송 회귀는 득점 수를 확률로
+모델링한다. 이런 방법은 해석이 쉽다는 장점이 있다.
+</p>
+
+<p>
+하지만 한계가 있다. 변수들 사이의 복잡한 상호작용을 잘 못 잡는다.
+예를 들어 &ldquo;원정인데 비가 오고 핵심 수비수가 빠진&rdquo; 상황처럼 여러 조건이
+겹쳤을 때의 효과를 단순 통계 모델은 표현하기 어렵다.
+</p>
+</div>
+</div>
+<div id="outline-container-org081a5ca" class="outline-3">
+<h3 id="org081a5ca"><span class="section-number-3">1.3.</span> 1.3 머신러닝·딥러닝으로의 전환</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+머신러닝은 데이터에서 규칙을 스스로 찾는다. 결정 트리나 부스팅 같은
+방법이 먼저 쓰였다. 이들은 표 형태(tabular) 데이터에 강하지만, 데이터의
+순차적 성질이나 깊은 상호작용을 잡는 데는 약하다.
+</p>
+
+<p>
+그래서 딥러닝이 등장한다. 특히 Transformer는 자연어 처리에서 큰 성공을
+거뒀고, 이 논문은 그 아이디어를 축구 데이터에 가져온다.
+</p>
+</div>
+</div>
+<div id="outline-container-org00f9fe6" class="outline-3">
+<h3 id="org00f9fe6"><span class="section-number-3">1.4.</span> 1.4 논문의 핵심 아이디어</h3>
+<div class="outline-text-3" id="text-1-4">
+<p>
+이 논문의 모델은 두 가지를 결합한다.
+</p>
+
+<ul class="org-ul">
+<li><b>1D CNN</b>: 연속형 숫자 특성(득점, 점유율 등)에서 가까이 있는 값들의
+국소 패턴을 잡는다.</li>
+<li><b>Transformer</b>: 범주형 특성(리그 등)을 임베딩으로 바꾼 뒤, 서로 멀리
+떨어진 특성들 사이의 관계까지 잡는다.</li>
+</ul>
+
+<p>
+두 흐름의 결과를 합쳐 최종적으로 승/무/패를 예측한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4b6c6b4" class="outline-3">
+<h3 id="org4b6c6b4"><span class="section-number-3">1.5.</span> 1.5 논문의 기여 한 줄 정리</h3>
+<div class="outline-text-3" id="text-1-5">
+<p>
+연속형은 1D CNN으로, 범주형은 임베딩+Transformer로 따로 처리한 뒤
+합치는 하이브리드 구조가, 전통 머신러닝과 단독 딥러닝보다 축구 결과를
+더 잘 맞혔다는 것이 이 논문의 핵심 결과다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org09fb452" class="outline-2">
+<h2 id="org09fb452"><span class="section-number-2">2.</span> 2. 기본 개념</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-orgefb88d5" class="outline-3">
+<h3 id="orgefb88d5"><span class="section-number-3">2.1.</span> 2.1 승/무/패 3-클래스 분류 문제</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+예측 대상이 세 가지 중 하나인 문제를 3-클래스 분류라고 한다. 모델은 각
+경기에 대해 세 숫자를 내놓는다. 예를 들어 (승 0.6, 무 0.25, 패 0.15)
+처럼 합이 1인 확률을 출력하고, 가장 큰 쪽을 예측으로 고른다.
+</p>
+
+<p>
+이 확률을 만드는 함수가 softmax다. 점수 \( z_1, z_2, z_3 \)을 확률로 바꾼다.
+</p>
+
+<p>
+\[
+\text{softmax}(z_i) = \frac{e^{z_i}}{\sum_{j} e^{z_j}}
+\]
+</p>
+
+<p>
+지수 함수를 쓰는 이유는 두 가지다. 첫째, 모든 값을 양수로 만든다.
+둘째, 큰 점수는 더 크게 키워 차이를 또렷하게 만든다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgaef3d53" class="outline-3">
+<h3 id="orgaef3d53"><span class="section-number-3">2.2.</span> 2.2 연속형 특성과 범주형 특성의 차이</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+특성은 크게 두 종류다.
+</p>
+
+<ul class="org-ul">
+<li><b>연속형(continuous)</b>: 숫자에 크기 의미가 있는 값. 득점 수, 점유율,
+배당률 등. 더하고 빼는 게 의미가 있다.</li>
+<li><b>범주형(categorical)</b>: 종류를 나타내는 값. 리그 이름, 팀 이름 등.
+&ldquo;프리미어리그 1, 분데스리가 2&rdquo;처럼 번호를 붙여도 그 숫자의 크기에는
+의미가 없다.</li>
+</ul>
+
+<p>
+이 둘을 같은 방식으로 다루면 안 된다. 논문이 두 경로로 나눈 이유가
+여기에 있다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4b88477" class="outline-3">
+<h3 id="org4b88477"><span class="section-number-3">2.3.</span> 2.3 범주형을 임베딩으로 바꾸는 이유</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+리그를 그냥 1, 2, 3 숫자로 넣으면 모델은 &ldquo;3번 리그가 1번 리그의 3배&rdquo;
+라고 오해할 수 있다. 그렇다고 원-핫으로 펼치면 종류가 많을 때 0이
+가득한 희소한(sparse) 벡터가 된다.
+</p>
+
+<p>
+임베딩은 각 범주를 학습 가능한 짧은 실수 벡터로 바꾼다. 예를 들어
+리그를 8차원 벡터로 표현하고, 그 값을 훈련하면서 조정한다. 비슷한 성격의
+리그는 비슷한 벡터를 갖게 되어 의미 관계가 자연스럽게 담긴다.
+</p>
+</div>
+</div>
+<div id="outline-container-org055b7ae" class="outline-3">
+<h3 id="org055b7ae"><span class="section-number-3">2.4.</span> 2.4 셀프 어텐션의 직관</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+셀프 어텐션은 &ldquo;지금 보는 특성이 다른 어떤 특성과 관련이 깊은가&rdquo;를 스스로
+계산한다. 각 특성마다 질문(Query), 열쇠(Key), 값(Value) 세 벡터를 만들고,
+질문과 열쇠가 잘 맞는 특성의 값을 더 많이 가져온다.
+</p>
+
+<p>
+비유하면 도서관에서 검색어(Query)를 넣고, 각 책의 색인(Key)과 비교해
+관련 높은 책의 내용(Value)을 더 많이 읽는 것과 같다.
+</p>
+</div>
+</div>
+<div id="outline-container-org357b16c" class="outline-3">
+<h3 id="org357b16c"><span class="section-number-3">2.5.</span> 2.5 평가지표</h3>
+<div class="outline-text-3" id="text-2-5">
+<p>
+정확도만으로는 부족하다. 클래스가 불균형하면 다수 클래스만 찍어도
+정확도가 높게 나오기 때문이다. 그래서 논문은 여러 지표를 함께 본다.
+</p>
+
+<ul class="org-ul">
+<li><b>정확도(ACC)</b>: 맞힌 비율.</li>
+<li><b>Weighted F1</b>: 클래스별 정밀도와 재현율의 조화평균을, 클래스 크기로
+가중 평균한 값.</li>
+<li><b>MCC</b>: 네 칸(TP, TN, FP, FN)을 모두 반영해 불균형에 강한 지표.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org8905d6d" class="outline-2">
+<h2 id="org8905d6d"><span class="section-number-2">3.</span> 3. 알고리즘 설명 (논문 모델 중심)</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org6ee68e7" class="outline-3">
+<h3 id="org6ee68e7"><span class="section-number-3">3.1.</span> 3.1 전체 구조 한눈에 보기</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+논문 모델은 입력을 두 갈래로 나눈다. 연속형은 1D CNN으로, 범주형은
+임베딩 후 Transformer로 보낸다. 두 결과를 이어 붙이고(concat), 완전연결층
+(FC)을 거쳐 softmax로 승/무/패 확률을 낸다.
+</p>
+
+<div id="org3a19f0b" class="figure">
+<p><img src="images/architecture.svg" alt="architecture.svg" class="org-svg" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org4e1e331" class="outline-3">
+<h3 id="org4e1e331"><span class="section-number-3">3.2.</span> 3.2 범주형 경로: 컬럼 임베딩 층</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+범주형 특성 \( c_i \)는 정해진 후보값 집합 \( V_i \) 중 하나를 갖는다.
+각 범주형 특성마다 임베딩 행렬 \( E_i \in \mathbb{R}^{|V_i| \times d} \)를 둔다.
+여기서 \( |V_i| \)는 후보값 개수, \( d \)는 임베딩 차원이다. 이 행렬은
+학습되는 값이라 훈련하면서 점점 좋아진다.
+</p>
+
+<p>
+쉽게 말해, 각 범주는 표에서 자기 줄(행)을 찾아 \( d \)차원 벡터로
+바뀐다. 리그가 11개면 \( 11 \times d \) 크기의 표에서 해당 리그 줄을
+꺼내는 것이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgc06c22e" class="outline-3">
+<h3 id="orgc06c22e"><span class="section-number-3">3.3.</span> 3.3 Transformer: 셀프 어텐션 수식</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+핵심은 어텐션 한 줄이다. 입력에서 질문 \( Q \), 열쇠 \( K \), 값 \( V \)
+행렬을 만들고 다음을 계산한다.
+</p>
+
+<p>
+\[
+\text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^{T}}{\sqrt{d_k}}\right)V
+\]
+</p>
+
+<p>
+\( QK^{T} \)는 질문과 열쇠의 유사도다. \( \sqrt{d_k} \)로 나누는 이유는
+차원이 커질수록 값이 너무 커져서 softmax가 한쪽으로 쏠리는 것을 막기
+위해서다. softmax로 가중치를 만든 뒤 값 \( V \)를 그 비율로 섞는다.
+</p>
+
+<p>
+여러 관점에서 동시에 보기 위해 어텐션을 여러 개(head) 둔다. 이를
+멀티헤드 어텐션이라 한다.
+</p>
+
+<p>
+\[
+\text{MultiHead}(Q,K,V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h)\,W^{O}
+\]
+</p>
+
+<p>
+각 head가 독립적으로 어텐션을 계산하고, 결과를 이어 붙인 뒤 가중치
+\( W^{O} \)로 한 번 더 변환한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org00ca87a" class="outline-3">
+<h3 id="org00ca87a"><span class="section-number-3">3.4.</span> 3.4 연속형 경로: 잔차 1D CNN 블록</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+1D 합성곱은 이웃한 값들을 묶어 가중합한다.
+</p>
+
+<p>
+\[
+y_i = \sum_{j=0}^{k-1} w_j \, x_{i+j}
+\]
+</p>
+
+<p>
+\( x \)는 입력, \( w \)는 학습되는 필터, \( k \)는 필터 크기다. 필터가
+한 칸씩 미끄러지며 국소 패턴을 읽는다. 예를 들어 &ldquo;최근 득점과 점유율이
+함께 높다&rdquo; 같은 이웃한 특성의 조합을 잡는다.
+</p>
+
+<p>
+논문은 여기에 잔차 연결(residual)을 더한다. 입력을 두 갈래로 보내,
+한쪽은 합성곱 두 번 + LeakyReLU + 배치 정규화 + 풀링을 거치고, 다른
+한쪽은 FC 층으로 차원만 맞춘다. 그리고 둘을 더한다.
+</p>
+
+<div id="org1adfb03" class="figure">
+<p><img src="images/cnn_block.svg" alt="cnn_block.svg" class="org-svg" />
+</p>
+</div>
+
+<p>
+잔차 연결의 장점은 정보가 깊은 층을 지나도 사라지지 않게 지름길을
+열어 주는 것이다. 이는 층이 깊어질 때 생기는 기울기 소실 문제를 줄인다.
+</p>
+</div>
+</div>
+<div id="outline-container-org7360dca" class="outline-3">
+<h3 id="org7360dca"><span class="section-number-3">3.5.</span> 3.5 두 경로 합치기 → FC → softmax</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+연속형 경로의 출력과 범주형 경로의 출력을 이어 붙인다. 그 벡터를 FC
+층으로 줄이고 softmax로 세 확률을 만든다. 학습은 정답과 예측의 차이를
+재는 교차 엔트로피 손실을 줄이는 방향으로 진행한다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgbea6caf" class="outline-3">
+<h3 id="orgbea6caf"><span class="section-number-3">3.6.</span> 3.6 모델 선택 근거</h3>
+<div class="outline-text-3" id="text-3-6">
+<p>
+논문은 단독 CNN, RNN, 전통 머신러닝도 먼저 시험했다고 밝힌다. 결과는
+하이브리드가 가장 좋았다. 이유는 분업이다. CNN은 가까운 특성의 국소
+패턴에 강하고, Transformer는 멀리 떨어진 특성 간 관계에 강하다. 둘을
+합치니 낮은 수준과 높은 수준의 상호작용을 모두 잡을 수 있었다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd27ec52" class="outline-2">
+<h2 id="orgd27ec52"><span class="section-number-2">4.</span> 4. 간단 예제</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+각 구성 요소를 작은 코드로 따로 본다. 모두 keras로 작성한다.
+</p>
+</div>
+<div id="outline-container-org4c9c039" class="outline-3">
+<h3 id="org4c9c039"><span class="section-number-3">4.1.</span> 4.1 임베딩 층 예제</h3>
+<div class="outline-text-3" id="text-4-1">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+<span style="color: #51afef;">from</span> tensorflow <span style="color: #51afef;">import</span> keras
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47532;&#44536;&#44032; 11&#51333;&#51060;&#46972;&#44256; &#44032;&#51221;. &#44033; &#47532;&#44536;&#47484; 8&#52264;&#50896; &#48289;&#53552;&#47196; &#51076;&#48288;&#46377;&#54620;&#45796;.
+</span><span style="color: #dcaeea;">embedding</span> <span style="color: #51afef;">=</span> keras.layers.Embedding(input_dim<span style="color: #51afef;">=</span>11, output_dim<span style="color: #51afef;">=</span>8)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44221;&#44592; 4&#44060;&#51032; &#47532;&#44536; &#48264;&#54840; (0~10 &#49324;&#51060; &#51221;&#49688;)
+</span><span style="color: #dcaeea;">league_ids</span> <span style="color: #51afef;">=</span> np.array([0, 3, 7, 10])
+<span style="color: #dcaeea;">vectors</span> <span style="color: #51afef;">=</span> embedding(league_ids)
+<span style="color: #c678dd;">print</span>(vectors.shape)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(4, 8): &#44221;&#44592; 4&#44060; &#44033;&#44033; 8&#52264;&#50896; &#48289;&#53552;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+(4, 8)
+</pre>
+
+<p>
+실행 단계는 이렇다. 먼저 <code>Embedding</code> 층을 만든다. 입력 단계에서 정수
+리그 번호를 넣는다. 출력 단계에서 각 번호가 8차원 벡터로 바뀐다.
+</p>
+
+<p>
+주요 인자를 보면, <code>input_dim</code> 은 범주의 개수(여기서는 리그 11종),
+<code>output_dim</code> 은 임베딩 벡터의 차원이다. 이 층의 특징은 표에서 해당
+줄을 꺼내는 단순 동작이지만, 그 표 값이 훈련으로 학습된다는 점이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf935be7" class="outline-3">
+<h3 id="orgf935be7"><span class="section-number-3">4.2.</span> 4.2 멀티헤드 어텐션 블록 예제</h3>
+<div class="outline-text-3" id="text-4-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53664;&#53360; 6&#44060;, &#44033; &#53664;&#53360; 16&#52264;&#50896;&#51060;&#46972;&#44256; &#44032;&#51221;&#54620; &#51077;&#47141;
+</span><span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> tf.random.normal((1, 6, 16))   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(&#48176;&#52824;, &#53664;&#53360; &#49688;, &#52264;&#50896;)
+</span>
+<span style="color: #dcaeea;">attn</span> <span style="color: #51afef;">=</span> keras.layers.MultiHeadAttention(num_heads<span style="color: #51afef;">=</span>2, key_dim<span style="color: #51afef;">=</span>16)
+<span style="color: #dcaeea;">out</span> <span style="color: #51afef;">=</span> attn(x, x)                   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49472;&#54532; &#50612;&#53584;&#49496;: query&#50752; value&#44032; &#44057;&#51008; x
+</span><span style="color: #c678dd;">print</span>(out.shape)                   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(1, 6, 16): &#47784;&#50577;&#51008; &#44536;&#45824;&#47196;, &#45236;&#50857;&#51008; &#49438;&#51076;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+(1, 6, 16)
+</pre>
+
+<p>
+실행 단계는 이렇다. 입력을 (배치, 토큰 수, 차원) 모양으로 준비한다.
+<code>MultiHeadAttention</code> 을 만들고, 같은 입력을 query와 value로 넣어 셀프
+어텐션을 한다. 출력 모양은 입력과 같지만, 각 토큰이 다른 토큰의 정보를
+섞어 받은 상태가 된다.
+</p>
+
+<p>
+주요 인자는 <code>num_heads</code> (관점의 수)와 <code>key_dim</code> (각 head에서 쓰는
+열쇠 벡터 차원)이다. 특징은 한 번에 여러 관점으로 관계를 본다는 점이다.
+</p>
+</div>
+</div>
+<div id="outline-container-org9b40f75" class="outline-3">
+<h3 id="org9b40f75"><span class="section-number-3">4.3.</span> 4.3 잔차 1D CNN 블록 예제</h3>
+<div class="outline-text-3" id="text-4-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">residual_cnn_block</span>(input_dim):
+    <span style="color: #dcaeea;">inputs</span> <span style="color: #51afef;">=</span> keras.Input(shape<span style="color: #51afef;">=</span>(input_dim,))
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.Reshape((input_dim, 1))(inputs)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">1D &#49888;&#54840; &#47784;&#50577;&#51004;&#47196;
+</span>
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47700;&#51064; &#44221;&#47196;: &#54633;&#49457;&#44273; &#46160; &#48264;
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.Conv1D(32, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>)(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.LeakyReLU()(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.BatchNormalization()(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.Conv1D(32, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>)(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.LeakyReLU()(x)
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.MaxPooling1D(2)(x)
+    <span style="color: #dcaeea;">main</span> <span style="color: #51afef;">=</span> keras.layers.Flatten()(x)
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51092;&#52264; &#44221;&#47196;: &#52264;&#50896;&#47564; &#47582;&#52656;&#49436; &#45908;&#54616;&#44592;
+</span>    <span style="color: #dcaeea;">res</span> <span style="color: #51afef;">=</span> keras.layers.Dense(main.shape[<span style="color: #51afef;">-</span>1])(inputs)
+    <span style="color: #dcaeea;">out</span> <span style="color: #51afef;">=</span> keras.layers.Add()([main, res])
+    <span style="color: #51afef;">return</span> keras.Model(inputs, out)
+
+<span style="color: #dcaeea;">block</span> <span style="color: #51afef;">=</span> residual_cnn_block(18)
+block.summary()
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 입력을 받아 <code>Reshape</code> 로 1D 신호 모양으로 바꾼다.
+메인 경로에서 합성곱을 두 번 통과시키며 국소 패턴을 뽑는다. 잔차
+경로에서는 <code>Dense</code> 로 차원만 맞춘다. 마지막에 <code>Add</code> 로 두 경로를 더한다.
+</p>
+
+<p>
+주요 함수를 보면, <code>Conv1D(필터 수, 필터 크기)</code> 는 이웃 값을 묶어 읽는다.
+<code>BatchNormalization</code> 은 값의 분포를 안정시켜 학습을 빠르게 한다.
+<code>MaxPooling1D</code> 는 길이를 줄여 계산을 가볍게 한다.
+</p>
+</div>
+</div>
+<div id="outline-container-org2f1e83a" class="outline-3">
+<h3 id="org2f1e83a"><span class="section-number-3">4.4.</span> 4.4 하이브리드 모델 조립 예제</h3>
+<div class="outline-text-3" id="text-4-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_hybrid</span>(n_cont, n_league, emb_dim<span style="color: #51afef;">=</span>8):
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50672;&#49549;&#54805; &#51077;&#47141; -&gt; &#51092;&#52264; 1D CNN
+</span>    <span style="color: #dcaeea;">cont_in</span> <span style="color: #51afef;">=</span> keras.Input(shape<span style="color: #51afef;">=</span>(n_cont,), name<span style="color: #51afef;">=</span><span style="color: #98be65;">'continuous'</span>)
+    <span style="color: #dcaeea;">c</span> <span style="color: #51afef;">=</span> keras.layers.Reshape((n_cont, 1))(cont_in)
+    <span style="color: #dcaeea;">c</span> <span style="color: #51afef;">=</span> keras.layers.Conv1D(32, 3, padding<span style="color: #51afef;">=</span><span style="color: #98be65;">'same'</span>, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>)(c)
+    <span style="color: #dcaeea;">c</span> <span style="color: #51afef;">=</span> keras.layers.MaxPooling1D(2)(c)
+    <span style="color: #dcaeea;">c</span> <span style="color: #51afef;">=</span> keras.layers.Flatten()(c)
+    <span style="color: #dcaeea;">c_res</span> <span style="color: #51afef;">=</span> keras.layers.Dense(c.shape[<span style="color: #51afef;">-</span>1])(cont_in)
+    <span style="color: #dcaeea;">cont_out</span> <span style="color: #51afef;">=</span> keras.layers.Add()([c, c_res])
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48276;&#51452;&#54805;(&#47532;&#44536;) &#51077;&#47141; -&gt; &#51076;&#48288;&#46377; -&gt; &#49472;&#54532; &#50612;&#53584;&#49496;
+</span>    <span style="color: #dcaeea;">cat_in</span> <span style="color: #51afef;">=</span> keras.Input(shape<span style="color: #51afef;">=</span>(1,), name<span style="color: #51afef;">=</span><span style="color: #98be65;">'league'</span>)
+    <span style="color: #dcaeea;">e</span> <span style="color: #51afef;">=</span> keras.layers.Embedding(n_league, emb_dim)(cat_in)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(&#48176;&#52824;,1,emb)
+</span>    <span style="color: #dcaeea;">e</span> <span style="color: #51afef;">=</span> keras.layers.MultiHeadAttention(num_heads<span style="color: #51afef;">=</span>2, key_dim<span style="color: #51afef;">=</span>emb_dim)(e, e)
+    <span style="color: #dcaeea;">cat_out</span> <span style="color: #51afef;">=</span> keras.layers.Flatten()(e)
+
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#46160; &#44221;&#47196; &#54633;&#52824;&#44592; -&gt; FC -&gt; softmax
+</span>    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.Concatenate()([cont_out, cat_out])
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> keras.layers.Dense(64, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'relu'</span>)(x)
+    <span style="color: #dcaeea;">out</span> <span style="color: #51afef;">=</span> keras.layers.Dense(3, activation<span style="color: #51afef;">=</span><span style="color: #98be65;">'softmax'</span>)(x)
+    <span style="color: #51afef;">return</span> keras.Model([cont_in, cat_in], out)
+
+<span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> build_hybrid(n_cont<span style="color: #51afef;">=</span>18, n_league<span style="color: #51afef;">=</span>11)
+model.summary()
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 연속형과 범주형을 각각 다른 <code>Input</code> 으로 받는다.
+연속형은 1D CNN 경로로, 범주형은 임베딩과 어텐션 경로로 보낸다.
+<code>Concatenate</code> 로 두 결과를 합치고, <code>Dense</code> 와 softmax로 세 확률을 낸다.
+이 구조가 논문 Fig.2를 학생 수준으로 단순화한 형태다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf91c27a" class="outline-2">
+<h2 id="orgf91c27a"><span class="section-number-2">5.</span> 5. 고찰: 장단점과 개선 방향</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-org9b09292" class="outline-3">
+<h3 id="org9b09292"><span class="section-number-3">5.1.</span> 5.1 하이브리드 모델의 장점</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+가장 큰 장점은 분업이다. 연속형과 범주형을 성격에 맞게 따로 처리한다.
+1D CNN은 이웃 특성의 국소 패턴을, Transformer는 멀리 떨어진 특성 간
+관계를 잡는다. 잔차 연결 덕분에 층을 깊게 쌓아도 정보가 잘 흐른다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcb8805a" class="outline-3">
+<h3 id="orgcb8805a"><span class="section-number-3">5.2.</span> 5.2 단점과 비용</h3>
+<div class="outline-text-3" id="text-5-2">
+<p>
+단점도 분명하다. 첫째, 계산량이 많다. Transformer와 CNN을 같이 쓰니
+학습에 자원이 많이 든다. 둘째, 데이터가 많이 필요하다. 딥러닝은 표본이
+적으면 과대적합되기 쉽다. 셋째, 해석이 어렵다. 왜 그렇게 예측했는지
+사람이 알아보기 힘들다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgd89de5d" class="outline-3">
+<h3 id="orgd89de5d"><span class="section-number-3">5.3.</span> 5.3 베이스라인 대비 의미</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+논문은 단독 CNN, RNN, 전통 머신러닝과 비교했고 하이브리드가 더 나았다.
+하지만 스포츠 예측은 본질적으로 어렵다. 어떤 모델도 정확도가 아주 높지는
+않다. 그래서 단순한 기준선(다수 클래스 찍기, 배당률만 쓰기)과 비교해
+&ldquo;정말 의미 있는 향상인지&rdquo; 확인하는 태도가 중요하다.
+</p>
+</div>
+</div>
+<div id="outline-container-org35d9108" class="outline-3">
+<h3 id="org35d9108"><span class="section-number-3">5.4.</span> 5.4 개선 방향</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+논문은 후속 방향을 제시한다. 표형 데이터 전용 모델인 TabNet, TabPFN을
+써 보거나, 사전학습된 표현을 활용하거나, 경기 보고서 같은 텍스트 데이터를
+함께 쓰는 멀티모달 확장이 그것이다. 또한 계산 비용을 줄이는 경량화도
+실무에서는 중요한 과제다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org5eab450" class="outline-2">
+<h2 id="org5eab450"><span class="section-number-2">6.</span> 6. 실무 데이터 고찰: 데이터 정리와 관찰</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-org22321e1" class="outline-3">
+<h3 id="org22321e1"><span class="section-number-3">6.1.</span> 6.1 데이터셋 구조</h3>
+<div class="outline-text-3" id="text-6-1">
+<p>
+논문은 캐글의 European Soccer Database를 쓴다. 11개 유럽 국가, 2008~2016
+시즌, 경기 2만 5천 건 이상, 선수 1만 명 이상을 담는다. 데이터는 크게
+네 종류다.
+</p>
+
+<ul class="org-ul">
+<li><b>경기 데이터</b>: 결과, 팀 구성, 라인업, 골·파울·점유율 등 경기 중 사건.</li>
+<li><b>선수·팀 능력치</b>: EA Sports FIFA 시리즈에서 가져온 선수 기량, 팀 전력.</li>
+<li><b>배당률</b>: 최대 10개 업체의 배당률. 시장의 기대치를 보여 준다.</li>
+<li><b>이벤트 데이터</b>: 골 종류, 코너, 크로스, 파울 등 세부 사건.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb6fde24" class="outline-3">
+<h3 id="orgb6fde24"><span class="section-number-3">6.2.</span> 6.2 레이블 만들기</h3>
+<div class="outline-text-3" id="text-6-2">
+<p>
+각 경기를 홈팀 기준으로 라벨링한다. 홈팀 골이 더 많으면 Win, 같으면
+Draw, 적으면 Defeat다. 즉 정답은 홈팀 골과 원정팀 골만 있으면 정해진다.
+주의할 점은, 정답을 만든 골 수 자체를 입력 특성으로 쓰면 안 된다는
+것이다. 그건 답을 그대로 알려주는 셈이라 데이터 누수가 된다.
+</p>
+</div>
+</div>
+<div id="outline-container-org8622f67" class="outline-3">
+<h3 id="org8622f67"><span class="section-number-3">6.3.</span> 6.3 필드 선정 ① FIFA 평점</h3>
+<div class="outline-text-3" id="text-6-3">
+<p>
+팀 전력을 수치로 나타내려고 FIFA의 선수 종합 평점(overall rating)을
+쓴다. 핵심은 시점이다. 각 선수의 평점 중 &ldquo;경기 날짜 이전의 가장 가까운&rdquo;
+값을 고른다.
+</p>
+
+<p>
+\[
+\text{rating}(p_i) = \max\big(\text{overall\_rating}(p_i, d)\big), \quad d < D
+\]
+</p>
+
+<p>
+여기서 \( D \)는 경기 날짜, \( d \)는 그 이전 시점이다. 이렇게 하는
+이유는 미래 정보가 새는 것을 막기 위해서다. 경기 이후에 갱신된 평점을
+쓰면 결과를 알고 예측하는 반칙이 된다. 이 필드는 &ldquo;이 팀이 얼마나 센
+선수들로 구성됐는가&rdquo;를 알려 주므로 선정됐다.
+</p>
+</div>
+</div>
+<div id="outline-container-org3a8ec77" class="outline-3">
+<h3 id="org3a8ec77"><span class="section-number-3">6.4.</span> 6.4 필드 선정 ② 팀 과거 성적</h3>
+<div class="outline-text-3" id="text-6-4">
+<p>
+일정 기간의 득점 수, 실점 수, 승리 수를 모은다. 그리고 골득실(득점 -
+실점)도 본다. 득점은 공격력을, 실점은 수비력을 보여 준다. 골득실은
+둘을 합쳐 팀의 전체 강함을 한 숫자로 요약한다. 과거의 흐름이 다음
+경기로 이어지는 경향이 있어 이 필드들이 선정됐다.
+</p>
+</div>
+</div>
+<div id="outline-container-org8e8f6e1" class="outline-3">
+<h3 id="org8e8f6e1"><span class="section-number-3">6.5.</span> 6.5 필드 선정 ③ 상대 전적</h3>
+<div class="outline-text-3" id="text-6-5">
+<p>
+같은 두 팀의 과거 맞대결 기록을 본다. 전체 전력으로는 설명이 안 되는
+&ldquo;천적 관계&rdquo; 같은 맞대결 특유의 성질을 담기 위해서다.
+</p>
+</div>
+</div>
+<div id="outline-container-orge91126a" class="outline-3">
+<h3 id="orge91126a"><span class="section-number-3">6.6.</span> 6.6 필드 선정 ④ 배당률</h3>
+<div class="outline-text-3" id="text-6-6">
+<p>
+배당률은 수많은 사람의 베팅이 모여 만들어진 시장의 집단 예측이다. 그
+자체로 매우 강한 신호다. 전문가와 대중의 판단이 압축돼 있기 때문에,
+배당률만 써도 꽤 잘 맞는다. 그래서 빠질 수 없는 필드다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgee9447d" class="outline-3">
+<h3 id="orgee9447d"><span class="section-number-3">6.7.</span> 6.7 필드 선정 ⑤ 리그 식별자</h3>
+<div class="outline-text-3" id="text-6-7">
+<p>
+리그는 범주형 특성이다. 리그마다 경기 성향(득점이 많은 리그, 수비적인
+리그)이 달라서 예측에 도움이 된다. 숫자 크기에 의미가 없으니 임베딩으로
+바꿔서 모델에 넣는다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgbd353eb" class="outline-3">
+<h3 id="orgbd353eb"><span class="section-number-3">6.8.</span> 6.8 결측치 처리</h3>
+<div class="outline-text-3" id="text-6-8">
+<p>
+논문은 값이 빠진 행을 평균이나 중앙값으로 채우지 않고 그냥 제거한다.
+인위적으로 채운 값이 분포를 왜곡해 모델 해석을 흐릴 수 있기 때문이다.
+대신 데이터가 충분히 많아서 행을 지워도 학습에 무리가 없다.
+</p>
+</div>
+</div>
+<div id="outline-container-org6aabf13" class="outline-3">
+<h3 id="org6aabf13"><span class="section-number-3">6.9.</span> 6.9 데이터 관찰: KDE 분포 보기</h3>
+<div class="outline-text-3" id="text-6-9">
+<p>
+논문은 연속형 특성의 분포를 승/무/패 그룹별로 겹쳐 그린다(KDE). 어떤
+특성이 결과를 잘 가르는지 눈으로 확인하는 단계다. 세 곡선이 많이 겹치면
+그 특성은 결과를 잘 못 가르고, 곡선이 서로 떨어져 있으면 잘 가른다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+<span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+<span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.read_csv(<span style="color: #98be65;">'data/data.csv'</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48176;&#45817;&#47456;(B365H, &#54856; &#49849;&#47532; &#48176;&#45817;)&#51012; &#44208;&#44284;&#48324;&#47196; &#48516;&#54252; &#48708;&#44368;
+</span><span style="color: #51afef;">for</span> label <span style="color: #51afef;">in</span> [<span style="color: #98be65;">'Win'</span>, <span style="color: #98be65;">'Draw'</span>, <span style="color: #98be65;">'Defeat'</span>]:
+    <span style="color: #dcaeea;">subset</span> <span style="color: #51afef;">=</span> df[df[<span style="color: #98be65;">'label'</span>] <span style="color: #51afef;">==</span> label][<span style="color: #98be65;">'B365H'</span>]
+    subset.plot(kind<span style="color: #51afef;">=</span><span style="color: #98be65;">'kde'</span>, label<span style="color: #51afef;">=</span>label)
+
+plt.xlabel(<span style="color: #98be65;">'&#54856; &#49849;&#47532; &#48176;&#45817;&#47456; (B365H)'</span>)
+plt.ylabel(<span style="color: #98be65;">'&#48128;&#46020;'</span>)
+plt.legend()
+plt.title(<span style="color: #98be65;">'&#44208;&#44284;&#48324; &#48176;&#45817;&#47456; &#48516;&#54252;'</span>)
+plt.show()
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 데이터를 불러온다. 승/무/패 각각의 배당률을 골라
+<code>kde</code> 분포로 그린다. 곡선이 갈라지는 정도로 그 특성의 예측력을 가늠한다.
+배당률은 보통 세 곡선이 잘 갈라져서 강한 특성임을 눈으로 알 수 있다.
+</p>
+</div>
+</div>
+<div id="outline-container-org88aa5a6" class="outline-3">
+<h3 id="org88aa5a6"><span class="section-number-3">6.10.</span> 6.10 클래스 불균형 관찰</h3>
+<div class="outline-text-3" id="text-6-10">
+<p>
+전체 21,374경기의 결과 분포를 보면 한쪽으로 치우쳐 있다. 홈 승리가
+가장 많다. 홈 어드밴티지 때문이다.
+</p>
+
+<p>
+불균형이 있으므로 정확도만 보면 안 되고 Weighted F1, MCC를 함께 봐야
+한다는 6.5절(2장)의 이유가 여기서 분명해진다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org301f160" class="outline-2">
+<h2 id="org301f160"><span class="section-number-2">7.</span> 7. 실무 데이터 적용</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+여기서는 우리가 만든 단순 버전 데이터(배당률 + 리그)로 전 과정을 돌린다.
+논문의 FIFA 평점·과거 성적·상대 전적은 6장에서 설명한 방식으로 같은
+파이프라인에 더 넣으면 된다.
+</p>
+</div>
+<div id="outline-container-org5916a8d" class="outline-3">
+<h3 id="org5916a8d"><span class="section-number-3">7.1.</span> 7.1 시간 순서 분할</h3>
+<div class="outline-text-3" id="text-7-1">
+<p>
+스포츠 데이터는 시간 순서가 있다. 미래로 과거를 예측하면 안 되므로,
+섞지 않고 앞에서부터 훈련/검증/테스트로 나눈다. 논문도 같은 원칙으로
+2009~2013을 훈련(13,155), 2014를 검증(2,887), 2015를 테스트(3,052)로
+나눴다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgfb1b42c" class="outline-3">
+<h3 id="orgfb1b42c"><span class="section-number-3">7.2.</span> 7.2 전처리 파이프라인</h3>
+<div class="outline-text-3" id="text-7-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+<span style="color: #51afef;">from</span> sklearn.preprocessing <span style="color: #51afef;">import</span> LabelEncoder, StandardScaler
+
+<span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.read_csv(<span style="color: #98be65;">'data/data.csv'</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50672;&#49549;&#54805;(&#48176;&#45817;&#47456;)&#44284; &#48276;&#51452;&#54805;(&#47532;&#44536;)&#51012; &#45208;&#45576;&#45796;
+</span><span style="color: #dcaeea;">odds_cols</span> <span style="color: #51afef;">=</span> [c <span style="color: #51afef;">for</span> c <span style="color: #51afef;">in</span> df.columns <span style="color: #51afef;">if</span> c[:3] <span style="color: #51afef;">in</span> (<span style="color: #98be65;">'B36'</span>,<span style="color: #98be65;">'BWH'</span>,<span style="color: #98be65;">'BWD'</span>,<span style="color: #98be65;">'BWA'</span>,<span style="color: #98be65;">'IWH'</span>,
+             <span style="color: #98be65;">'IWD'</span>,<span style="color: #98be65;">'IWA'</span>,<span style="color: #98be65;">'WHH'</span>,<span style="color: #98be65;">'WHD'</span>,<span style="color: #98be65;">'WHA'</span>,<span style="color: #98be65;">'VCH'</span>,<span style="color: #98be65;">'VCD'</span>,<span style="color: #98be65;">'VCA'</span>)]
+<span style="color: #dcaeea;">league_cols</span> <span style="color: #51afef;">=</span> [c <span style="color: #51afef;">for</span> c <span style="color: #51afef;">in</span> df.columns <span style="color: #51afef;">if</span> c.startswith(<span style="color: #98be65;">'League_'</span>)]
+
+<span style="color: #dcaeea;">X_cont</span> <span style="color: #51afef;">=</span> df[odds_cols].astype(<span style="color: #98be65;">'float32'</span>).values
+<span style="color: #dcaeea;">X_league</span> <span style="color: #51afef;">=</span> df[league_cols].values.argmax(axis<span style="color: #51afef;">=</span>1)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50896;-&#54635; -&gt; &#51221;&#49688; &#51064;&#45937;&#49828;
+</span>
+<span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> LabelEncoder().fit_transform(df[<span style="color: #98be65;">'label'</span>])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">'&#50672;&#49549;&#54805; &#53945;&#49457; &#49688;:'</span>, X_cont.shape[1], <span style="color: #98be65;">'| &#47532;&#44536; &#51333;&#47448;:'</span>, X_league.<span style="color: #c678dd;">max</span>()<span style="color: #51afef;">+</span>1)
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 데이터를 불러온다. 배당률 열은 연속형으로, <code>League_*</code>
+열은 원-핫이므로 <code>argmax</code> 로 다시 정수 리그 번호로 바꾼다. 정답은
+<code>LabelEncoder</code> 로 0/1/2로 인코딩한다. 이렇게 연속형과 범주형을 따로
+준비해야 하이브리드 모델의 두 입력에 맞출 수 있다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf729bf9" class="outline-3">
+<h3 id="orgf729bf9"><span class="section-number-3">7.3.</span> 7.3 모델 학습</h3>
+<div class="outline-text-3" id="text-7-3">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49884;&#44036; &#49692;&#49436;&#45824;&#47196; &#48516;&#54624; (&#49438;&#51648; &#50506;&#51020;)
+</span><span style="color: #dcaeea;">n</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">len</span>(df); <span style="color: #dcaeea;">te</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">int</span>(n<span style="color: #51afef;">*</span>0.69); <span style="color: #dcaeea;">ve</span> <span style="color: #51afef;">=</span> te <span style="color: #51afef;">+</span> <span style="color: #c678dd;">int</span>(n<span style="color: #51afef;">*</span>0.15)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50672;&#49549;&#54805;&#51008; &#54984;&#47144; &#49464;&#53944;&#47196;&#47564; &#54364;&#51456;&#54868; &#54617;&#49845;
+</span><span style="color: #dcaeea;">scaler</span> <span style="color: #51afef;">=</span> StandardScaler().fit(X_cont[:te])
+<span style="color: #dcaeea;">Xc_tr</span>, <span style="color: #dcaeea;">Xc_va</span>, <span style="color: #dcaeea;">Xc_te</span> <span style="color: #51afef;">=</span> (scaler.transform(X_cont[:te]),
+                       scaler.transform(X_cont[te:ve]),
+                       scaler.transform(X_cont[ve:]))
+<span style="color: #dcaeea;">Xl_tr</span>, <span style="color: #dcaeea;">Xl_va</span>, <span style="color: #dcaeea;">Xl_te</span> <span style="color: #51afef;">=</span> X_league[:te], X_league[te:ve], X_league[ve:]
+<span style="color: #dcaeea;">y_tr</span>, <span style="color: #dcaeea;">y_va</span>, <span style="color: #dcaeea;">y_te</span> <span style="color: #51afef;">=</span> y[:te], y[te:ve], y[ve:]
+
+<span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> build_hybrid(n_cont<span style="color: #51afef;">=</span>Xc_tr.shape[1], n_league<span style="color: #51afef;">=</span>X_league.<span style="color: #c678dd;">max</span>()<span style="color: #51afef;">+</span>1)
+model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">'adam'</span>,
+              loss<span style="color: #51afef;">=</span><span style="color: #98be65;">'sparse_categorical_crossentropy'</span>,
+              metrics<span style="color: #51afef;">=</span>[<span style="color: #98be65;">'accuracy'</span>])
+
+<span style="color: #dcaeea;">history</span> <span style="color: #51afef;">=</span> model.fit(
+    {<span style="color: #98be65;">'continuous'</span>: Xc_tr, <span style="color: #98be65;">'league'</span>: Xl_tr}, y_tr,
+    validation_data<span style="color: #51afef;">=</span>({<span style="color: #98be65;">'continuous'</span>: Xc_va, <span style="color: #98be65;">'league'</span>: Xl_va}, y_va),
+    epochs<span style="color: #51afef;">=</span>30, batch_size<span style="color: #51afef;">=</span>64,
+    callbacks<span style="color: #51afef;">=</span>[keras.callbacks.EarlyStopping(patience<span style="color: #51afef;">=</span>5,
+                                             restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)],
+    verbose<span style="color: #51afef;">=</span>1)
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 시간 순서로 데이터를 나눈다. 표준화는 훈련 세트로만
+<code>fit</code> 한 뒤 나머지에 <code>transform</code> 한다(누수 방지). 하이브리드 모델을 만들고
+<code>compile</code> 로 학습 방법을 정한다. <code>fit</code> 에서 두 입력을 딕셔너리로 함께
+넣어 학습한다. <code>EarlyStopping</code> 은 검증 점수가 더 안 좋아지면 멈춘다.
+</p>
+
+<p>
+주요 인자를 보면, <code>loss='sparse_categorical_crossentropy'</code> 는 정답이
+정수일 때 쓰는 다중 분류 손실이다. <code>batch_size</code> 는 한 번에 보는 경기 수,
+<code>epochs</code> 는 전체 데이터를 몇 번 반복할지다.
+</p>
+</div>
+</div>
+<div id="outline-container-org9c6a6e8" class="outline-3">
+<h3 id="org9c6a6e8"><span class="section-number-3">7.4.</span> 7.4 평가와 베이스라인 비교</h3>
+<div class="outline-text-3" id="text-7-4">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> sklearn.metrics <span style="color: #51afef;">import</span> f1_score, matthews_corrcoef
+
+<span style="color: #dcaeea;">y_pred</span> <span style="color: #51afef;">=</span> np.argmax(
+    model.predict({<span style="color: #98be65;">'continuous'</span>: Xc_te, <span style="color: #98be65;">'league'</span>: Xl_te}, verbose<span style="color: #51afef;">=</span>0), axis<span style="color: #51afef;">=</span>1)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44592;&#51456;&#49440;: &#47924;&#51312;&#44148; &#45796;&#49688; &#53364;&#47000;&#49828;&#47196; &#52237;&#44592;
+</span><span style="color: #dcaeea;">majority</span> <span style="color: #51afef;">=</span> np.bincount(y_tr).argmax()
+<span style="color: #dcaeea;">base_acc</span> <span style="color: #51afef;">=</span> (y_te <span style="color: #51afef;">==</span> majority).mean()
+
+<span style="color: #dcaeea;">acc</span> <span style="color: #51afef;">=</span> (y_te <span style="color: #51afef;">==</span> y_pred).mean()
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">'&#44592;&#51456;&#49440;(&#45796;&#49688; &#53364;&#47000;&#49828;) &#51221;&#54869;&#46020; : </span>{base_acc:.4f}<span style="color: #98be65;">'</span>)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">'&#54616;&#51060;&#48652;&#47532;&#46300; &#51221;&#54869;&#46020;          : </span>{acc:.4f}<span style="color: #98be65;">'</span>)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">'Weighted F1               : </span>{f1_score(y_te, y_pred, average<span style="color: #51afef;">=</span>"weighted"):.4f}<span style="color: #98be65;">'</span>)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">'MCC                       : </span>{matthews_corrcoef(y_te, y_pred):.4f}<span style="color: #98be65;">'</span>)
+</code></pre>
+</div>
+
+<p>
+실행 단계는 이렇다. 테스트 세트로 예측한다. 다수 클래스만 찍는 기준선과
+비교한다. 정확도뿐 아니라 Weighted F1과 MCC도 함께 출력한다. 모델이
+기준선을 의미 있게 넘는지가 핵심이다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgfeb8480" class="outline-3">
+<h3 id="orgfeb8480"><span class="section-number-3">7.5.</span> 7.5 결과 해석·한계·마무리</h3>
+<div class="outline-text-3" id="text-7-5">
+<p>
+축구 결과 예측은 어렵다. 좋은 모델도 정확도가 아주 높지는 않다. 그래도
+이 강의에서 배운 핵심은 분명하다.
+</p>
+
+<p>
+첫째, 데이터의 성격에 맞춰 처리한다. 연속형은 CNN, 범주형은 임베딩과
+어텐션으로 나눈다. 둘째, 누수를 막는다. 경기 직전 정보만 쓰고, 시간
+순서로 나누고, 표준화는 훈련 세트로만 학습한다. 셋째, 지표를 제대로
+고른다. 불균형 데이터에서는 정확도만 보지 않고 Weighted F1, MCC를 본다.
+</p>
+
+<p>
+이 세 가지는 축구뿐 아니라 모든 표형 데이터 예측에 그대로 적용되는
+원칙이다.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: minwook Han</p>
+<p class="date">Created: 2026-06-12 Fri 01:40</p>
+</div>
+</body>
+</html>

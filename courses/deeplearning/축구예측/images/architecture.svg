@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="sans-serif" font-size="13">
+  <rect x="0" y="0" width="760" height="360" fill="white"/>
+
+  <!-- 연속형 경로 -->
+  <rect x="20" y="30" width="150" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="95" y="55" text-anchor="middle">연속형 특성</text>
+
+  <rect x="20" y="100" width="150" height="40" rx="6" fill="#bbdefb" stroke="#1565c0"/>
+  <text x="95" y="125" text-anchor="middle">정규화</text>
+
+  <rect x="20" y="170" width="150" height="50" rx="6" fill="#90caf9" stroke="#1565c0"/>
+  <text x="95" y="195" text-anchor="middle">잔차 1D CNN</text>
+  <text x="95" y="211" text-anchor="middle" font-size="11">블록</text>
+
+  <!-- 범주형 경로 -->
+  <rect x="220" y="30" width="150" height="40" rx="6" fill="#fff3e0" stroke="#e65100"/>
+  <text x="295" y="55" text-anchor="middle">범주형 특성</text>
+
+  <rect x="220" y="100" width="150" height="40" rx="6" fill="#ffe0b2" stroke="#e65100"/>
+  <text x="295" y="125" text-anchor="middle">임베딩</text>
+
+  <rect x="220" y="170" width="150" height="50" rx="6" fill="#ffcc80" stroke="#e65100"/>
+  <text x="295" y="190" text-anchor="middle">Transformer</text>
+  <text x="295" y="207" text-anchor="middle" font-size="11">(셀프 어텐션)</text>
+
+  <!-- 합치기 -->
+  <rect x="120" y="260" width="150" height="40" rx="6" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="195" y="285" text-anchor="middle">이어 붙이기</text>
+
+  <rect x="320" y="260" width="120" height="40" rx="6" fill="#c8e6c9" stroke="#2e7d32"/>
+  <text x="380" y="285" text-anchor="middle">FC 층</text>
+
+  <rect x="490" y="260" width="120" height="40" rx="6" fill="#a5d6a7" stroke="#2e7d32"/>
+  <text x="550" y="285" text-anchor="middle">softmax</text>
+
+  <rect x="640" y="260" width="100" height="40" rx="6" fill="#81c784" stroke="#1b5e20"/>
+  <text x="690" y="280" text-anchor="middle">승/무/패</text>
+
+  <!-- 화살표 -->
+  <defs>
+    <marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <g stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <path d="M95,70 V100"/>
+    <path d="M95,140 V170"/>
+
+    <path d="M295,70 V100"/>
+    <path d="M295,140 V170"/>
+
+    <path d="M95,220 V280 H120"/>
+    <path d="M295,220 V280 H270"/>
+
+    <path d="M270,280 H320"/>
+    <path d="M440,280 H490"/>
+    <path d="M610,280 H640"/>
+  </g>
+</svg>
