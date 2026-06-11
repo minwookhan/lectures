@@ -42,6 +42,14 @@
           "title": "심장병 예측으로 배우는 머신러닝",
           "path": "courses/ml/심장병-예측으로-배우는-머신러닝/",
           "tags": []
+        },
+        {
+          "title": "부스팅 알고리즘:Adaboost, XGBoost",
+          "path": "courses/ml/부스팅-알고리즘adaboost-xgboost/",
+          "tags": [
+            "adaboost",
+            "xgboost"
+          ]
         }
       ]
     },

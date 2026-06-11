@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="220" viewBox="0 0 520 220">
+  <style>
+    .lbl { font: 13px sans-serif; fill: #333; }
+    .ok  { fill: #4a90d9; }
+    .bad { fill: #d94a4a; }
+  </style>
+  <text class="lbl" x="20" y="25">Round 1 (모든 가중치 동일)</text>
+  <circle class="ok" cx="60"  cy="50" r="8"/>
+  <circle class="ok" cx="100" cy="50" r="8"/>
+  <circle class="bad" cx="140" cy="50" r="8"/>
+  <circle class="ok" cx="180" cy="50" r="8"/>
+  <circle class="bad" cx="220" cy="50" r="8"/>
+
+  <text class="lbl" x="20" y="115">Round 2 (틀린 점의 가중치 ↑ → 크게 표시)</text>
+  <circle class="ok" cx="60"  cy="140" r="6"/>
+  <circle class="ok" cx="100" cy="140" r="6"/>
+  <circle class="bad" cx="140" cy="140" r="14"/>
+  <circle class="ok" cx="180" cy="140" r="6"/>
+  <circle class="bad" cx="220" cy="140" r="14"/>
+
+  <text class="lbl" x="20" y="195">파랑: 맞힌 점   빨강: 틀린 점</text>
+</svg>

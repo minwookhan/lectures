@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="240" viewBox="0 0 520 240">
+  <style>
+    .axis { stroke: #999; stroke-width: 1; }
+    .lbl { font: 12px sans-serif; fill: #333; }
+    .pt  { fill: #222; }
+    .l1  { stroke: #d94a4a; stroke-width: 2; fill: none; stroke-dasharray: 4 3; }
+    .l2  { stroke: #4a90d9; stroke-width: 2.5; fill: none; }
+  </style>
+  <line class="axis" x1="50" y1="200" x2="490" y2="200"/>
+  <line class="axis" x1="50" y1="20"  x2="50"  y2="200"/>
+  <circle class="pt" cx="90"  cy="160" r="4"/>
+  <circle class="pt" cx="170" cy="120" r="4"/>
+  <circle class="pt" cx="250" cy="90"  r="4"/>
+  <circle class="pt" cx="330" cy="70"  r="4"/>
+  <circle class="pt" cx="410" cy="55"  r="4"/>
+  <path class="l1" d="M 90 150 L 410 100"/>
+  <text class="lbl" x="300" y="135" fill="#d94a4a">트리 1개</text>
+  <path class="l2" d="M 90 160 Q 250 80 410 55"/>
+  <text class="lbl" x="300" y="50" fill="#4a90d9">트리 여러 개</text>
+  <text class="lbl" x="220" y="225">트리가 늘면 예측이 정답에 가까워진다</text>
+</svg>
