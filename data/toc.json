@@ -104,6 +104,11 @@
           "tags": [
             "google sheet"
           ]
+        },
+        {
+          "title": "apple_game",
+          "path": "courses/ai와미래사회/applegame/",
+          "tags": []
         }
       ]
     }
