@@ -91,6 +91,14 @@
           "title": "축구예측",
           "path": "courses/deeplearning/축구예측/",
           "tags": []
+        },
+        {
+          "title": "순차 데이터 학습: LSTM 복습과 GRU 연습 장점이 드러나는 예제: 덧셈 문제로 보는 LSTM과 GRU",
+          "path": "courses/deeplearning/순차-데이터-학습-lstm-복습과-gru-연습-장점이-드러나는-예제-덧셈-문제로-보는-lstm과-gru/",
+          "tags": [
+            "gru",
+            "lstm"
+          ]
         }
       ]
     },

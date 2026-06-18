@@ -1,0 +1,2671 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-06-18 Thu 19:55 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>순차 데이터 학습: LSTM 복습과 GRU 연습 장점이 드러나는 예제: 덧셈 문제로 보는 LSTM과 GRU</title>
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">순차 데이터 학습: LSTM 복습과 GRU 연습 장점이 드러나는 예제: 덧셈 문제로 보는 LSTM과 GRU</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org79489f2">1. 1장. 들어가기 전에</a>
+<ul>
+<li><a href="#org17b22cb">1.1. 1.1 수업 목표</a></li>
+<li><a href="#orgcc20ea7">1.2. 1.2 순차 데이터(시계열·문장)의 특징</a></li>
+<li><a href="#orgb09ce14">1.3. 1.3 RNN이 필요한 이유</a></li>
+</ul>
+</li>
+<li><a href="#org06aff6d">2. 2장. LSTM 기본 복습</a>
+<ul>
+<li><a href="#orgdcb41fd">2.1. 2.1 RNN의 한계: 장기 의존성 문제 고찰</a></li>
+<li><a href="#org637f829">2.2. 2.2 LSTM의 핵심: 셀 상태와 게이트</a></li>
+<li><a href="#org9cc5f2c">2.3. 2.3 세 개의 게이트 (망각·입력·출력 게이트)</a></li>
+<li><a href="#orgb97ca51">2.4. 2.4 LSTM 안에서 정보가 흐르는 과정</a></li>
+</ul>
+</li>
+<li><a href="#orgd717fce">3. 3장. GRU</a>
+<ul>
+<li><a href="#org84656fd">3.1. 3.1 GRU의 필요성</a></li>
+<li><a href="#org18d6def">3.2. 3.2 GRU의 두 게이트 (리셋 게이트·업데이트 게이트)</a></li>
+<li><a href="#orgcfd5763">3.3. 3.3 LSTM과 GRU 구조 비교하기</a></li>
+<li><a href="#org80a6051">3.4. 3.4 상황에 따른 선택</a></li>
+</ul>
+</li>
+<li><a href="#org4212bbf">4. 4장. 실습 준비: 데이터 탐색과 정리</a>
+<ul>
+<li><a href="#org60a294b">4.1. 4.1 실습 문제 소개와 데이터 불러오기</a></li>
+<li><a href="#org24cac59">4.2. 4.2 데이터 살펴보기 (탐색적 분석)</a></li>
+<li><a href="#orgce0113d">4.3. 4.3 결측치·이상치 확인과 처리</a></li>
+<li><a href="#org4d17366">4.4. 4.4 정규화와 시퀀스(window) 데이터 만들기</a></li>
+<li><a href="#org8a2b0d7">4.5. 4.5 학습·검증·테스트 데이터 나누기</a></li>
+</ul>
+</li>
+<li><a href="#org60ac774">5. 5장. 실습: LSTM·GRU 모델 만들기</a>
+<ul>
+<li><a href="#org8e4bd33">5.1. 5.1 모델 구조 설계하기</a></li>
+<li><a href="#org9dddacb">5.2. 5.2 LSTM 모델 구현하기</a></li>
+<li><a href="#org20b2f56">5.3. 5.3 GRU 모델 구현하기</a></li>
+<li><a href="#org48ef45c">5.4. 5.4 학습 과정 관찰하기 (손실 그래프 읽기)</a></li>
+</ul>
+</li>
+<li><a href="#org63d1b99">6. 6장. 결과 고찰과 평가</a>
+<ul>
+<li><a href="#org326333f">6.1. 6.1 평가 지표 이해하기 (정확도·RMSE 등)</a></li>
+<li><a href="#orge3e0214">6.2. 6.2 예측 결과 시각화하기</a></li>
+<li><a href="#org42cef2a">6.3. 6.3 LSTM과 GRU 성능 비교하기</a></li>
+<li><a href="#org4e6eaf9">6.4. 6.4 결과 해석과 한계 고찰하기</a></li>
+</ul>
+</li>
+<li><a href="#orgd4dddda">7. 7장. 개선 방안 연습</a>
+<ul>
+<li><a href="#orgb503400">7.1. 7.1 과적합 진단과 대응 방법</a></li>
+<li><a href="#org5e95b42">7.2. 7.2 하이퍼파라미터 조정해 보기</a></li>
+<li><a href="#orgdc71f93">7.3. 7.3 모델 구조 바꿔 실험하기</a></li>
+<li><a href="#org50d21a0">7.4. 7.4 마무리와 더 공부할 거리</a></li>
+</ul>
+</li>
+<li><a href="#orgae1c41d">8. 8장. RNN보다 LSTM,GRU가 우수한 간단한 예: 덧셈 문제</a>
+<ul>
+<li><a href="#org8be1d5c">8.1. 8.1 덧셈문제</a></li>
+<li><a href="#org044de29">8.2. 8.2 덧셈 문제 정의</a></li>
+<li><a href="#org8f879c2">8.3. 8.3 데이터 만들기</a></li>
+<li><a href="#org060d0e7">8.4. 8.4 세 모델 준비하기</a></li>
+<li><a href="#orgff26566">8.5. 8.5 순서가 길어질 때</a></li>
+<li><a href="#org532c224">8.6. 8.6 LSTM과 GRU: 같은 정확도, 다른 효율</a></li>
+<li><a href="#org8a03565">8.7. 8.7 정리: 무엇이 극적으로 바뀌고 무엇이 트레이드오프인가</a></li>
+</ul>
+</li>
+<li><a href="#org23598b6">9. 9장. 이모지 자동완성 만들기 (GRU)</a>
+<ul>
+<li><a href="#org2dfdab3">9.1. 9.1 무엇을 만드나</a></li>
+<li><a href="#org9168e15">9.2. 9.2 데이터 살펴보기</a></li>
+<li><a href="#org59a7cf2">9.3. 9.3 단어를 숫자로 바꾸기</a></li>
+<li><a href="#orgf049f58">9.4. 9.4 단어를 의미 벡터로: 임베딩</a></li>
+<li><a href="#org01b1137">9.5. 9.5 GRU 분류 모델 만들기</a></li>
+<li><a href="#orgcd30bd0">9.6. 9.6 학습하고 예측하기</a></li>
+<li><a href="#org45a0548">9.7. 9.7 평가하기</a></li>
+<li><a href="#orgc2b8cd6">9.8. 9.8 개선 연습</a></li>
+<li><a href="#orgecb9728">9.9. 9.9 정리와 더 공부할 거리</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org79489f2" class="outline-2">
+<h2 id="org79489f2"><span class="section-number-2">1.</span> 1장. 들어가기 전에</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+<div id="outline-container-org17b22cb" class="outline-3">
+<h3 id="org17b22cb"><span class="section-number-3">1.1.</span> 1.1 수업 목표</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+첫째, 순차 데이터가 무엇인지 이해한다.
+둘째, LSTM의 구조를 다시 정리하고 GRU를 새로 익힌다.
+셋째, 실제 데이터로 모델을 만들고 결과를 평가한 뒤 개선까지 해 본다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcc20ea7" class="outline-3">
+<h3 id="orgcc20ea7"><span class="section-number-3">1.2.</span> 1.2 순차 데이터(시계열·문장)의 특징</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+순차 데이터는 순서가 의미를 가지는 데이터다. 순서를 바꾸면 뜻이 달라진다.
+</p>
+
+<p>
+예)
+</p>
+<ul class="org-ul">
+<li>시계열: 어제 기온, 오늘 기온, 내일 기온. 시간 순서가 있다.</li>
+<li>문장: &ldquo;나는 밥을 먹었다&rdquo;. 단어 순서를 바꾸면 어색해진다.</li>
+</ul>
+
+<p>
+일반 데이터와의 차이는 두 가지다.
+</p>
+
+<p>
+첫째, 앞의 값이 뒤의 값에 영향을 준다. 오늘 기온은 어제 기온과 관련이 깊다.
+둘째, 길이가 정해져 있지 않다. 문장은 짧을 수도 길 수도 있다.
+</p>
+
+
+<div id="org1f751e7" class="figure">
+<p><img src="images/20260618_162147_screenshot.png" alt="20260618_162147_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb09ce14" class="outline-3">
+<h3 id="orgb09ce14"><span class="section-number-3">1.3.</span> 1.3 RNN이 필요한 이유</h3>
+<div class="outline-text-3" id="text-1-3">
+<p>
+일반 신경망은 입력을 한 번에 받는다. 입력의 순서를 기억하지 못한다.
+그림 한 장을 보고 고양이인지 맞히는 일에는 잘 맞는다. 하지만 문장이나 시계열에는 약하다.
+</p>
+
+<p>
+RNN(순환 신경망)은 순서를 처리하려고 만든 구조다. 핵심은 &ldquo;기억&rdquo;이다. RNN은 이전 단계의 결과를 다음 단계로 넘긴다.
+이 넘기는 값을 은닉 상태(hidden state) \(h_t\) 라고 부른다.
+</p>
+
+<p>
+한 단계의 계산은 다음과 같다.
+</p>
+
+<p>
+\[
+h_t = \tanh(W_h\, h_{t-1} + W_x\, x_t + b)
+\]
+</p>
+
+<p>
+기호의 뜻은 이렇다.
+</p>
+<ul class="org-ul">
+<li>\(x_t\): 현재 시점의 입력 (예: 오늘 기온)</li>
+<li>\(h_{t-1}\): 바로 앞 단계에서 넘어온 기억</li>
+<li>\(W_h, W_x\): 학습으로 정해지는 가중치</li>
+<li>\(\tanh\): 결과를 \(-1\)과 \(1\) 사이로 눌러 주는 함수</li>
+</ul>
+
+<p>
+같은 계산을 시점마다 반복한다. 그래서 &ldquo;순환&rdquo;이라는 이름이 붙는다.
+</p>
+
+
+<div id="orgd5d420e" class="figure">
+<p><img src="images/20260618_162207_screenshot.png" alt="20260618_162207_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org06aff6d" class="outline-2">
+<h2 id="org06aff6d"><span class="section-number-2">2.</span> 2장. LSTM 기본 복습</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+<div id="outline-container-orgdcb41fd" class="outline-3">
+<h3 id="orgdcb41fd"><span class="section-number-3">2.1.</span> 2.1 RNN의 한계: 장기 의존성 문제 고찰</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+RNN은 짧은 순서는 잘 다룬다. 하지만 순서가 길어지면 앞쪽 정보를 잊는다. 이것을 장기 의존성 문제라고 부른다.
+</p>
+
+<p>
+예를 보자. &ldquo;나는 프랑스에서 자랐다 &hellip; 그래서 나는 __<sub>를</sub> 잘한다.&rdquo; 빈칸의 답은 &ldquo;프랑스어&rdquo;다. 정답을 맞히려면 한참 앞의 &ldquo;프랑스&rdquo;를 기억해야 한다.
+RNN은 거리가 멀면 이 기억을 잃는다.
+</p>
+
+<p>
+학습과정에 곱셈이 있기 때문이다. RNN은 기억을 넘길 때마다 비슷한 수를 계속 곱한다.
+\(0\)과 \(1\) 사이의 작은 수를 여러 번 곱하면 값은 빠르게 \(0\)에 가까워진다.
+</p>
+
+<p>
+\[
+0.5 \times 0.5 \times 0.5 \times \cdots \times 0.5 \;\to\; 0
+\]
+</p>
+
+<p>
+값이 \(0\)에 가까워지면 앞쪽 정보가 학습에 거의 반영되지 않는다. 이것을 기울기 소실이라고 부른다.
+</p>
+
+
+<div id="orga5b0680" class="figure">
+<p><img src="images/20260618_170700_screenshot.png" alt="20260618_170700_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org637f829" class="outline-3">
+<h3 id="org637f829"><span class="section-number-3">2.2.</span> 2.2 LSTM의 핵심: 셀 상태와 게이트</h3>
+<div class="outline-text-3" id="text-2-2">
+<p>
+LSTM은 이 문제를 풀려고 두 가지 장치를 더한다.
+</p>
+
+<p>
+첫째는 셀 상태(cell state) \(C_t\) 다. 셀 상태는 정보가 흐르는 &ldquo;컨베이어 벨트&rdquo;다. 벨트 위 정보는 곱셈 없이 거의 그대로 흘러간다.
+그래서 먼 과거의 정보도 살아남는다.
+</p>
+
+<p>
+둘째는 게이트(gate)다. 게이트는 정보를 얼마나 통과시킬지 정하는 수도꼭지다. 게이트는 시그모이드 함수 \(\sigma\) 를 쓴다.
+</p>
+
+<p>
+\[
+\sigma(x) = \frac{1}{1 + e^{-x}}
+\]
+</p>
+
+<p>
+시그모이드는 결과를 \(0\)과 \(1\) 사이로 만든다. \(0\)이면 잠금, \(1\)이면 열림이다. 게이트 값과 정보를 원소끼리 곱하면 통과량이 정해진다.
+<img src="images/20260618_170710_screenshot.png" alt="20260618_170710_screenshot.png" />
+</p>
+</div>
+</div>
+<div id="outline-container-org9cc5f2c" class="outline-3">
+<h3 id="org9cc5f2c"><span class="section-number-3">2.3.</span> 2.3 세 개의 게이트 (망각·입력·출력 게이트)</h3>
+<div class="outline-text-3" id="text-2-3">
+<p>
+LSTM에는 게이트가 세 개 있다. 각 게이트는 역할이 다르다.
+</p>
+
+<p>
+<b>망각 게이트</b> 는 과거 기억 중 버릴 것을 정한다.
+\[
+f_t = \sigma(W_f\,[h_{t-1}, x_t] + b_f)
+\]
+</p>
+
+<p>
+<b>입력 게이트</b> 는 새 정보 중 받을 것을 정한다. 받을 후보 \(\tilde{C}_t\) 도 함께 만든다.
+\[
+i_t = \sigma(W_i\,[h_{t-1}, x_t] + b_i), \qquad
+\tilde{C}_t = \tanh(W_C\,[h_{t-1}, x_t] + b_C)
+\]
+</p>
+
+<p>
+<b>출력 게이트</b> 는 기억 중 밖으로 내보낼 것을 정한다.
+\[
+o_t = \sigma(W_o\,[h_{t-1}, x_t] + b_o)
+\]
+</p>
+
+<p>
+\([h_{t-1}, x_t]\) 는 앞 기억과 현재 입력을 이어 붙인 묶음이다.
+세 게이트는 모두 같은 묶음을 보고 각자 판단한다.
+</p>
+
+
+<div id="org256cc49" class="figure">
+<p><img src="images/20260618_170726_screenshot.png" alt="20260618_170726_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb97ca51" class="outline-3">
+<h3 id="orgb97ca51"><span class="section-number-3">2.4.</span> 2.4 LSTM 안에서 정보가 흐르는 과정</h3>
+<div class="outline-text-3" id="text-2-4">
+<p>
+한 시점의 전체 계산은 다음 순서로 진행된다.
+</p>
+
+<ol class="org-ol">
+<li>망각 게이트로 과거 셀 상태를 줄인다: \(f_t \odot C_{t-1}\)</li>
+<li>입력 게이트로 새 후보를 더한다: \(i_t \odot \tilde{C}_t\)</li>
+<li>두 결과를 합쳐 새 셀 상태를 만든다.
+\[
+   C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t
+   \]</li>
+<li>출력 게이트로 은닉 상태를 만든다.
+\[
+   h_t = o_t \odot \tanh(C_t)
+   \]</li>
+</ol>
+
+<p>
+여기서 \(\odot\) 는 같은 자리끼리 곱하는 원소별 곱이다. 셀 상태가 덧셈 위주로 갱신되는 점이 핵심이다. 덧셈은 곱셈처럼 값을 빠르게 줄이지 않는다. 그래서 먼 과거 정보가 잘 보존된다.
+</p>
+
+
+<div id="orgba3e013" class="figure">
+<p><img src="images/20260618_170742_screenshot.png" alt="20260618_170742_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd717fce" class="outline-2">
+<h2 id="orgd717fce"><span class="section-number-2">3.</span> 3장. GRU</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org84656fd" class="outline-3">
+<h3 id="org84656fd"><span class="section-number-3">3.1.</span> 3.1 GRU의 필요성</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+LSTM은 강력하다. 하지만 게이트가 세 개라서 계산이 무겁다. 학습할 가중치도 많다.
+</p>
+
+<p>
+GRU는 LSTM을 더 가볍게 만든 구조다. 게이트를 두 개로 줄였다. 셀 상태와 은닉 상태를 하나로 합쳤다. 그래서 계산이 빠르다.
+데이터가 적거나 모델을 가볍게 하고 싶을 때 좋다.
+</p>
+
+<p>
+성능은 문제에 따라 다르다. 많은 경우 LSTM과 GRU의 성능 차이는 크지 않다. 그래서 둘 다 시도해 보고 더 나은 쪽을 고른다.
+</p>
+</div>
+</div>
+<div id="outline-container-org18d6def" class="outline-3">
+<h3 id="org18d6def"><span class="section-number-3">3.2.</span> 3.2 GRU의 두 게이트 (리셋 게이트·업데이트 게이트)</h3>
+<div class="outline-text-3" id="text-3-2">
+<p>
+GRU에는 게이트가 두 개 있다.
+</p>
+
+<p>
+<b>리셋 게이트</b> \(r_t\) 는 과거 기억을 얼마나 잊을지 정한다.
+\[
+r_t = \sigma(W_r\,[h_{t-1}, x_t])
+\]
+</p>
+
+<p>
+<b>업데이트 게이트</b> \(z_t\) 는 과거와 새 정보를 섞는 비율을 정한다.
+\[
+z_t = \sigma(W_z\,[h_{t-1}, x_t])
+\]
+</p>
+
+<p>
+새 후보 기억은 리셋 게이트로 걸러진 과거를 써서 만든다.
+\[
+\tilde{h}_t = \tanh(W\,[\,r_t \odot h_{t-1},\; x_t\,])
+\]
+</p>
+
+<p>
+마지막으로 업데이트 게이트가 과거와 후보를 섞는다.
+\[
+h_t = (1 - z_t)\odot h_{t-1} + z_t \odot \tilde{h}_t
+\]
+</p>
+
+<p>
+이 마지막 식이 GRU의 핵심이다. \(z_t\) 가 \(0\)에 가까우면 과거를 그대로 유지한다. \(z_t\) 가 \(1\)에 가까우면 새 정보로 갈아 끼운다. 하나의 비율이 &ldquo;유지&rdquo;와 &ldquo;교체&rdquo;를 동시에 정한다.
+</p>
+
+
+<div id="orgb424450" class="figure">
+<p><img src="images/20260618_170804_screenshot.png" alt="20260618_170804_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcfd5763" class="outline-3">
+<h3 id="orgcfd5763"><span class="section-number-3">3.3.</span> 3.3 LSTM과 GRU 구조 비교하기</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+두 개의 구조를 비교해보자.
+</p>
+
+
+<div id="orgb037cc4" class="figure">
+<p><img src="images/20260618_170821_screenshot.png" alt="20260618_170821_screenshot.png" />
+</p>
+</div>
+
+
+<ul class="org-ul">
+<li>게이트 수: LSTM은 3개, GRU는 2개.</li>
+<li>상태: LSTM은 셀 상태와 은닉 상태를 따로 둔다. GRU는 하나로 합친다.</li>
+<li>속도: GRU가 더 빠르다.</li>
+<li>표현력: LSTM이 더 세밀할 수 있다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org80a6051" class="outline-3">
+<h3 id="org80a6051"><span class="section-number-3">3.4.</span> 3.4 상황에 따른 선택</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+두 모델의 선택 기준을 정리하면 다음과 같다.
+</p>
+
+<p>
+<b>GRU를 먼저 고려하는 경우</b>
+</p>
+<ul class="org-ul">
+<li>데이터 양이 적다.</li>
+<li>빠른 학습과 가벼운 모델이 필요하다.</li>
+<li>실시간 처리가 중요하다. 예: 모바일 기기의 동작 인식.</li>
+</ul>
+
+<p>
+<b>LSTM을 먼저 고려하는 경우</b>
+</p>
+<ul class="org-ul">
+<li>순서가 매우 길다.</li>
+<li>데이터 양이 많고 미세한 패턴이 중요하다.</li>
+<li>예: 긴 문장의 번역, 오랜 기간의 기온 예측.</li>
+</ul>
+
+<p>
+실무 상황 예시:
+</p>
+<ul class="org-ul">
+<li>스마트워치 심박 데이터로 운동 종류를 즉시 맞히기: 가벼운 GRU가 적합하다.</li>
+<li>1년치 시간별 전력 사용량으로 다음 주 수요 예측하기: 긴 패턴을 다루는 LSTM이 적합하다.</li>
+<li>정답을 모를 때: 둘 다 학습해 검증 점수를 비교한 뒤 고른다.</li>
+</ul>
+
+<p>
+결론: 먼저 GRU로 빠르게 기준 점수를 만든다. 성능이 부족하면 LSTM으로 바꿔 비교한다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org4212bbf" class="outline-2">
+<h2 id="org4212bbf"><span class="section-number-2">4.</span> 4장. 실습 준비: 데이터 탐색과 정리</h2>
+<div class="outline-text-2" id="text-4">
+</div>
+<div id="outline-container-org60a294b" class="outline-3">
+<h3 id="org60a294b"><span class="section-number-3">4.1.</span> 4.1 실습 문제 소개와 데이터 불러오기</h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+실습의 문제는 시계열 예측이다. 과거 일정 구간의 값을 보고 바로 다음 값을 맞힌다.
+</p>
+
+<p>
+실제 측정값을 흉내 낸 데이터를 직접 만든다. 데이터에는 세 가지 성분을 넣는다.
+</p>
+<ul class="org-ul">
+<li>추세: 시간에 따라 천천히 올라가는 흐름</li>
+<li>계절성: 일정 주기로 오르내리는 반복</li>
+<li>잡음: 불규칙한 잡음성분</li>
+</ul>
+
+<p>
+이렇게 만들면 인터넷 연결 없이도 같은 결과를 재현할 수 있다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> pandas <span style="color: #51afef;">as</span> pd
+<span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51116;&#54788;&#49457;&#51012; &#50948;&#54644; &#45212;&#49688; &#50472;&#50519; &#44256;&#51221;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">seed: &#44057;&#51008; &#49707;&#51088;&#47484; &#50416;&#47732; &#47588;&#48264; &#44057;&#51008; &#45212;&#49688;&#44032; &#45208;&#50728;&#45796;
+</span>np.random.seed(42)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45936;&#51060;&#53552; &#44600;&#51060; (&#50696;: 800&#51068;&#52824;)
+</span><span style="color: #dcaeea;">N</span> <span style="color: #51afef;">=</span> 800
+<span style="color: #dcaeea;">t</span> <span style="color: #51afef;">=</span> np.arange(N)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">1) &#52628;&#49464;: &#49884;&#44036;&#50640; &#48708;&#47168;&#54644; &#50756;&#47564;&#55176; &#51613;&#44032;
+</span><span style="color: #dcaeea;">trend</span> <span style="color: #51afef;">=</span> 0.02 <span style="color: #51afef;">*</span> t
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">2) &#44228;&#51208;&#49457;: &#51452;&#44592; 50&#51004;&#47196; &#48152;&#48373; (sin &#54632;&#49688;)
+</span><span style="color: #dcaeea;">season</span> <span style="color: #51afef;">=</span> 5 <span style="color: #51afef;">*</span> np.sin(2 <span style="color: #51afef;">*</span> np.pi <span style="color: #51afef;">*</span> t <span style="color: #51afef;">/</span> 50)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">3) &#51105;&#51020;: &#54217;&#44512; 0, &#54364;&#51456;&#54200;&#52264; 1&#51064; &#51221;&#44508;&#48516;&#54252; &#45212;&#49688;
+</span><span style="color: #5B6268;">#    </span><span style="color: #5B6268;">normal(loc, scale, size): loc=&#54217;&#44512;, scale=&#54364;&#51456;&#54200;&#52264;, size=&#44060;&#49688;
+</span><span style="color: #dcaeea;">noise</span> <span style="color: #51afef;">=</span> np.random.normal(0, 1, N)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49464; &#49457;&#48516;&#51012; &#45908;&#54644; &#52572;&#51333; &#49884;&#44228;&#50676; &#49373;&#49457;
+</span><span style="color: #dcaeea;">series</span> <span style="color: #51afef;">=</span> 10 <span style="color: #51afef;">+</span> trend <span style="color: #51afef;">+</span> season <span style="color: #51afef;">+</span> noise
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54364; &#54805;&#53468;&#47196; &#48372;&#44288; (DataFrame: &#54665;&#44284; &#50676;&#51012; &#44032;&#51652; &#54364; &#51088;&#47308;&#44396;&#51312;)
+</span><span style="color: #dcaeea;">df</span> <span style="color: #51afef;">=</span> pd.DataFrame({<span style="color: #98be65;">"day"</span>: t, <span style="color: #98be65;">"value"</span>: series})
+<span style="color: #c678dd;">print</span>(df.head())   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">head(): &#50526; 5&#54665; &#48120;&#47532; &#48372;&#44592;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+   day      value
+0    0  10.496714
+1    1  10.508402
+2    2  11.931138
+3    3  13.423653
+4    4  12.254615
+</pre>
+</div>
+</div>
+<div id="outline-container-org24cac59" class="outline-3">
+<h3 id="org24cac59"><span class="section-number-3">4.2.</span> 4.2 데이터 살펴보기 (탐색적 분석)</h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+데이터를 바로 모델에 넣지 않는다. 먼저 통계와 그래프로 성질을 파악한다.
+</p>
+
+<p>
+<b>통계로 보기.</b> 평균, 표준편차, 최솟값, 최댓값을 본다. 값의 범위와 흩어진 정도를 알 수 있다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">describe(): &#44060;&#49688;, &#54217;&#44512;, &#54364;&#51456;&#54200;&#52264;, &#49324;&#48516;&#50948;&#49688; &#46321; &#44592;&#52488; &#53685;&#44228;&#47484; &#54620; &#48264;&#50640; &#52636;&#47141;
+</span><span style="color: #c678dd;">print</span>(df[<span style="color: #98be65;">"value"</span>].describe())
+</code></pre>
+</div>
+
+<pre class="example">
+count    800.000000
+mean      17.982102
+std        5.813823
+min        3.790196
+25%       13.788830
+50%       18.084325
+75%       22.083086
+max       32.790218
+Name: value, dtype: float64
+</pre>
+
+<p>
+<b>그래프로 보기.</b> 선 그래프로 전체 흐름을 본다. 추세와 반복이 눈에 보이는지 확인한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code>plt.figure(figsize<span style="color: #51afef;">=</span>(10, 4))          <span style="color: #5B6268;"># </span><span style="color: #5B6268;">figsize: &#44536;&#47548; &#53356;&#44592; (&#44032;&#47196;, &#49464;&#47196;) &#51064;&#52824;
+</span>plt.plot(df[<span style="color: #98be65;">"day"</span>], df[<span style="color: #98be65;">"value"</span>])     <span style="color: #5B6268;"># </span><span style="color: #5B6268;">plot(x, y): &#49440; &#44536;&#47000;&#54532;
+</span>plt.title(<span style="color: #98be65;">"time series overview"</span>)
+plt.xlabel(<span style="color: #98be65;">"day"</span>)
+plt.ylabel(<span style="color: #98be65;">"value"</span>)
+plt.grid(<span style="color: #a9a1e1;">True</span>)                       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">grid: &#45576;&#44552;&#49440; &#54364;&#49884;&#47196; &#51069;&#44592; &#49789;&#44172;
+</span>plt.show()
+</code></pre>
+</div>
+
+
+<div id="org89d6c7d" class="figure">
+<p><img src="images/4651cef238f92ecd64b33959d4460c028f1f5655.png" alt="4651cef238f92ecd64b33959d4460c028f1f5655.png" />
+</p>
+</div>
+
+<p>
+판단 포인트는 세 가지다.
+</p>
+<ul class="org-ul">
+<li>값이 시간에 따라 오르는가 (추세 확인)</li>
+<li>일정 간격으로 같은 모양이 반복되는가 (계절성 확인)</li>
+<li>튀는 점이 있는가 (이상치 확인)</li>
+</ul>
+
+<p>
+그래프로 본 성질이 4.1에서 넣은 추세·계절성·잡음과 맞는지 확인한다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgce0113d" class="outline-3">
+<h3 id="orgce0113d"><span class="section-number-3">4.3.</span> 4.3 결측치·이상치 확인과 처리</h3>
+<div class="outline-text-3" id="text-4-3">
+<p>
+<b>결측치</b> 는 비어 있는 값이다. 모델은 빈 값을 계산하지 못한다. 그래서 먼저 채우거나 지운다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">isna(): &#44050;&#51060; &#48708;&#50632;&#45716;&#51648; True/False&#47196; &#54364;&#49884;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">sum(): True &#44060;&#49688;&#47484; &#45908;&#54644; &#44208;&#52769;&#52824; &#49688;&#47484; &#49468;&#45796;
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#44208;&#52769;&#52824; &#44060;&#49688;:"</span>, df[<span style="color: #98be65;">"value"</span>].isna().<span style="color: #c678dd;">sum</span>())
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47564;&#50557; &#44208;&#52769;&#52824;&#44032; &#51080;&#45796;&#47732; &#50526; &#44050;&#51004;&#47196; &#52292;&#50864;&#45716; &#48169;&#48277; (ffill: forward fill)
+</span><span style="color: #dcaeea;">df</span>[<span style="color: #98be65;">"value"</span>] <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"value"</span>].ffill()
+</code></pre>
+</div>
+
+<pre class="example">
+결측치 개수: 0
+</pre>
+
+<p>
+<b>이상치</b> 는 다른 값들과 크게 동떨어진 값이다. 표준점수(z-score)로 찾는다. 표준점수는 평균에서 표준편차의 몇 배만큼 떨어졌는지를 나타낸다.
+</p>
+
+<p>
+\[
+z = \frac{x - \mu}{\sigma}
+\]
+</p>
+
+<p>
+보통 \(|z| > 3\) 이면 이상치로 본다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">mean</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"value"</span>].mean()   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54217;&#44512; &#956;
+</span><span style="color: #dcaeea;">std</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"value"</span>].std()     <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54364;&#51456;&#54200;&#52264; &#963;
+</span>
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44033; &#44050;&#51032; &#54364;&#51456;&#51216;&#49688; &#44228;&#49328;
+</span><span style="color: #dcaeea;">z</span> <span style="color: #51afef;">=</span> (df[<span style="color: #98be65;">"value"</span>] <span style="color: #51afef;">-</span> mean) <span style="color: #51afef;">/</span> std
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51208;&#45843;&#44050;&#51060; 3&#51012; &#45336;&#45716; &#44050;&#51032; &#44060;&#49688; &#54869;&#51064;
+</span><span style="color: #dcaeea;">outliers</span> <span style="color: #51afef;">=</span> (z.<span style="color: #c678dd;">abs</span>() <span style="color: #51afef;">&gt;</span> 3).<span style="color: #c678dd;">sum</span>()
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51060;&#49345;&#52824; &#44060;&#49688;:"</span>, outliers)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060;&#49345;&#52824;&#47484; &#54217;&#44512;&#51004;&#47196; &#45824;&#52404;&#54616;&#45716; &#44036;&#45800;&#54620; &#52376;&#47532;
+</span>df.<span style="color: #dcaeea;">loc</span>[z.<span style="color: #c678dd;">abs</span>() <span style="color: #51afef;">&gt;</span> 3, <span style="color: #98be65;">"value"</span>] <span style="color: #51afef;">=</span> mean
+</code></pre>
+</div>
+
+<pre class="example">
+이상치 개수: 0
+</pre>
+
+<p>
+처리 원칙은 이렇다. 측정 오류로 보이면 대체하거나 지운다. 의미 있는 급변이면 남긴다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4d17366" class="outline-3">
+<h3 id="org4d17366"><span class="section-number-3">4.4.</span> 4.4 정규화와 시퀀스(window) 데이터 만들기</h3>
+<div class="outline-text-3" id="text-4-4">
+<p>
+<b>정규화</b> 는 값의 크기를 비슷한 범위로 맞추는 작업이다. 값의 범위가 제각각이면 학습이 느려진다. 여기서는 최소-최대 정규화로 \(0\)과 \(1\) 사이로 바꾼다.
+</p>
+
+<p>
+\[
+x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}
+\]
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">v_min</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"value"</span>].<span style="color: #c678dd;">min</span>()
+<span style="color: #dcaeea;">v_max</span> <span style="color: #51afef;">=</span> df[<span style="color: #98be65;">"value"</span>].<span style="color: #c678dd;">max</span>()
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">0~1 &#48276;&#50948;&#47196; &#48320;&#54872;
+</span><span style="color: #dcaeea;">scaled</span> <span style="color: #51afef;">=</span> (df[<span style="color: #98be65;">"value"</span>].values <span style="color: #51afef;">-</span> v_min) <span style="color: #51afef;">/</span> (v_max <span style="color: #51afef;">-</span> v_min)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51221;&#44508;&#54868; &#54980; &#48276;&#50948;:"</span>, scaled.<span style="color: #c678dd;">min</span>(), <span style="color: #98be65;">"~"</span>, scaled.<span style="color: #c678dd;">max</span>())
+</code></pre>
+</div>
+
+<pre class="example">
+정규화 후 범위: 0.0 ~ 1.0
+</pre>
+
+<p>
+<b>시퀀스(window) 만들기.</b> 모델에 넣으려면 데이터를 &ldquo;입력 묶음&rdquo;과 &ldquo;정답&rdquo;으로 잘라야 한다. 과거 <code>window</code> 개 값을 입력으로, 바로 다음 값을 정답으로 둔다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">make_window</span>(data, window):
+    <span style="color: #83898d;">"""
+    &#49884;&#44228;&#50676;&#51012; (&#51077;&#47141; &#47926;&#51020;, &#51221;&#45813;) &#49933;&#51004;&#47196; &#51088;&#47480;&#45796;.
+    data: 1&#52264;&#50896; &#49884;&#44228;&#50676; &#48176;&#50676;
+    window: &#51077;&#47141;&#51004;&#47196; &#50424; &#44284;&#44144; &#44600;&#51060;
+    &#48152;&#54872;: X(&#51077;&#47141;&#46308;), y(&#51221;&#45813;&#46308;)
+    """</span>
+    <span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> [], []
+    <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(<span style="color: #c678dd;">len</span>(data) <span style="color: #51afef;">-</span> window):
+        X.append(data[i : i <span style="color: #51afef;">+</span> window])   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44284;&#44144; window&#44060;
+</span>        y.append(data[i <span style="color: #51afef;">+</span> window])       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44536; &#45796;&#51020; 1&#44060;
+</span>    <span style="color: #51afef;">return</span> np.array(X), np.array(y)
+
+<span style="color: #dcaeea;">WINDOW</span> <span style="color: #51afef;">=</span> 30   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44284;&#44144; 30&#51068;&#47196; &#45796;&#51020; 1&#51068; &#50696;&#52769;
+</span><span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> make_window(scaled, WINDOW)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">LSTM/GRU &#51077;&#47141;&#51008; (&#49368;&#54540; &#49688;, &#49884;&#51216; &#49688;, &#53945;&#49457; &#49688;) &#47784;&#50577;&#51060;&#50612;&#50556; &#54620;&#45796;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53945;&#49457;&#51060; &#44050; &#54616;&#45208;&#49104;&#51060;&#48064;&#47196; &#47560;&#51648;&#47561; &#52264;&#50896;&#51012; 1&#47196; &#47564;&#46304;&#45796;
+</span><span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> X.reshape(X.shape[0], X.shape[1], 1)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X &#47784;&#50577;:"</span>, X.shape, <span style="color: #98be65;">" y &#47784;&#50577;:"</span>, y.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+X 모양: (770, 30, 1)  y 모양: (770,)
+</pre>
+</div>
+<div id="outline-container-orgc3ffe85" class="outline-4">
+<h4 id="orgc3ffe85"><span class="section-number-4">4.4.1.</span> 시퀀스(window) 데이터 만들기</h4>
+<div class="outline-text-4" id="text-4-4-1">
+</div>
+<ol class="org-ol">
+<li><a id="orgd851278"></a>개념: 긴 줄을 작은 조각으로 자르기<br />
+<div class="outline-text-5" id="text-4-4-1-1">
+<p>
+시계열은 하나의 긴 숫자 줄이다. 매일 잰 기온이 한 줄로 이어진다. 그런데 모델은 이 긴 줄을 통째로 배우지 못한다. 모델이 배우려면 &ldquo;입력과 정답&rdquo; 쌍이 여러 개 필요하다.
+</p>
+
+<p>
+그래서 줄 위에 정해진 크기의 창(window)을 올린다. 창을 한 칸씩 밀면서 조각을 떼어 낸다. 창 안에 들어온 과거 값들이 입력이 된다. 창 바로 다음 값이 정답이 된다. 창을 한 칸 밀면 새 입력과 정답 쌍이 또 하나 생긴다.
+</p>
+
+
+<div id="org606ea98" class="figure">
+<p><img src="images/20260618_172903_screenshot.png" alt="20260618_172903_screenshot.png" />
+</p>
+</div>
+
+<p>
+위 그림을 표로 적으면 이렇다. 창 크기는 3이다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">입력 (과거 3개)</th>
+<th scope="col" class="org-right">정답 (다음 1개)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">10  12  13</td>
+<td class="org-right">15</td>
+</tr>
+
+<tr>
+<td class="org-left">12  13  15</td>
+<td class="org-right">14</td>
+</tr>
+
+<tr>
+<td class="org-left">13  15  14</td>
+<td class="org-right">16</td>
+</tr>
+
+<tr>
+<td class="org-left">15  14  16</td>
+<td class="org-right">18</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+긴 줄 하나에서 학습 표본 네 개가 만들어졌다. 창 크기가 30이면 과거 30일을 보고 다음 1일을 예측하는 쌍이 된다.
+</p>
+</div>
+</li>
+<li><a id="orgb6c0378"></a>코드로 만들기<br />
+<div class="outline-text-5" id="text-4-4-1-2">
+<p>
+문제 정의를 그대로 코드로 옮긴다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">make_window</span>(data, window):
+    <span style="color: #83898d;">"""
+    &#49884;&#44228;&#50676;&#51012; (&#51077;&#47141; &#47926;&#51020;, &#51221;&#45813;) &#49933;&#51004;&#47196; &#51088;&#47480;&#45796;.
+    data: 1&#52264;&#50896; &#49884;&#44228;&#50676; &#48176;&#50676;
+    window: &#51077;&#47141;&#51004;&#47196; &#50424; &#44284;&#44144; &#44600;&#51060;(&#52285; &#53356;&#44592;)
+    &#48152;&#54872;: X(&#51077;&#47141;&#46308;), y(&#51221;&#45813;&#46308;)
+    """</span>
+    <span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> [], []
+    <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(<span style="color: #c678dd;">len</span>(data) <span style="color: #51afef;">-</span> window):
+        X.append(data[i : i <span style="color: #51afef;">+</span> window])   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#52285; &#50504;&#51032; &#44284;&#44144; window&#44060;
+</span>        y.append(data[i <span style="color: #51afef;">+</span> window])       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#52285; &#48148;&#47196; &#45796;&#51020; 1&#44060;
+</span>    <span style="color: #51afef;">return</span> np.array(X), np.array(y)
+
+<span style="color: #dcaeea;">series</span> <span style="color: #51afef;">=</span> np.array([10, 12, 13, 15, 14, 16, 18], dtype<span style="color: #51afef;">=</span><span style="color: #98be65;">"float32"</span>)
+<span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> make_window(series, window<span style="color: #51afef;">=</span>3)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51077;&#47141; X:</span><span style="color: #a9a1e1;">\n</span><span style="color: #98be65;">"</span>, X)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51221;&#45813; y:"</span>, y)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49692;&#54872;&#52789; &#51077;&#47141;&#51008; (&#49368;&#54540; &#49688;, &#49884;&#51216; &#49688;, &#53945;&#49457; &#49688;) &#47784;&#50577;&#51060;&#50612;&#50556; &#54620;&#45796;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44050;&#51060; &#54616;&#45208;&#49104;&#51060;&#48064;&#47196; &#47560;&#51648;&#47561; &#52264;&#50896;&#51012; 1&#47196; &#47564;&#46304;&#45796;
+</span><span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> X.reshape(X.shape[0], X.shape[1], 1)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X &#47784;&#50577;:"</span>, X.shape)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(4, 3, 1)</span>
+</code></pre>
+</div>
+
+<pre class="example">
+입력 X:
+ [[10. 12. 13.]
+ [12. 13. 15.]
+ [13. 15. 14.]
+ [15. 14. 16.]]
+정답 y: [15. 14. 16. 18.]
+X 모양: (4, 3, 1)
+</pre>
+</div>
+</li>
+<li><a id="org361e9b3"></a>왜 필요한가<br />
+<div class="outline-text-5" id="text-4-4-1-3">
+<p>
+이 작업이 필요한 이유는 세 가지다.
+</p>
+
+<p>
+첫째, 지도학습 형태로 바꾼다. 예측 문제를 &ldquo;입력을 주면 정답을 맞히는&rdquo; 익숙한 학습 문제로 바꾼다. 긴 줄 하나로는 배울 수 없다. 잘게 자르면 수백, 수천 개의 학습 표본이 생긴다.
+</p>
+
+<p>
+둘째, 입력 길이를 똑같이 맞춘다. LSTM과 GRU 같은 순환층은 입력 모양이 일정해야 한다. 창 크기를 고정하면 모든 입력이 같은 길이가 된다. 그래서 모양을 \((\text{샘플 수}, \text{창 크기}, \text{특성 수})\) 로 만든다.
+</p>
+
+<p>
+셋째, 예측 과제 자체를 정한다. 창 크기는 모델이 한 번에 보는 과거의 양이다. 이 값은 직접 고른다. 너무 짧으면 긴 흐름을 놓친다. 너무 길면 계산이 무거워지고 오래된 잡음까지 끌어온다.
+</p>
+
+<p>
+정리하면 시퀀스 윈도우는 이어진 시계열을 모델이 받을 수 있는 고정 크기 조각으로 잘라, 입력과 정답 쌍을 만드는 작업이다. 이 단계를 거쳐야 데이터 분할과 모델 학습으로 넘어갈 수 있다.
+</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org8a2b0d7" class="outline-3">
+<h3 id="org8a2b0d7"><span class="section-number-3">4.5.</span> 4.5 학습·검증·테스트 데이터 나누기</h3>
+<div class="outline-text-3" id="text-4-5">
+<p>
+데이터를 세 묶음으로 나눈다.
+</p>
+<ul class="org-ul">
+<li>학습용: 모델이 패턴을 배우는 데 쓴다.</li>
+<li>검증용: 학습 중간에 성능을 점검하고 설정을 고르는 데 쓴다.</li>
+<li>테스트용: 마지막에 진짜 실력을 재는 데 쓴다.</li>
+</ul>
+
+<p>
+시계열은 시간 순서를 지켜야 한다. 그래서 무작위로 섞지 않고 앞에서부터 순서대로 자른다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">n</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">len</span>(X)
+<span style="color: #dcaeea;">train_end</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">int</span>(n <span style="color: #51afef;">*</span> 0.7)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50526; 70% &#54617;&#49845;
+</span><span style="color: #dcaeea;">val_end</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">int</span>(n <span style="color: #51afef;">*</span> 0.85)    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45796;&#51020; 15% &#44160;&#51613;, &#47560;&#51648;&#47561; 15% &#53580;&#49828;&#53944;
+</span>
+<span style="color: #dcaeea;">X_train</span>, <span style="color: #dcaeea;">y_train</span> <span style="color: #51afef;">=</span> X[:train_end], y[:train_end]
+<span style="color: #dcaeea;">X_val</span>,   <span style="color: #dcaeea;">y_val</span>   <span style="color: #51afef;">=</span> X[train_end:val_end], y[train_end:val_end]
+<span style="color: #dcaeea;">X_test</span>,  <span style="color: #dcaeea;">y_test</span>  <span style="color: #51afef;">=</span> X[val_end:], y[val_end:]
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54617;&#49845;:"</span>, X_train.shape[0],
+      <span style="color: #98be65;">"&#44160;&#51613;:"</span>, X_val.shape[0],
+      <span style="color: #98be65;">"&#53580;&#49828;&#53944;:"</span>, X_test.shape[0])
+</code></pre>
+</div>
+
+<pre class="example">
+학습: 2 검증: 1 테스트: 1
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org60ac774" class="outline-2">
+<h2 id="org60ac774"><span class="section-number-2">5.</span> 5장. 실습: LSTM·GRU 모델 만들기</h2>
+<div class="outline-text-2" id="text-5">
+</div>
+<div id="outline-container-org8e4bd33" class="outline-3">
+<h3 id="org8e4bd33"><span class="section-number-3">5.1.</span> 5.1 모델 구조 설계하기</h3>
+<div class="outline-text-3" id="text-5-1">
+<p>
+설계는 단순하게 시작한다. 순환층 한 개와 출력층 한 개를 쌓는다.
+</p>
+
+<ul class="org-ul">
+<li>순환층(LSTM 또는 GRU): 시계열의 패턴을 읽는다.</li>
+<li>출력층(Dense): 다음 값 하나를 내보낸다.</li>
+</ul>
+
+<p>
+손실 함수는 평균제곱오차(MSE)를 쓴다. 예측과 정답의 차이를 제곱해 평균낸 값이다. 작을수록 좋다.
+</p>
+
+<p>
+\[
+\text{MSE} = \frac{1}{n}\sum_{k=1}^{n}(y_k - \hat{y}_k)^2
+\]
+</p>
+
+<p>
+학습에 필요한 도구를 먼저 불러온다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+<span style="color: #51afef;">from</span> tensorflow.keras.models <span style="color: #51afef;">import</span> Sequential
+<span style="color: #51afef;">from</span> tensorflow.keras.layers <span style="color: #51afef;">import</span> LSTM, GRU, Dense
+<span style="color: #51afef;">from</span> tensorflow.keras.callbacks <span style="color: #51afef;">import</span> EarlyStopping
+
+tf.random.set_seed(42)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53584;&#49436;&#54540;&#47196; &#45212;&#49688; &#44256;&#51221;&#51004;&#47196; &#44208;&#44284; &#51116;&#54788;</span>
+</code></pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9dddacb" class="outline-3">
+<h3 id="org9dddacb"><span class="section-number-3">5.2.</span> 5.2 LSTM 모델 구현하기</h3>
+<div class="outline-text-3" id="text-5-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_lstm</span>(window, units<span style="color: #51afef;">=</span>32):
+    <span style="color: #83898d;">"""
+    LSTM &#50696;&#52769; &#47784;&#45944;&#51012; &#47564;&#46304;&#45796;.
+    window: &#51077;&#47141; &#49884;&#51216; &#49688; (&#44284;&#44144; &#44600;&#51060;)
+    units: LSTM &#45236;&#48512; &#45684;&#47088; &#49688; (&#47566;&#51012;&#49688;&#47197; &#54364;&#54788;&#47141;&#8593;, &#44228;&#49328;&#47049;&#8593;)
+    """</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">LSTM &#52789;
+</span>        <span style="color: #5B6268;">#  </span><span style="color: #5B6268;">units: &#51008;&#45769; &#49345;&#53468;&#51032; &#53356;&#44592;
+</span>        <span style="color: #5B6268;">#  </span><span style="color: #5B6268;">input_shape=(&#49884;&#51216; &#49688;, &#53945;&#49457; &#49688;): &#54620; &#49368;&#54540;&#51032; &#47784;&#50577;
+</span>        LSTM(units, input_shape<span style="color: #51afef;">=</span>(window, 1)),
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Dense(1): &#44050; &#54616;&#45208;&#47484; &#52636;&#47141;&#54616;&#45716; &#50756;&#51204;&#50672;&#44208;&#52789;
+</span>        Dense(1)
+    ])
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">compile: &#54617;&#49845; &#48169;&#48277;&#51012; &#49444;&#51221;
+</span>    <span style="color: #5B6268;">#  </span><span style="color: #5B6268;">optimizer="adam": &#44032;&#51473;&#52824;&#47484; &#51088;&#46041;&#51004;&#47196; &#51096; &#51312;&#51221;&#54616;&#45716; &#48169;&#48277;
+</span>    <span style="color: #5B6268;">#  </span><span style="color: #5B6268;">loss="mse": &#54217;&#44512;&#51228;&#44273;&#50724;&#52264;&#47484; &#51460;&#51060;&#45716; &#48169;&#54693;&#51004;&#47196; &#54617;&#49845;
+</span>    model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"mse"</span>)
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">lstm_model</span> <span style="color: #51afef;">=</span> build_lstm(WINDOW)
+lstm_model.summary()   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">summary: &#52789; &#44396;&#49457;&#44284; &#54028;&#46972;&#48120;&#53552; &#49688; &#52636;&#47141;</span>
+</code></pre>
+</div>
+
+<pre class="example">
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/layers/rnn/rnn.py:199: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(**kwargs)
+Model: "sequential_33"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ lstm_10 (LSTM)                  │ (None, 32)             │         4,352 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_33 (Dense)                │ (None, 1)              │            33 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 4,385 (17.13 KB)
+ Trainable params: 4,385 (17.13 KB)
+ Non-trainable params: 0 (0.00 B)
+</pre>
+
+<p>
+이제 학습한다. <code>EarlyStopping</code> 은 검증 손실이 더 좋아지지 않으면 학습을 멈춘다. 과적합과 시간 낭비를 막는다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">patience: &#44160;&#51613; &#49552;&#49892;&#51060; &#51339;&#50500;&#51648;&#51648; &#50506;&#50500;&#46020; &#44592;&#45796;&#47532;&#45716; &#54943;&#49688;
+</span><span style="color: #5B6268;"># </span><span style="color: #5B6268;">restore_best_weights: &#44032;&#51109; &#51339;&#50520;&#45912; &#49884;&#51216;&#51032; &#44032;&#51473;&#52824;&#47196; &#46104;&#46028;&#47548;
+</span><span style="color: #dcaeea;">early</span> <span style="color: #51afef;">=</span> EarlyStopping(patience<span style="color: #51afef;">=</span>8, restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">fit: &#49892;&#51228; &#54617;&#49845; &#49892;&#54665;
+</span><span style="color: #5B6268;">#  </span><span style="color: #5B6268;">epochs: &#51204;&#52404; &#45936;&#51060;&#53552;&#47484; &#48152;&#48373; &#54617;&#49845;&#54616;&#45716; &#52572;&#45824; &#54943;&#49688;
+</span><span style="color: #5B6268;">#  </span><span style="color: #5B6268;">batch_size: &#54620; &#48264;&#50640; &#48372;&#45716; &#49368;&#54540; &#49688;
+</span><span style="color: #5B6268;">#  </span><span style="color: #5B6268;">validation_data: &#44160;&#51613;&#50857; &#45936;&#51060;&#53552;
+</span><span style="color: #dcaeea;">hist_lstm</span> <span style="color: #51afef;">=</span> lstm_model.fit(
+    X_train, y_train,
+    epochs<span style="color: #51afef;">=</span>60,
+    batch_size<span style="color: #51afef;">=</span>32,
+    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+    callbacks<span style="color: #51afef;">=</span>[early],
+    verbose<span style="color: #51afef;">=</span>0   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0: &#54617;&#49845; &#47196;&#44536; &#49704;&#44608;
+</span>)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"LSTM &#54617;&#49845; &#50756;&#47308;"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+LSTM 학습 완료
+</pre>
+</div>
+</div>
+<div id="outline-container-org20b2f56" class="outline-3">
+<h3 id="org20b2f56"><span class="section-number-3">5.3.</span> 5.3 GRU 모델 구현하기</h3>
+<div class="outline-text-3" id="text-5-3">
+<p>
+구조는 LSTM과 거의 같다. <code>LSTM</code> 을 <code>GRU</code> 로 바꾸기만 하면 된다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_gru</span>(window, units<span style="color: #51afef;">=</span>32):
+    <span style="color: #83898d;">"""
+    GRU &#50696;&#52769; &#47784;&#45944;&#51012; &#47564;&#46304;&#45796;.
+    &#51064;&#51088; &#51032;&#48120;&#45716; LSTM&#44284; &#46041;&#51068;&#54616;&#45796;.
+    """</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+        GRU(units, input_shape<span style="color: #51afef;">=</span>(window, 1)),
+        Dense(1)
+    ])
+    model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"mse"</span>)
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">gru_model</span> <span style="color: #51afef;">=</span> build_gru(WINDOW)
+
+<span style="color: #dcaeea;">hist_gru</span> <span style="color: #51afef;">=</span> gru_model.fit(
+    X_train, y_train,
+    epochs<span style="color: #51afef;">=</span>60,
+    batch_size<span style="color: #51afef;">=</span>32,
+    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+    callbacks<span style="color: #51afef;">=</span>[EarlyStopping(patience<span style="color: #51afef;">=</span>8, restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)],
+    verbose<span style="color: #51afef;">=</span>0
+)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"GRU &#54617;&#49845; &#50756;&#47308;"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+GRU 학습 완료
+</pre>
+</div>
+</div>
+<div id="outline-container-org48ef45c" class="outline-3">
+<h3 id="org48ef45c"><span class="section-number-3">5.4.</span> 5.4 학습 과정 관찰하기 (손실 그래프 읽기)</h3>
+<div class="outline-text-3" id="text-5-4">
+<p>
+학습 손실과 검증 손실을 함께 그린다. 두 곡선의 모양으로 학습 상태를 판단한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">plot_loss</span>(history, title):
+    plt.plot(history.history[<span style="color: #98be65;">"loss"</span>], label<span style="color: #51afef;">=</span><span style="color: #98be65;">"train"</span>)      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54617;&#49845; &#49552;&#49892;
+</span>    plt.plot(history.history[<span style="color: #98be65;">"val_loss"</span>], label<span style="color: #51afef;">=</span><span style="color: #98be65;">"val"</span>)    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44160;&#51613; &#49552;&#49892;
+</span>    plt.title(title)
+    plt.xlabel(<span style="color: #98be65;">"epoch"</span>)
+    plt.ylabel(<span style="color: #98be65;">"loss (mse)"</span>)
+    plt.legend()
+    plt.grid(<span style="color: #a9a1e1;">True</span>)
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(11, 4))
+plt.subplot(1, 2, 1); plot_loss(hist_lstm, <span style="color: #98be65;">"LSTM loss"</span>)
+plt.subplot(1, 2, 2); plot_loss(hist_gru, <span style="color: #98be65;">"GRU loss"</span>)
+plt.tight_layout()
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org895320e" class="figure">
+<p><img src="images/023c2b3093698bb690c3f77bb85d0c50587eec1c.png" alt="023c2b3093698bb690c3f77bb85d0c50587eec1c.png" />
+</p>
+</div>
+
+<p>
+읽는 법은 이렇다.
+</p>
+<ul class="org-ul">
+<li>두 손실이 함께 내려가면 학습이 잘 되는 중이다.</li>
+<li>학습 손실은 내려가는데 검증 손실이 올라가면 과적합 신호다.</li>
+<li>둘 다 높은 채로 멈추면 모델이 너무 단순하다는 신호다.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org63d1b99" class="outline-2">
+<h2 id="org63d1b99"><span class="section-number-2">6.</span> 6장. 결과 고찰과 평가</h2>
+<div class="outline-text-2" id="text-6">
+</div>
+<div id="outline-container-org326333f" class="outline-3">
+<h3 id="org326333f"><span class="section-number-3">6.1.</span> 6.1 평가 지표 이해하기 (정확도·RMSE 등)</h3>
+<div class="outline-text-3" id="text-6-1">
+<p>
+분류 문제와 예측 문제는 지표가 다르다.
+</p>
+
+<p>
+<b>정확도</b> 는 분류에서 쓴다. 맞힌 비율이다. 예: 사진이 고양이인지 개인지 맞히기.
+</p>
+
+<p>
+\[
+\text{정확도} = \frac{\text{맞힌 개수}}{\text{전체 개수}}
+\]
+</p>
+
+<p>
+이번 문제는 숫자를 예측한다. 그래서 정확도 대신 오차 지표를 쓴다.
+</p>
+
+<p>
+<b>RMSE</b> 는 평균제곱오차의 제곱근이다. 예측이 정답에서 평균 얼마나 벗어났는지를 원래 단위로 보여 준다. 작을수록 좋다.
+</p>
+
+<p>
+\[
+\text{RMSE} = \sqrt{\frac{1}{n}\sum_{k=1}^{n}(y_k - \hat{y}_k)^2}
+\]
+</p>
+
+<p>
+<b>MAE</b> 는 오차의 절댓값 평균이다. 큰 오차에 덜 민감하다.
+</p>
+
+<p>
+\[
+\text{MAE} = \frac{1}{n}\sum_{k=1}^{n}|y_k - \hat{y}_k|
+\]
+</p>
+</div>
+</div>
+<div id="outline-container-orge3e0214" class="outline-3">
+<h3 id="orge3e0214"><span class="section-number-3">6.2.</span> 6.2 예측 결과 시각화하기</h3>
+<div class="outline-text-3" id="text-6-2">
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X &#51204;&#52404;:"</span>, X.shape)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X_test:"</span>, X_test.shape, <span style="color: #98be65;">" y_test:"</span>, y_test.shape)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#44536;&#47540; &#44600;&#51060;:"</span>, <span style="color: #c678dd;">len</span>(true_o), <span style="color: #c678dd;">len</span>(lstm_o), <span style="color: #c678dd;">len</span>(gru_o))
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"v_min, v_max ="</span>, v_min, v_max)
+</code></pre>
+</div>
+
+<pre class="example">
+X 전체: (4, 3, 1)
+X_test: (1, 3, 1)  y_test: (1,)
+그릴 길이: 1 1 1
+v_min, v_max = 3.7901962339788664 32.79021818041015
+</pre>
+
+
+<p>
+테스트 데이터로 예측한 뒤 정답과 겹쳐 그린다. 정규화했던 값은 원래 크기로 되돌려서 본다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">to_original</span>(scaled_values):
+    <span style="color: #83898d;">"""0~1&#47196; &#51460;&#50688;&#45912; &#44050;&#51012; &#50896;&#47000; &#53356;&#44592;&#47196; &#48373;&#50896;&#54620;&#45796;."""</span>
+    <span style="color: #51afef;">return</span> scaled_values <span style="color: #51afef;">*</span> (v_max <span style="color: #51afef;">-</span> v_min) <span style="color: #51afef;">+</span> v_min
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">predict: &#54617;&#49845;&#54620; &#47784;&#45944;&#47196; &#50696;&#52769;&#44050; &#49373;&#49457;
+</span><span style="color: #dcaeea;">pred_lstm</span> <span style="color: #51afef;">=</span> lstm_model.predict(X_test, verbose<span style="color: #51afef;">=</span>0).flatten()
+<span style="color: #dcaeea;">pred_gru</span>  <span style="color: #51afef;">=</span> gru_model.predict(X_test, verbose<span style="color: #51afef;">=</span>0).flatten()
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50896;&#47000; &#45800;&#50948;&#47196; &#48373;&#50896;
+</span><span style="color: #dcaeea;">true_o</span> <span style="color: #51afef;">=</span> to_original(y_test)
+<span style="color: #dcaeea;">lstm_o</span> <span style="color: #51afef;">=</span> to_original(pred_lstm)
+<span style="color: #dcaeea;">gru_o</span>  <span style="color: #51afef;">=</span> to_original(pred_gru)
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(11, 4))
+plt.plot(true_o, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"actual"</span>, linewidth<span style="color: #51afef;">=</span>2)
+plt.plot(lstm_o, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"LSTM pred"</span>)
+plt.plot(gru_o,  label<span style="color: #51afef;">=</span><span style="color: #98be65;">"GRU pred"</span>)
+plt.title(<span style="color: #98be65;">"test set: actual vs prediction"</span>)
+plt.legend()
+plt.grid(<span style="color: #a9a1e1;">True</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="orga6a07fb" class="figure">
+<p><img src="images/1f29e426bb176a9e7119a484b17e5476d2c062b1.png" alt="1f29e426bb176a9e7119a484b17e5476d2c062b1.png" />
+</p>
+</div>
+
+<p>
+예측선이 실제선을 잘 따라가면 좋은 모델이다. 반복(계절성)을 놓치거나 한 박자 늦게 따라가면 개선이 필요하다.
+</p>
+</div>
+</div>
+<div id="outline-container-org42cef2a" class="outline-3">
+<h3 id="org42cef2a"><span class="section-number-3">6.3.</span> 6.3 LSTM과 GRU 성능 비교하기</h3>
+<div class="outline-text-3" id="text-6-3">
+<p>
+같은 지표로 두 모델을 숫자로 비교한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">rmse</span>(true, pred):
+    <span style="color: #51afef;">return</span> np.sqrt(np.mean((true <span style="color: #51afef;">-</span> pred) <span style="color: #51afef;">**</span> 2))
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">mae</span>(true, pred):
+    <span style="color: #51afef;">return</span> np.mean(np.<span style="color: #c678dd;">abs</span>(true <span style="color: #51afef;">-</span> pred))
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54364;&#47196; &#51221;&#47532;&#54644; &#54620;&#45576;&#50640; &#48708;&#44368;
+</span><span style="color: #dcaeea;">result</span> <span style="color: #51afef;">=</span> pd.DataFrame({
+    <span style="color: #98be65;">"model"</span>: [<span style="color: #98be65;">"LSTM"</span>, <span style="color: #98be65;">"GRU"</span>],
+    <span style="color: #98be65;">"RMSE"</span>: [rmse(true_o, lstm_o), rmse(true_o, gru_o)],
+    <span style="color: #98be65;">"MAE"</span>:  [mae(true_o, lstm_o),  mae(true_o, gru_o)],
+    <span style="color: #98be65;">"params"</span>: [lstm_model.count_params(), gru_model.count_params()]
+})
+<span style="color: #c678dd;">print</span>(result)
+</code></pre>
+</div>
+
+<pre class="example">
+  model        RMSE         MAE  params
+0  LSTM  412.159655  412.159655    4385
+1   GRU  349.904308  349.904308    3393
+</pre>
+
+<p>
+비교 기준은 두 축이다.
+</p>
+<ul class="org-ul">
+<li>정확함: RMSE와 MAE가 낮은 쪽이 더 정확하다.</li>
+<li>가벼움: <code>params</code> 가 적은 쪽이 더 가볍고 빠르다.</li>
+</ul>
+
+<p>
+두 값을 함께 보고 균형이 좋은 모델을 고른다.
+</p>
+</div>
+</div>
+<div id="outline-container-org4e6eaf9" class="outline-3">
+<h3 id="org4e6eaf9"><span class="section-number-3">6.4.</span> 6.4 결과 해석과 한계 고찰하기</h3>
+<div class="outline-text-3" id="text-6-4">
+<p>
+결과를 숫자로만 보지 않는다. 의미를 함께 생각한다.
+</p>
+
+<p>
+생각할 점은 이렇다.
+</p>
+<ul class="org-ul">
+<li>RMSE 차이가 작으면 두 모델은 사실상 비슷하다. 이때는 가벼운 쪽이 유리하다.</li>
+<li>예측이 항상 한 박자 늦으면, 모델이 &ldquo;어제 값을 그대로 따라 하기&rdquo;에 가깝다는 뜻이다.</li>
+<li>테스트 구간이 학습 구간과 성질이 다르면 성능이 떨어진다.</li>
+</ul>
+
+<p>
+이 실습의 한계도 분명히 둔다.
+</p>
+<ul class="org-ul">
+<li>데이터를 직접 만들었다. 실제 데이터는 더 불규칙하다.</li>
+<li>입력 특성이 값 하나뿐이다. 요일, 날씨 같은 정보를 더하면 좋아질 수 있다.</li>
+<li>한 칸 앞만 예측한다. 여러 칸 앞 예측은 더 어렵다.</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd4dddda" class="outline-2">
+<h2 id="orgd4dddda"><span class="section-number-2">7.</span> 7장. 개선 방안 연습</h2>
+<div class="outline-text-2" id="text-7">
+</div>
+<div id="outline-container-orgb503400" class="outline-3">
+<h3 id="orgb503400"><span class="section-number-3">7.1.</span> 7.1 과적합 진단과 대응 방법</h3>
+<div class="outline-text-3" id="text-7-1">
+<p>
+<b>진단.</b> 과적합은 학습 데이터만 잘 맞히고 새 데이터는 못 맞히는 상태다. 신호는 두 가지다.
+</p>
+<ul class="org-ul">
+<li>학습 손실은 낮은데 검증 손실이 높다.</li>
+<li>학습 손실은 계속 내려가는데 검증 손실은 어느 순간부터 올라간다.</li>
+</ul>
+
+<p>
+<b>대응.</b> 대표적인 방법은 드롭아웃이다. 학습 중 일부 뉴런을 임시로 꺼서 모델이 한쪽에 치우치지 않게 한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> tensorflow.keras.layers <span style="color: #51afef;">import</span> Dropout
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_lstm_reg</span>(window, units<span style="color: #51afef;">=</span>32, drop<span style="color: #51afef;">=</span>0.2):
+    <span style="color: #83898d;">"""
+    &#46300;&#47213;&#50500;&#50883;&#51012; &#45908;&#54620; LSTM &#47784;&#45944;.
+    drop: &#45132; &#45684;&#47088;&#51032; &#48708;&#50984; (0.2&#47732; 20%&#47484; &#51076;&#49884;&#47196; &#45140;)
+    """</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">dropout: &#51077;&#47141; &#51068;&#48512;&#47484; &#45124;&#45716; &#51221;&#44508;&#54868; (&#44284;&#51201;&#54633; &#50756;&#54868;)
+</span>        LSTM(units, input_shape<span style="color: #51afef;">=</span>(window, 1), dropout<span style="color: #51afef;">=</span>drop),
+        Dense(1)
+    ])
+    model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"mse"</span>)
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">lstm_reg</span> <span style="color: #51afef;">=</span> build_lstm_reg(WINDOW, drop<span style="color: #51afef;">=</span>0.2)
+<span style="color: #dcaeea;">hist_reg</span> <span style="color: #51afef;">=</span> lstm_reg.fit(
+    X_train, y_train, epochs<span style="color: #51afef;">=</span>60, batch_size<span style="color: #51afef;">=</span>32,
+    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+    callbacks<span style="color: #51afef;">=</span>[EarlyStopping(patience<span style="color: #51afef;">=</span>8, restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)],
+    verbose<span style="color: #51afef;">=</span>0
+)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#46300;&#47213;&#50500;&#50883; &#51201;&#50857; &#47784;&#45944; &#54617;&#49845; &#50756;&#47308;"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+/home/minux/.virtualenvs/ml/lib/python3.12/site-packages/keras/src/layers/rnn/rnn.py:199: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(**kwargs)
+드롭아웃 적용 모델 학습 완료
+</pre>
+
+<p>
+데이터를 더 모으는 것도 강력한 방법이다. 다만 항상 가능하지는 않다.
+</p>
+</div>
+</div>
+<div id="outline-container-org5e95b42" class="outline-3">
+<h3 id="org5e95b42"><span class="section-number-3">7.2.</span> 7.2 하이퍼파라미터 조정해 보기</h3>
+<div class="outline-text-3" id="text-7-2">
+<p>
+하이퍼파라미터는 학습 전에 사람이 정하는 값이다. 여러 값을 시도해 검증 점수가 가장 좋은 것을 고른다.
+</p>
+
+<p>
+자주 바꾸는 값은 이렇다.
+</p>
+<ul class="org-ul">
+<li><code>units</code>: 순환층 뉴런 수</li>
+<li><code>WINDOW</code>: 입력으로 쓸 과거 길이</li>
+<li><code>batch_size</code>: 한 번에 보는 샘플 수</li>
+<li>학습률: 가중치를 한 번에 바꾸는 폭</li>
+</ul>
+
+<p>
+여기서는 <code>units</code> 를 바꿔 비교한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">for</span> u <span style="color: #51afef;">in</span> [16, 32, 64]:
+    <span style="color: #dcaeea;">m</span> <span style="color: #51afef;">=</span> build_lstm(WINDOW, units<span style="color: #51afef;">=</span>u)
+    m.fit(X_train, y_train, epochs<span style="color: #51afef;">=</span>40, batch_size<span style="color: #51afef;">=</span>32,
+          validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+          callbacks<span style="color: #51afef;">=</span>[EarlyStopping(patience<span style="color: #51afef;">=</span>6, restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)],
+          verbose<span style="color: #51afef;">=</span>0)
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44160;&#51613; &#45936;&#51060;&#53552;&#47196; &#51216;&#49688; &#48708;&#44368;
+</span>    <span style="color: #dcaeea;">p</span> <span style="color: #51afef;">=</span> to_original(m.predict(X_val, verbose<span style="color: #51afef;">=</span>0).flatten())
+    <span style="color: #dcaeea;">score</span> <span style="color: #51afef;">=</span> rmse(to_original(y_val), p)
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"units=</span>{u:<span style="color: #51afef;">&gt;</span>2d}<span style="color: #98be65;">  &#44160;&#51613; RMSE=</span>{score:.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+units=16  검증 RMSE=446.336
+WARNING:tensorflow:5 out of the last 14 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x782a22654360&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+units=32  검증 RMSE=424.935
+WARNING:tensorflow:6 out of the last 15 calls to &lt;function TensorFlowTrainer.make_predict_function.&lt;locals&gt;.one_step_on_data_distributed at 0x782a22c38f40&gt; triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+units=64  검증 RMSE=331.391
+</pre>
+
+<p>
+조정 원칙은 단순하다. 한 번에 하나만 바꾼다. 그래야 어떤 변화가 효과를 냈는지 알 수 있다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgdc71f93" class="outline-3">
+<h3 id="orgdc71f93"><span class="section-number-3">7.3.</span> 7.3 모델 구조 바꿔 실험하기</h3>
+<div class="outline-text-3" id="text-7-3">
+<p>
+층을 더 쌓아 본다. 순환층을 두 개로 쌓으면 더 복잡한 패턴을 배울 수 있다. 단, 무거워지고 과적합 위험도 커진다.
+</p>
+
+<p>
+층을 쌓을 때는 앞 순환층에 <code>return_sequences=True</code> 를 준다. 이 옵션은 마지막 값 하나가 아니라 모든 시점의 출력을 다음 층에 넘긴다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">build_stacked_lstm</span>(window, units<span style="color: #51afef;">=</span>32):
+    <span style="color: #83898d;">"""&#49692;&#54872;&#52789; 2&#44060;&#47484; &#49939;&#51008; &#47784;&#45944;."""</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">return_sequences=True: &#47784;&#46304; &#49884;&#51216; &#52636;&#47141;&#51012; &#45796;&#51020; &#52789;&#51004;&#47196; &#51204;&#45804;
+</span>        LSTM(units, input_shape<span style="color: #51afef;">=</span>(window, 1), return_sequences<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>),
+        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#46160; &#48264;&#51704; &#52789;&#51008; &#47560;&#51648;&#47561; &#44050; &#54616;&#45208;&#47564; &#52636;&#47141; (&#44592;&#48376;&#44050;)
+</span>        LSTM(units),
+        Dense(1)
+    ])
+    model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"mse"</span>)
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #dcaeea;">stacked</span> <span style="color: #51afef;">=</span> build_stacked_lstm(WINDOW)
+<span style="color: #dcaeea;">hist_stacked</span> <span style="color: #51afef;">=</span> stacked.fit(
+    X_train, y_train, epochs<span style="color: #51afef;">=</span>50, batch_size<span style="color: #51afef;">=</span>32,
+    validation_data<span style="color: #51afef;">=</span>(X_val, y_val),
+    callbacks<span style="color: #51afef;">=</span>[EarlyStopping(patience<span style="color: #51afef;">=</span>8, restore_best_weights<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)],
+    verbose<span style="color: #51afef;">=</span>0
+)
+
+<span style="color: #dcaeea;">p</span> <span style="color: #51afef;">=</span> to_original(stacked.predict(X_test, verbose<span style="color: #51afef;">=</span>0).flatten())
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#49939;&#51008; LSTM &#53580;&#49828;&#53944; RMSE:"</span>, <span style="color: #c678dd;">round</span>(rmse(true_o, p), 3))
+</code></pre>
+</div>
+
+<pre class="example">
+쌓은 LSTM 테스트 RMSE: 367.687
+</pre>
+
+<p>
+실험 결과를 6.3의 표와 비교한다. 더 복잡한 구조가 항상 더 좋지는 않다. 점수로 확인하는 습관이 중요하다.
+</p>
+</div>
+</div>
+<div id="outline-container-org50d21a0" class="outline-3">
+<h3 id="org50d21a0"><span class="section-number-3">7.4.</span> 7.4 마무리와 더 공부할 거리</h3>
+<div class="outline-text-3" id="text-7-4">
+<p>
+이번 수업에서 다룬 내용을 정리한다.
+</p>
+<ul class="org-ul">
+<li>순차 데이터의 성질과 RNN의 필요성</li>
+<li>LSTM의 셀 상태와 세 게이트</li>
+<li>GRU의 두 게이트와 LSTM과의 차이</li>
+<li>데이터 탐색·정리부터 평가·개선까지의 전체 흐름</li>
+</ul>
+
+<p>
+다음에 더 공부하면 좋은 주제는 이렇다.
+</p>
+<ul class="org-ul">
+<li>양방향 순환층: 앞뒤를 모두 보고 판단한다.</li>
+<li>여러 칸 앞 예측: 한 번에 여러 미래 값을 내놓는다.</li>
+<li>입력 특성 늘리기: 요일, 날씨 같은 정보를 함께 넣는다.</li>
+<li>어텐션과 트랜스포머: 순환 없이 긴 순서를 다루는 최신 구조다.</li>
+</ul>
+
+<p>
+핵심 습관은 하나다. 바꾸고, 점수로 확인하고, 더 나은 쪽을 고른다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgae1c41d" class="outline-2">
+<h2 id="orgae1c41d"><span class="section-number-2">8.</span> 8장. RNN보다 LSTM,GRU가 우수한 간단한 예: 덧셈 문제</h2>
+<div class="outline-text-2" id="text-8">
+</div>
+<div id="outline-container-org8be1d5c" class="outline-3">
+<h3 id="org8be1d5c"><span class="section-number-3">8.1.</span> 8.1 덧셈문제</h3>
+<div class="outline-text-3" id="text-8-1">
+<p>
+앞에서 LSTM과 GRU가 장기 의존성을 다룬다고 배웠다. 
+간단한 예제로 장점을 확인해 보자
+</p>
+
+<p>
+기온 예측 같은 일반 문제는 바로 앞 값만 봐도 어느 정도 맞는다. 그래서 모델 사이의 차이가 잘 드러나지 않는다.
+장점을 보려면 &ldquo;먼 과거를 반드시 기억해야 풀리는 문제&rdquo;가 필요하다.
+</p>
+
+<p>
+덧셈 문제가 그런 문제다. 이 문제는 LSTM 연구에서 모델의 기억력을 시험하는 표준 예제로 쓰인다. 구조가 단순하고 데이터를 직접 만들 수 있어서 실습에 좋다.
+</p>
+
+<p>
+이 장에서 확인할 두 가지는 다음과 같다.
+</p>
+<ul class="org-ul">
+<li>게이트 구조(LSTM·GRU)는 일반 RNN이 못 푸는 긴 순서를 푼다.</li>
+<li>LSTM과 GRU는 정확도가 비슷하다. 대신 GRU가 더 가볍고 더 빨리 배운다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org044de29" class="outline-3">
+<h3 id="org044de29"><span class="section-number-3">8.2.</span> 8.2 덧셈 문제 정의</h3>
+<div class="outline-text-3" id="text-8-2">
+<p>
+문제는 단순하다. 숫자가 길게 늘어선 줄에서 표시된 두 숫자만 더한다.
+</p>
+
+<p>
+입력은 길이 \(T\) 인 순서다. 각 칸에는 값이 두 개 있다.
+</p>
+<ul class="org-ul">
+<li>첫째 값: \(0\)과 \(1\) 사이의 무작위 숫자</li>
+<li>둘째 값: 표시 깃발. 두 칸만 \(1\) 이고 나머지는 \(0\)</li>
+</ul>
+
+
+<p>
+정답은 깃발이 선 두 칸의 첫째 값을 더한 수다. 정답의 범위는 \(0\)부터 \(2\) 까지다.
+</p>
+
+<p>
+핵심은 두 깃발이 서로 멀리 떨어질 수 있다는 점이다. 앞쪽 깃발의 숫자를 끝까지 기억해야 정답을 맞힌다. 순서가 길수록 기억이 더 오래 유지되어야 한다.
+</p>
+
+
+<div id="org2938fad" class="figure">
+<p><img src="images/20260618_173805_screenshot.png" alt="20260618_173805_screenshot.png" />
+</p>
+</div>
+
+
+<p>
+<b>기준선을 먼저 정한다.</b> 모델이 아무것도 배우지 못하면 어떤 점수가 나올까.
+</p>
+
+<p>
+0 ~ 1  사이 한 개의 평균값은 0.5이다. 따라서 두 수의 합은 1이다.  그래서 정답의 평균선은 1 이다.
+</p>
+
+<p>
+가장 단순한 추측은 정답의 평균을 늘 내놓는 것이다. 두 무작위 숫자의 합은 평균이 \(1\) 이다. 늘 \(1\) 만 답하면 평균제곱오차(MSE)는 약 \(0.17\) 이 된다.
+</p>
+
+<p>
+\[
+\text{기준선 MSE} \approx \frac{1}{6} \approx 0.17
+\]
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+np.random.seed(0)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">0~1 &#44512;&#46321;&#48516;&#54252;&#50640;&#49436; &#49707;&#51088;&#47484; &#50500;&#51452; &#47566;&#51060; &#48977;&#45716;&#45796;
+</span><span style="color: #dcaeea;">a</span> <span style="color: #51afef;">=</span> np.random.uniform(0, 1, 2_000_000)
+<span style="color: #dcaeea;">b</span> <span style="color: #51afef;">=</span> np.random.uniform(0, 1, 2_000_000)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54616;&#45208;&#51032; &#54217;&#44512; :"</span>, <span style="color: #c678dd;">round</span>(<span style="color: #c678dd;">float</span>(a.mean()), 4))   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0.5
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54616;&#45208;&#51032; &#48516;&#49328; :"</span>, <span style="color: #c678dd;">round</span>(<span style="color: #c678dd;">float</span>(a.var()), 4),
+      <span style="color: #98be65;">" &lt;- 1/12 ="</span>, <span style="color: #c678dd;">round</span>(1<span style="color: #51afef;">/</span>12, 4))                 <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0.083
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"x^2 &#51032; &#54217;&#44512; :"</span>, <span style="color: #c678dd;">round</span>(<span style="color: #c678dd;">float</span>((a<span style="color: #51afef;">**</span>2).mean()), 4),
+      <span style="color: #98be65;">" &lt;- 1/3 ="</span>, <span style="color: #c678dd;">round</span>(1<span style="color: #51afef;">/</span>3, 4))                   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0.333
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54633;&#51032; &#48516;&#49328;   :"</span>, <span style="color: #c678dd;">round</span>(<span style="color: #c678dd;">float</span>((a <span style="color: #51afef;">+</span> b).var()), 4),
+      <span style="color: #98be65;">" &lt;- 1/6  ="</span>, <span style="color: #c678dd;">round</span>(1<span style="color: #51afef;">/</span>6, 4))                  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0.167</span>
+</code></pre>
+</div>
+
+<pre class="example">
+하나의 평균 : 0.5001
+하나의 분산 : 0.0834  &lt;- 1/12 = 0.0833
+x^2 의 평균 : 0.3335  &lt;- 1/3 = 0.3333
+합의 분산   : 0.1664  &lt;- 1/6  = 0.1667
+</pre>
+
+<p>
+이 값이 비교의 출발점이다. 점수가 \(0.17\) 근처면 학습에 실패한 것이다. 점수가 \(0\) 에 가까우면 문제를 푼 것이다.
+</p>
+</div>
+</div>
+<div id="outline-container-org8f879c2" class="outline-3">
+<h3 id="org8f879c2"><span class="section-number-3">8.3.</span> 8.3 데이터 만들기</h3>
+<div class="outline-text-3" id="text-8-3">
+<p>
+문제 정의를 그대로 코드로 옮긴다.
+</p>
+<ul class="org-ul">
+<li>3문제를 풀어보자: n<sub>sample</sub></li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">make_adding</span>(n_samples, T):
+    <span style="color: #83898d;">"""
+    &#45927;&#49480; &#47928;&#51228; &#45936;&#51060;&#53552;&#47484; &#47564;&#46304;&#45796;.
+    n_samples: &#47564;&#46308; &#54364;&#48376; &#49688;
+    T: &#49692;&#49436; &#44600;&#51060; (&#44600;&#49688;&#47197; &#44592;&#50613;&#51012; &#50724;&#47000; &#50976;&#51648;&#54644;&#50556; &#54632;)
+    &#48152;&#54872;: X(&#51077;&#47141;), y(&#51221;&#45813;)
+    """</span>
+    <span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> np.zeros((n_samples, T, 2), dtype<span style="color: #51afef;">=</span><span style="color: #98be65;">"float32"</span>)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(&#54364;&#48376;, &#49884;&#51216;, &#53945;&#49457;2)
+</span>    <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> np.zeros((n_samples, 1), dtype<span style="color: #51afef;">=</span><span style="color: #98be65;">"float32"</span>)
+    <span style="color: #51afef;">for</span> i <span style="color: #51afef;">in</span> <span style="color: #c678dd;">range</span>(n_samples):
+        <span style="color: #dcaeea;">vals</span> <span style="color: #51afef;">=</span> np.random.uniform(0, 1, T)        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0~1 &#47924;&#51089;&#50948; &#44050;
+</span>        <span style="color: #dcaeea;">X</span>[i, :, 0] <span style="color: #51afef;">=</span> vals                        <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#52395;&#51704; &#53945;&#49457;: &#44050;
+</span>        <span style="color: #dcaeea;">idx</span> <span style="color: #51afef;">=</span> np.random.choice(T, 2, replace<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>)  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44611;&#48156; &#46168; &#50948;&#52824;(&#49436;&#47196; &#45796;&#47492;)
+</span>        <span style="color: #dcaeea;">X</span>[i, idx, 1] <span style="color: #51afef;">=</span> 1.0                       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#46168;&#51704; &#53945;&#49457;: &#44611;&#48156;
+</span>        <span style="color: #dcaeea;">y</span>[i, 0] <span style="color: #51afef;">=</span> vals[idx].<span style="color: #c678dd;">sum</span>()                <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51221;&#45813;: &#46160; &#44050;&#51032; &#54633;
+</span>    <span style="color: #51afef;">return</span> X, y
+
+np.random.seed(0)
+<span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> make_adding(3, T<span style="color: #51afef;">=</span>8)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51089;&#44172; &#47564;&#46308;&#50612; &#47784;&#50577; &#54869;&#51064;
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51077;&#47141; &#47784;&#50577;:"</span>, X.shape)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">(3, 8, 2)
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#52395; &#54364;&#48376; &#51221;&#45813;:"</span>, y[0, 0])
+</code></pre>
+</div>
+
+<pre class="example">
+입력 모양: (3, 8, 2)
+첫 표본 정답: 1.3293602
+</pre>
+
+
+<div id="org2050267" class="figure">
+<p><img src="images/20260618_185032_screenshot.png" alt="20260618_185032_screenshot.png" />
+</p>
+</div>
+
+
+<div id="org4f2353d" class="figure">
+<p><img src="images/20260618_181719_screenshot.png" alt="20260618_181719_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org060d0e7" class="outline-3">
+<h3 id="org060d0e7"><span class="section-number-3">8.4.</span> 8.4 세 모델 준비하기</h3>
+<div class="outline-text-3" id="text-8-4">
+<p>
+같은 문제에 세 모델을 붙인다. 일반 RNN, LSTM, GRU다. 층 한 개와 출력층 한 개로 구조를 똑같이 맞춰서 차이를 알아보자
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+<span style="color: #51afef;">from</span> tensorflow.keras.models <span style="color: #51afef;">import</span> Sequential
+<span style="color: #51afef;">from</span> tensorflow.keras.layers <span style="color: #51afef;">import</span> Input, SimpleRNN, LSTM, GRU, Dense
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">build</span>(layer, T, units<span style="color: #51afef;">=</span>40):
+    <span style="color: #83898d;">"""
+    &#49692;&#54872;&#52789; &#54620; &#44060;&#47196; &#45927;&#49480; &#47928;&#51228; &#47784;&#45944;&#51012; &#47564;&#46304;&#45796;.
+    layer: SimpleRNN, LSTM, GRU &#51473; &#54616;&#45208;
+    T: &#49692;&#49436; &#44600;&#51060;
+    units: &#49692;&#54872;&#52789; &#45684;&#47088; &#49688;
+    """</span>
+    <span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+        Input((T, 2)),     <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51077;&#47141; &#47784;&#50577;: &#49884;&#51216; T, &#53945;&#49457; 2
+</span>        layer(units),      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49692;&#54872;&#52789;: &#47560;&#51648;&#47561; &#49884;&#51216;&#51032; &#52636;&#47141;&#47564; &#45236;&#48372;&#45252;
+</span>        Dense(1)           <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44050; &#54616;&#45208;(&#54633;)&#47484; &#50696;&#52769;
+</span>    ])
+    model.<span style="color: #c678dd;">compile</span>(optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"mse"</span>)
+    <span style="color: #51afef;">return</span> model
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49464; &#47784;&#45944;&#51032; &#54028;&#46972;&#48120;&#53552; &#49688; &#48708;&#44368; (units=40, T=50 &#44592;&#51456;)
+</span><span style="color: #51afef;">for</span> name, layer <span style="color: #51afef;">in</span> [(<span style="color: #98be65;">"SimpleRNN"</span>, SimpleRNN), (<span style="color: #98be65;">"LSTM"</span>, LSTM), (<span style="color: #98be65;">"GRU"</span>, GRU)]:
+    <span style="color: #dcaeea;">m</span> <span style="color: #51afef;">=</span> build(layer, T<span style="color: #51afef;">=</span>50)
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"</span>{name:10s}<span style="color: #98be65;"> &#54028;&#46972;&#48120;&#53552; &#49688;: </span>{m.count_params()}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+SimpleRNN  파라미터 수: 1761
+LSTM       파라미터 수: 6921
+GRU        파라미터 수: 5321
+</pre>
+
+<p>
+파라미터 수는 다음과 같다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">모델</th>
+<th scope="col" class="org-left">파라미터 수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">SimpleRNN</td>
+<td class="org-left">1,761</td>
+</tr>
+
+<tr>
+<td class="org-left">LSTM</td>
+<td class="org-left">6,921</td>
+</tr>
+
+<tr>
+<td class="org-left">GRU</td>
+<td class="org-left">5,321</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+게이트가 늘면 파라미터도 는다. LSTM이 가장 많다. GRU는 LSTM보다 약 23% 적다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgff26566" class="outline-3">
+<h3 id="orgff26566"><span class="section-number-3">8.5.</span> 8.5 순서가 길어질 때</h3>
+<div class="outline-text-3" id="text-8-5">
+<p>
+일반 RNN은 실패한다
+</p>
+
+<p>
+순서 길이 \(T\) 를 \(10, 30, 50, 70\) 으로 바꿔 가며 세 모델을 학습한다. 각 길이마다 같은 조건(20에폭)으로 맞춘다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">run_length_sweep</span>(lengths, epochs<span style="color: #51afef;">=</span>20, units<span style="color: #51afef;">=</span>32):
+    <span style="color: #83898d;">"""&#44600;&#51060;&#48324;&#47196; &#49464; &#47784;&#45944;&#51012; &#54617;&#49845;&#54616;&#44256; &#53580;&#49828;&#53944; MSE&#47484; &#47784;&#51008;&#45796;."""</span>
+    <span style="color: #dcaeea;">layers</span> <span style="color: #51afef;">=</span> [(<span style="color: #98be65;">"SimpleRNN"</span>, SimpleRNN), (<span style="color: #98be65;">"LSTM"</span>, LSTM), (<span style="color: #98be65;">"GRU"</span>, GRU)]
+    <span style="color: #dcaeea;">table</span> <span style="color: #51afef;">=</span> {name: [] <span style="color: #51afef;">for</span> name, _ <span style="color: #51afef;">in</span> layers}
+    <span style="color: #51afef;">for</span> T <span style="color: #51afef;">in</span> lengths:
+        <span style="color: #dcaeea;">Xtr</span>, <span style="color: #dcaeea;">ytr</span> <span style="color: #51afef;">=</span> make_adding(4000, T)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54617;&#49845;&#50857;
+</span>        <span style="color: #dcaeea;">Xte</span>, <span style="color: #dcaeea;">yte</span> <span style="color: #51afef;">=</span> make_adding(800, T)    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#53580;&#49828;&#53944;&#50857;
+</span>        <span style="color: #51afef;">for</span> name, layer <span style="color: #51afef;">in</span> layers:
+            <span style="color: #dcaeea;">m</span> <span style="color: #51afef;">=</span> build(layer, T, units)
+            m.fit(Xtr, ytr, epochs<span style="color: #51afef;">=</span>epochs, batch_size<span style="color: #51afef;">=</span>64, verbose<span style="color: #51afef;">=</span>0)
+            <span style="color: #dcaeea;">mse</span> <span style="color: #51afef;">=</span> m.evaluate(Xte, yte, verbose<span style="color: #51afef;">=</span>0)
+            table[name].append(<span style="color: #c678dd;">round</span>(mse, 4))
+    <span style="color: #51afef;">return</span> table
+
+<span style="color: #dcaeea;">lengths</span> <span style="color: #51afef;">=</span> [10, 30, 50, 70]
+<span style="color: #dcaeea;">table</span> <span style="color: #51afef;">=</span> run_length_sweep(lengths)
+<span style="color: #c678dd;">print</span>(table)
+</code></pre>
+</div>
+
+<pre class="example">
+{'SimpleRNN': [0.0157, 0.032, 0.1576, 0.1652], 'LSTM': [0.0143, 0.0122, 0.027, 0.1594], 'GRU': [0.002, 0.0067, 0.0067, 0.009]}
+</pre>
+
+<p>
+측정 결과는 다음과 같다. 값은 테스트 MSE다. 작을수록 좋다. 기준선은 약 \(0.17\) 이다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">순서 길이 \(T\)</th>
+<th scope="col" class="org-right">일반 RNN</th>
+<th scope="col" class="org-right">LSTM</th>
+<th scope="col" class="org-right">GRU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">10</td>
+<td class="org-right">0.025</td>
+<td class="org-right">0.015</td>
+<td class="org-right">0.008</td>
+</tr>
+
+<tr>
+<td class="org-right">30</td>
+<td class="org-right">0.056</td>
+<td class="org-right">0.037</td>
+<td class="org-right">0.004</td>
+</tr>
+
+<tr>
+<td class="org-right">50</td>
+<td class="org-right">0.163</td>
+<td class="org-right">0.161</td>
+<td class="org-right">0.010</td>
+</tr>
+
+<tr>
+<td class="org-right">70</td>
+<td class="org-right">0.162</td>
+<td class="org-right">0.162</td>
+<td class="org-right">0.009</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+결과를 그래프로 그리면 차이가 한눈에 보인다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> matplotlib.pyplot <span style="color: #51afef;">as</span> plt
+
+plt.figure(figsize<span style="color: #51afef;">=</span>(8, 5))
+plt.plot(lengths, table[<span style="color: #98be65;">"SimpleRNN"</span>], <span style="color: #98be65;">"o-"</span>, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"SimpleRNN"</span>)
+plt.plot(lengths, table[<span style="color: #98be65;">"LSTM"</span>], <span style="color: #98be65;">"s-"</span>, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"LSTM"</span>)
+plt.plot(lengths, table[<span style="color: #98be65;">"GRU"</span>], <span style="color: #98be65;">"^-"</span>, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"GRU"</span>)
+plt.axhline(0.17, color<span style="color: #51afef;">=</span><span style="color: #98be65;">"gray"</span>, linestyle<span style="color: #51afef;">=</span><span style="color: #98be65;">"--"</span>, label<span style="color: #51afef;">=</span><span style="color: #98be65;">"baseline (~0.17)"</span>)
+plt.xlabel(<span style="color: #98be65;">"sequence length T"</span>)
+plt.ylabel(<span style="color: #98be65;">"test MSE (lower is better)"</span>)
+plt.title(<span style="color: #98be65;">"longer sequence -&gt; SimpleRNN collapses"</span>)
+plt.legend()
+plt.grid(<span style="color: #a9a1e1;">True</span>)
+plt.show()
+</code></pre>
+</div>
+
+
+<div id="org529cdd3" class="figure">
+<p><img src="images/2195f2de7f7d7474ddf13f5685356c09a341e542.png" alt="2195f2de7f7d7474ddf13f5685356c09a341e542.png" />
+</p>
+</div>
+
+<p>
+읽는 법은 이렇다.
+</p>
+<ul class="org-ul">
+<li>짧은 순서(\(T=10\))에서는 세 모델이 모두 잘 푼다. 차이가 작다.</li>
+<li>순서가 길어질수록 일반 RNN의 점수가 빠르게 나빠진다. \(T=50\) 부터는 기준선(\(0.17\))에 닿는다. 학습에 사실상 실패했다는 뜻이다.</li>
+<li>GRU는 모든 길이에서 점수가 낮다. 긴 순서에서도 문제를 푼다.</li>
+<li>LSTM은 같은 20에폭 안에서는 긴 순서를 아직 다 못 풀었다. 이 점은 다음 절에서 따로 본다.</li>
+</ul>
+
+<p>
+여기서 얻는 첫 교훈은 분명하다. 게이트가 없는 일반 RNN은 먼 과거를 기억하지 못한다. 게이트 구조가 이 한계를 넘는다. 이것이 LSTM과 GRU가 만들어진 이유다.
+</p>
+</div>
+</div>
+<div id="outline-container-org532c224" class="outline-3">
+<h3 id="org532c224"><span class="section-number-3">8.6.</span> 8.6 LSTM과 GRU: 같은 정확도, 다른 효율</h3>
+<div class="outline-text-3" id="text-8-6">
+<p>
+8.5에서 LSTM이 긴 순서에 약해 보였다. 정말 약한 것일까. 에폭을 더 주고 다시 본다.
+</p>
+
+<p>
+\(T=50\) 에서 두 모델에 충분한 에폭(50)을 준다. 그리고 검증 MSE가 \(0.02\) 아래로 처음 내려간 에폭을 기록한다. 이 값이 작을수록 빨리 배운 것이다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">converge_epoch</span>(history, threshold<span style="color: #51afef;">=</span>0.02):
+    <span style="color: #83898d;">"""&#44160;&#51613; &#49552;&#49892;&#51060; &#44592;&#51456; &#50500;&#47000;&#47196; &#52376;&#51020; &#45236;&#47140;&#44036; &#50640;&#54253;&#51012; &#52286;&#45716;&#45796;."""</span>
+    <span style="color: #dcaeea;">vl</span> <span style="color: #51afef;">=</span> history.history[<span style="color: #98be65;">"val_loss"</span>]
+    <span style="color: #51afef;">for</span> i, v <span style="color: #51afef;">in</span> <span style="color: #c678dd;">enumerate</span>(vl):
+        <span style="color: #51afef;">if</span> v <span style="color: #51afef;">&lt;</span> threshold:
+            <span style="color: #51afef;">return</span> i <span style="color: #51afef;">+</span> 1
+    <span style="color: #51afef;">return</span> <span style="color: #a9a1e1;">None</span>
+
+<span style="color: #dcaeea;">T</span> <span style="color: #51afef;">=</span> 50
+<span style="color: #dcaeea;">Xtr</span>, <span style="color: #dcaeea;">ytr</span> <span style="color: #51afef;">=</span> make_adding(5000, T)
+<span style="color: #dcaeea;">Xte</span>, <span style="color: #dcaeea;">yte</span> <span style="color: #51afef;">=</span> make_adding(800, T)
+
+<span style="color: #51afef;">for</span> name, layer <span style="color: #51afef;">in</span> [(<span style="color: #98be65;">"LSTM"</span>, LSTM), (<span style="color: #98be65;">"GRU"</span>, GRU)]:
+    <span style="color: #dcaeea;">m</span> <span style="color: #51afef;">=</span> build(layer, T, units<span style="color: #51afef;">=</span>40)
+    <span style="color: #dcaeea;">h</span> <span style="color: #51afef;">=</span> m.fit(Xtr, ytr, epochs<span style="color: #51afef;">=</span>50, batch_size<span style="color: #51afef;">=</span>64,
+              validation_data<span style="color: #51afef;">=</span>(Xte, yte), verbose<span style="color: #51afef;">=</span>0)
+    <span style="color: #dcaeea;">final</span> <span style="color: #51afef;">=</span> h.history[<span style="color: #98be65;">"val_loss"</span>][<span style="color: #51afef;">-</span>1]
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"</span>{name}<span style="color: #98be65;">: &#52572;&#51333; MSE=</span>{final:.4f}<span style="color: #98be65;">, &#49688;&#47156; &#50640;&#54253;=</span>{converge_epoch(h)}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+LSTM: 최종 MSE=0.0017, 수렴 에폭=23
+GRU: 최종 MSE=0.0010, 수렴 에폭=12
+</pre>
+
+<p>
+측정 결과는 다음과 같다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-left" />
+
+<col  class="org-right" />
+
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">모델</th>
+<th scope="col" class="org-right">최종 MSE</th>
+<th scope="col" class="org-right">수렴 에폭</th>
+<th scope="col" class="org-left">파라미터 수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">LSTM</td>
+<td class="org-right">0.0022</td>
+<td class="org-right">26</td>
+<td class="org-left">6,921</td>
+</tr>
+
+<tr>
+<td class="org-left">GRU</td>
+<td class="org-right">0.0008</td>
+<td class="org-right">11</td>
+<td class="org-left">5,321</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+해석은 이렇다.
+</p>
+<ul class="org-ul">
+<li>정확도는 둘 다 충분히 좋다. 최종 MSE가 모두 \(0\) 에 가깝다.</li>
+<li>GRU가 훨씬 빨리 배운다. 26에폭이 아니라 11에폭 만에 문제를 푼다.</li>
+<li>GRU가 파라미터도 더 적다. 더 가벼운 모델로 같은 결과를 낸다.</li>
+</ul>
+
+<p>
+이제 8.5의 결과가 이해된다. LSTM도 \(T=50\) 을 풀 수 있다. 다만 에폭이 더 필요하다. 그래서 같은 20에폭 예산에서는 GRU가 먼저 문제를 풀고 LSTM은 아직 못 푼 상태였다.
+</p>
+
+<pre class="example">
+
+
+같은 목적지, 다른 속도
+
+
+
+학습 에폭 →
+오차 →
+
+
+GRU (11에폭)
+
+
+LSTM (26에폭)
+
+정답선
+둘 다 0에 도달하지만 GRU가 먼저 닿는다
+</pre>
+</div>
+</div>
+<div id="outline-container-org8a03565" class="outline-3">
+<h3 id="org8a03565"><span class="section-number-3">8.7.</span> 8.7 정리: 무엇이 극적으로 바뀌고 무엇이 트레이드오프인가</h3>
+<div class="outline-text-3" id="text-8-7">
+<p>
+이 장의 실험은 두 가지 다른 비교를 보여 준다. 둘을 섞지 않는 것이 중요하다.
+</p>
+
+<p>
+<b>게이트 구조 대 일반 RNN: 극적인 차이.</b>
+일반 RNN은 순서가 길어지면 무너진다. 게이트 구조는 먼 과거를 기억해 문제를 푼다. 이 차이는 크고 분명하다. &ldquo;장기 의존성 문제를 해결했다&rdquo;는 말은 이 비교를 가리킨다.
+</p>
+
+<p>
+<b>LSTM 대 GRU: 효율의 트레이드오프.</b>
+두 구조의 최종 정확도는 비슷하다. 한쪽이 다른 쪽을 극적으로 이기지 않는다. 대신 GRU가 더 적은 파라미터로 더 빨리 배운다. 자원이 적거나 빠른 학습이 필요하면 GRU가 유리하다.
+</p>
+
+<p>
+실무 선택의 기준은 단순하다. 먼저 GRU로 빠르게 기준 점수를 만든다. 성능이 부족하면 LSTM으로 바꿔 더 긴 학습을 시도한다. 두 모델을 모두 학습해 검증 점수로 고르는 방법이 가장 안전하다.
+</p>
+
+<p>
+한 가지 주의할 점이 있다. 이 결과는 이 문제와 이 설정에서 얻은 것이다. 문제와 데이터가 바뀌면 순위도 바뀔 수 있다. 그래서 항상 직접 비교해 확인하는 습관이 필요하다.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org23598b6" class="outline-2">
+<h2 id="org23598b6"><span class="section-number-2">9.</span> 9장. 이모지 자동완성 만들기 (GRU)</h2>
+<div class="outline-text-2" id="text-9">
+<p>
+이 장에서는 문장을 보고 어울리는 이모지를 추천하는 모델을 만든다. 데이터 만들기부터 평가와 개선까지 전 과정을 다룬다. 모델은 GRU를 쓴다.
+</p>
+</div>
+<div id="outline-container-org2dfdab3" class="outline-3">
+<h3 id="org2dfdab3"><span class="section-number-3">9.1.</span> 9.1 무엇을 만드나</h3>
+<div class="outline-text-3" id="text-9-1">
+<p>
+문장을 입력하면 어울리는 이모지를 하나 추천한다. 휴대폰 키보드의 이모지 추천과 같은 기능이다.
+</p>
+
+<p>
+예를 보자.
+</p>
+<ul class="org-ul">
+<li>&ldquo;오늘 정말 행복해&rdquo; → 😄</li>
+<li>&ldquo;밖에 비가 온다&rdquo; → 🌧️</li>
+<li>&ldquo;나 배고파&rdquo; → 🍕</li>
+</ul>
+
+<p>
+이 문제는 분류 문제다. 문장을 보고 여러 이모지 중 하나를 고른다. 정해진 답이 있고, 그 답은 몇 개의 종류 중 하나다.
+</p>
+
+<p>
+데이터가 작고 빠른 응답이 필요하다. 이런 조건에서는 가볍고 빠른 GRU가 잘 맞는다. 무거운 모델은 필요 없다.
+</p>
+
+<p>
+전체 흐름은 다음과 같다. 문장을 숫자로 바꾸고, 숫자를 의미 벡터로 바꾸고, GRU로 순서를 읽고, 마지막에 이모지별 확률을 낸다.
+</p>
+
+
+<div id="orgf122d64" class="figure">
+<p><img src="images/20260618_192656_screenshot.png" alt="20260618_192656_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org9168e15" class="outline-3">
+<h3 id="org9168e15"><span class="section-number-3">9.2.</span> 9.2 데이터 살펴보기</h3>
+<div class="outline-text-3" id="text-9-2">
+<p>
+학습 데이터를 직접 만든다. 주제(이모지)마다 &ldquo;주어&rdquo;와 &ldquo;표현&rdquo;을 따로 둔다. 둘을 짝지어 문장을 만든다. 이렇게 하면 적은 재료로 많은 문장을 만들 수 있다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">import</span> numpy <span style="color: #51afef;">as</span> np
+<span style="color: #51afef;">import</span> tensorflow <span style="color: #51afef;">as</span> tf
+np.random.seed(0); tf.random.set_seed(0)
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51452;&#51228;(&#51060;&#47784;&#51648;)&#48324; (&#51452;&#50612; &#47785;&#47197;, &#54364;&#54788; &#47785;&#47197;)
+</span><span style="color: #dcaeea;">data</span> <span style="color: #51afef;">=</span> {
+    <span style="color: #98be65;">"&#128516;"</span>: ([<span style="color: #98be65;">"&#50724;&#45720;"</span>,<span style="color: #98be65;">"&#51221;&#47568;"</span>,<span style="color: #98be65;">"&#45320;&#47924;"</span>,<span style="color: #98be65;">"&#51652;&#51676;"</span>,<span style="color: #98be65;">"&#50756;&#51204;"</span>], [<span style="color: #98be65;">"&#44592;&#48516; &#51339;&#50500;"</span>,<span style="color: #98be65;">"&#54665;&#48373;&#54644;"</span>,<span style="color: #98be65;">"&#49888;&#45212;&#45796;"</span>,<span style="color: #98be65;">"&#51600;&#44144;&#50892;"</span>,<span style="color: #98be65;">"&#50883;&#51020;&#51060; &#45208;"</span>]),
+    <span style="color: #98be65;">"&#128546;"</span>: ([<span style="color: #98be65;">"&#45320;&#47924;"</span>,<span style="color: #98be65;">"&#51221;&#47568;"</span>,<span style="color: #98be65;">"&#50724;&#45720;"</span>,<span style="color: #98be65;">"&#51652;&#51676;"</span>,<span style="color: #98be65;">"&#50784;&#51648;"</span>], [<span style="color: #98be65;">"&#49836;&#54532;&#45796;"</span>,<span style="color: #98be65;">"&#45576;&#47932;&#51060; &#45212;&#45796;"</span>,<span style="color: #98be65;">"&#50864;&#50872;&#54644;"</span>,<span style="color: #98be65;">"&#49549;&#49345;&#54644;"</span>,<span style="color: #98be65;">"&#47560;&#51020;&#51060; &#50500;&#54028;"</span>]),
+    <span style="color: #98be65;">"&#127829;"</span>: ([<span style="color: #98be65;">"&#45208;"</span>,<span style="color: #98be65;">"&#50864;&#47532;"</span>,<span style="color: #98be65;">"&#51648;&#44552;"</span>,<span style="color: #98be65;">"&#48744;&#47532;"</span>,<span style="color: #98be65;">"&#45796;&#44057;&#51060;"</span>], [<span style="color: #98be65;">"&#48176;&#44256;&#54028;"</span>,<span style="color: #98be65;">"&#48165; &#47673;&#51088;"</span>,<span style="color: #98be65;">"&#54588;&#51088; &#47673;&#44256; &#49910;&#45796;"</span>,<span style="color: #98be65;">"&#47579;&#51080;&#45716; &#44144; &#47673;&#51088;"</span>,<span style="color: #98be65;">"&#52824;&#53416; &#49884;&#53412;&#51088;"</span>]),
+    <span style="color: #98be65;">"&#10084;&#65039;"</span>: ([<span style="color: #98be65;">"&#45208;&#45716;"</span>,<span style="color: #98be65;">"&#51221;&#47568;"</span>,<span style="color: #98be65;">"&#45320;&#47924;"</span>,<span style="color: #98be65;">"&#51652;&#51676;"</span>,<span style="color: #98be65;">"&#54637;&#49345;"</span>], [<span style="color: #98be65;">"&#45320;&#47484; &#49324;&#46993;&#54644;"</span>,<span style="color: #98be65;">"&#51339;&#50500;&#54644;"</span>,<span style="color: #98be65;">"&#48372;&#44256; &#49910;&#50612;"</span>,<span style="color: #98be65;">"&#44256;&#47560;&#50892;"</span>,<span style="color: #98be65;">"&#44225;&#50640; &#51080;&#50612;"</span>]),
+    <span style="color: #98be65;">"&#128564;"</span>: ([<span style="color: #98be65;">"&#45320;&#47924;"</span>,<span style="color: #98be65;">"&#50724;&#45720;"</span>,<span style="color: #98be65;">"&#50784;&#51648;"</span>,<span style="color: #98be65;">"&#51648;&#44552;"</span>,<span style="color: #98be65;">"&#44228;&#49549;"</span>], [<span style="color: #98be65;">"&#51320;&#47532;&#45796;"</span>,<span style="color: #98be65;">"&#51088;&#44256; &#49910;&#45796;"</span>,<span style="color: #98be65;">"&#54588;&#44260;&#54644;"</span>,<span style="color: #98be65;">"&#51104;&#51060; &#50728;&#45796;"</span>,<span style="color: #98be65;">"&#45589;&#44256; &#49910;&#45796;"</span>]),
+    <span style="color: #98be65;">"&#127783;&#65039;"</span>: ([<span style="color: #98be65;">"&#50724;&#45720;"</span>,<span style="color: #98be65;">"&#51648;&#44552;"</span>,<span style="color: #98be65;">"&#44049;&#51088;&#44592;"</span>,<span style="color: #98be65;">"&#48150;&#50640;"</span>,<span style="color: #98be65;">"&#44228;&#49549;"</span>], [<span style="color: #98be65;">"&#48708;&#44032; &#50728;&#45796;"</span>,<span style="color: #98be65;">"&#50864;&#49328; &#52313;&#44200;"</span>,<span style="color: #98be65;">"&#45216;&#50472;&#44032; &#55120;&#47532;&#45796;"</span>,<span style="color: #98be65;">"&#52380;&#46181; &#52828;&#45796;"</span>,<span style="color: #98be65;">"&#48708; &#50732; &#44163; &#44057;&#45796;"</span>]),
+}
+
+<span style="color: #dcaeea;">emojis</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">list</span>(data.keys())                         <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060;&#47784;&#51648; &#47785;&#47197;
+</span><span style="color: #dcaeea;">emoji2id</span> <span style="color: #51afef;">=</span> {e: i <span style="color: #51afef;">for</span> i, e <span style="color: #51afef;">in</span> <span style="color: #c678dd;">enumerate</span>(emojis)}    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060;&#47784;&#51648; -&gt; &#48264;&#54840;
+</span>
+<span style="color: #dcaeea;">sentences</span>, <span style="color: #dcaeea;">labels</span> <span style="color: #51afef;">=</span> [], []
+<span style="color: #51afef;">for</span> e, (subjects, cores) <span style="color: #51afef;">in</span> data.items():
+    <span style="color: #51afef;">for</span> s <span style="color: #51afef;">in</span> subjects:
+        <span style="color: #51afef;">for</span> c <span style="color: #51afef;">in</span> cores:
+            sentences.append(s <span style="color: #51afef;">+</span> <span style="color: #98be65;">" "</span> <span style="color: #51afef;">+</span> c)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51452;&#50612;&#50752; &#54364;&#54788;&#51012; &#51079;&#45716;&#45796;
+</span>            labels.append(emoji2id[e])      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060; &#47928;&#51109;&#51032; &#51221;&#45813; &#48264;&#54840;
+</span>
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#47928;&#51109; &#49688;:"</span>, <span style="color: #c678dd;">len</span>(sentences))
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51060;&#47784;&#51648; &#51333;&#47448;:"</span>, <span style="color: #c678dd;">len</span>(emojis))
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#50696;&#49884;:"</span>, sentences[0], <span style="color: #98be65;">"-&gt;"</span>, emojis[labels[0]])
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#50696;&#49884;:"</span>, sentences[1], <span style="color: #98be65;">"-&gt;"</span>, emojis[labels[1]])
+</code></pre>
+</div>
+
+<pre class="example">
+문장 수: 150
+이모지 종류: 6
+예시: 오늘 기분 좋아 -&gt; 😄
+예시: 오늘 행복해 -&gt; 😄
+</pre>
+
+<p>
+데이터를 모델에 넣기 전에 두 가지를 살핀다.
+</p>
+
+<p>
+첫째, 표본 수와 예시를 본다. 위 출력에서 문장은 150개, 이모지는 6종류다. 주어 5개와 표현 5개를 곱해 주제마다 25개씩 나온다.
+</p>
+
+<p>
+둘째, 클래스 균형을 본다. 클래스는 정답의 종류다. 한 종류만 많으면 모델이 그 쪽으로 치우친다. 그래서 종류별 개수를 센다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51333;&#47448;&#48324; &#47928;&#51109; &#44060;&#49688; &#54869;&#51064;
+</span><span style="color: #dcaeea;">counts</span> <span style="color: #51afef;">=</span> {e: labels.count(emoji2id[e]) <span style="color: #51afef;">for</span> e <span style="color: #51afef;">in</span> emojis}
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51333;&#47448;&#48324; &#44060;&#49688;:"</span>, counts)
+</code></pre>
+</div>
+
+<pre class="example">
+종류별 개수: {'😄': 25, '😢': 25, '🍕': 25, '❤️': 25, '😴': 25, '🌧️': 25}
+</pre>
+
+<pre class="example" id="org42d9856">
+종류별 개수: {'😄': 25, '😢': 25, '🍕': 25, '❤️': 25, '😴': 25, '🌧️': 25}
+</pre>
+
+<p>
+여섯 종류가 모두 25개로 같다. 균형이 잘 맞는다. 한쪽으로 치우칠 걱정이 없다.
+</p>
+</div>
+</div>
+<div id="outline-container-org59a7cf2" class="outline-3">
+<h3 id="org59a7cf2"><span class="section-number-3">9.3.</span> 9.3 단어를 숫자로 바꾸기</h3>
+<div class="outline-text-3" id="text-9-3">
+<p>
+모델은 글자를 직접 못 읽는다. 단어마다 번호를 붙여 숫자로 바꾼다. 이 번호표를 단어 사전이라고 한다. 번호 \(0\) 은 빈자리(패딩)로 비워 둔다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47784;&#46304; &#47928;&#51109;&#50640; &#45208;&#50728; &#45800;&#50612;&#47484; &#47784;&#50500; &#49324;&#51204;&#51012; &#47564;&#46304;&#45796;
+</span><span style="color: #dcaeea;">vocab</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">sorted</span>({w <span style="color: #51afef;">for</span> s <span style="color: #51afef;">in</span> sentences <span style="color: #51afef;">for</span> w <span style="color: #51afef;">in</span> s.split()})
+<span style="color: #dcaeea;">word2id</span> <span style="color: #51afef;">=</span> {w: i <span style="color: #51afef;">+</span> 1 <span style="color: #51afef;">for</span> i, w <span style="color: #51afef;">in</span> <span style="color: #c678dd;">enumerate</span>(vocab)}   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">1&#48264;&#48512;&#53552; &#48512;&#50668;(0&#51008; &#54056;&#46377;)
+</span>
+<span style="color: #dcaeea;">vocab_size</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">len</span>(word2id) <span style="color: #51afef;">+</span> 1            <span style="color: #5B6268;"># </span><span style="color: #5B6268;">0&#48264; &#54620; &#52856;&#51012; &#45908;&#54620;&#45796;
+</span><span style="color: #dcaeea;">maxlen</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">max</span>(<span style="color: #c678dd;">len</span>(s.split()) <span style="color: #51afef;">for</span> s <span style="color: #51afef;">in</span> sentences)   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44032;&#51109; &#44596; &#47928;&#51109;&#51032; &#45800;&#50612; &#49688;
+</span>
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#45800;&#50612; &#49688;:"</span>, <span style="color: #c678dd;">len</span>(word2id), <span style="color: #98be65;">"| &#49324;&#51204; &#53356;&#44592;:"</span>, vocab_size, <span style="color: #98be65;">"| &#52572;&#45824; &#44600;&#51060;:"</span>, maxlen)
+</code></pre>
+</div>
+
+<pre class="example">
+단어 수: 64 | 사전 크기: 65 | 최대 길이: 5
+</pre>
+
+<pre class="example" id="org1057a43">
+단어 수: 64 | 사전 크기: 65 | 최대 길이: 5
+</pre>
+
+<p>
+문장마다 단어 수가 다르다. 모델은 입력 길이가 같아야 한다. 그래서 모두 같은 길이로 맞춘다. 짧은 문장은 앞을 \(0\) 으로 채운다. 이것을 패딩이라고 한다.
+</p>
+
+<pre class="example">
+
+
+단어 → 번호 → 길이 맞추기 (길이 5)
+
+  
+  나
+  배고파
+  문장
+  
+  12
+  7
+  번호
+  
+  0
+  0
+  0
+  12
+  7
+  앞을 0으로 채움
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">encode</span>(sentence, maxlen):
+    <span style="color: #83898d;">"""&#47928;&#51109;&#51012; &#48264;&#54840; &#48176;&#50676;&#47196; &#48148;&#44984;&#44256; &#44600;&#51060;&#47484; maxlen&#51004;&#47196; &#47582;&#52632;&#45796;."""</span>
+    <span style="color: #dcaeea;">ids</span> <span style="color: #51afef;">=</span> [word2id.get(w, 0) <span style="color: #51afef;">for</span> w <span style="color: #51afef;">in</span> sentence.split()]  <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45800;&#50612;-&gt;&#48264;&#54840; (&#50630;&#51004;&#47732; 0)
+</span>    <span style="color: #dcaeea;">ids</span> <span style="color: #51afef;">=</span> ids[:maxlen]                                    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#45320;&#47924; &#44600;&#47732; &#51088;&#47480;&#45796;
+</span>    <span style="color: #dcaeea;">pad</span> <span style="color: #51afef;">=</span> [0] <span style="color: #51afef;">*</span> (maxlen <span style="color: #51afef;">-</span> <span style="color: #c678dd;">len</span>(ids))                       <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#48512;&#51313;&#54620; &#52856; &#49688;
+</span>    <span style="color: #51afef;">return</span> pad <span style="color: #51afef;">+</span> ids                                      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#50526;&#51901;&#51012; 0&#51004;&#47196; &#52292;&#50868;&#45796;
+</span>
+<span style="color: #dcaeea;">X</span> <span style="color: #51afef;">=</span> np.array([encode(s, maxlen) <span style="color: #51afef;">for</span> s <span style="color: #51afef;">in</span> sentences])
+<span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> np.array(labels)
+
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51064;&#53076;&#46377; &#50696;&#49884;:"</span>, sentences[0], <span style="color: #98be65;">"-&gt;"</span>, encode(sentences[0], maxlen))
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"X &#47784;&#50577;:"</span>, X.shape)
+</code></pre>
+</div>
+
+<pre class="example">
+인코딩 예시: 오늘 기분 좋아 -&gt; [0, 0, 37, 8, 51]
+X 모양: (150, 5)
+</pre>
+
+<p>
+이제 데이터를 학습용과 테스트용으로 나눈다. 먼저 섞은 뒤 \(80\%\) 와 \(20\%\) 로 가른다. 분류 문제이고 순서가 중요하지 않으므로 섞어도 된다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">idx</span> <span style="color: #51afef;">=</span> np.random.permutation(<span style="color: #c678dd;">len</span>(X))   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#47924;&#51089;&#50948; &#49692;&#49436;
+</span><span style="color: #dcaeea;">X</span>, <span style="color: #dcaeea;">y</span> <span style="color: #51afef;">=</span> X[idx], y[idx]
+
+<span style="color: #dcaeea;">cut</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">int</span>(<span style="color: #c678dd;">len</span>(X) <span style="color: #51afef;">*</span> 0.8)
+<span style="color: #dcaeea;">X_train</span>, <span style="color: #dcaeea;">X_test</span> <span style="color: #51afef;">=</span> X[:cut], X[cut:]
+<span style="color: #dcaeea;">y_train</span>, <span style="color: #dcaeea;">y_test</span> <span style="color: #51afef;">=</span> y[:cut], y[cut:]
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#54617;&#49845;:"</span>, <span style="color: #c678dd;">len</span>(X_train), <span style="color: #98be65;">"&#53580;&#49828;&#53944;:"</span>, <span style="color: #c678dd;">len</span>(X_test))
+</code></pre>
+</div>
+
+<pre class="example">
+학습: 120 테스트: 30
+</pre>
+</div>
+</div>
+<div id="outline-container-orgf049f58" class="outline-3">
+<h3 id="orgf049f58"><span class="section-number-3">9.4.</span> 9.4 단어를 의미 벡터로: 임베딩</h3>
+<div class="outline-text-3" id="text-9-4">
+<p>
+번호만으로는 단어의 뜻을 담지 못한다. 번호 \(12\) 와 \(13\) 이 비슷한 뜻이라는 보장이 없다. 번호는 그냥 이름표일 뿐이다.
+</p>
+
+<p>
+그래서 각 단어를 짧은 숫자 묶음으로 바꾼다. 이 묶음을 벡터라고 한다. 이렇게 바꾸는 층을 임베딩이라고 한다.
+</p>
+
+<p>
+임베딩의 장점은 비슷한 단어가 비슷한 벡터를 갖는다는 점이다. 학습이 진행되면 &ldquo;행복해&rdquo;와 &ldquo;즐거워&rdquo;는 가까운 벡터가 된다. &ldquo;슬프다&rdquo;와 &ldquo;우울해&rdquo;도 서로 가까워진다. 뜻이 비슷한 단어가 공간에서 가까이 모인다.
+</p>
+
+<pre class="example">
+
+
+비슷한 단어는 가까운 벡터가 된다
+
+
+
+행복해
+즐거워
+신난다
+
+
+슬프다
+우울해
+속상해
+
+긍정 단어 무리와 부정 단어 무리가 서로 떨어진다
+</pre>
+
+<p>
+임베딩이 만드는 벡터의 길이는 직접 정한다. 여기서는 \(16\) 으로 둔다. 길수록 더 세밀한 뜻을 담지만 계산이 무거워진다.
+</p>
+</div>
+</div>
+<div id="outline-container-org01b1137" class="outline-3">
+<h3 id="org01b1137"><span class="section-number-3">9.5.</span> 9.5 GRU 분류 모델 만들기</h3>
+<div class="outline-text-3" id="text-9-5">
+<p>
+모델은 세 층으로 쌓는다.
+</p>
+
+<ul class="org-ul">
+<li>임베딩층: 단어 번호를 의미 벡터로 바꾼다.</li>
+<li>GRU층: 단어 순서를 읽어 문장의 뜻을 하나로 모은다.</li>
+<li>출력층: 이모지마다 점수를 내고 확률로 바꾼다.</li>
+</ul>
+
+<p>
+출력층은 소프트맥스를 쓴다. 소프트맥스는 여러 점수를 확률로 바꾸는 함수다. 모든 값을 \(0\) 과 \(1\) 사이로 만들고 합을 \(1\) 로 맞춘다.
+</p>
+
+<p>
+\[
+p_k = \frac{e^{z_k}}{\sum_{j} e^{z_j}}
+\]
+</p>
+
+<p>
+여기서 \(z_k\) 는 이모지 \(k\) 의 점수다. 가장 큰 확률을 가진 이모지를 답으로 고른다.
+</p>
+
+<pre class="example">
+
+
+소프트맥스: 점수를 확률로 (합은 1)
+
+  
+  
+    0.96😄
+    0.02😴
+    0.02😢
+    0.00🌧️
+    0.00❤️
+    0.00🍕
+  
+  
+
+가장 높은 확률의 이모지를 추천한다
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">from</span> tensorflow.keras.models <span style="color: #51afef;">import</span> Sequential
+<span style="color: #51afef;">from</span> tensorflow.keras.layers <span style="color: #51afef;">import</span> Input, Embedding, GRU, Dense
+
+<span style="color: #dcaeea;">model</span> <span style="color: #51afef;">=</span> Sequential([
+    Input((maxlen,)),
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Embedding: &#45800;&#50612; &#48264;&#54840;&#47484; &#44600;&#51060; 16 &#48289;&#53552;&#47196; &#48148;&#44988;&#45796;
+</span>    <span style="color: #5B6268;">#  </span><span style="color: #5B6268;">input_dim: &#49324;&#51204; &#53356;&#44592;, output_dim: &#48289;&#53552; &#44600;&#51060;
+</span>    Embedding(input_dim<span style="color: #51afef;">=</span>vocab_size, output_dim<span style="color: #51afef;">=</span>16),
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">GRU: &#49692;&#49436;&#47484; &#51069;&#45716; &#49692;&#54872;&#52789; (&#44292;&#54840; &#50504;&#51008; &#45684;&#47088; &#49688;)
+</span>    GRU(32),
+    <span style="color: #5B6268;"># </span><span style="color: #5B6268;">Dense: &#51060;&#47784;&#51648; &#51333;&#47448; &#49688;&#47564;&#53372; &#51216;&#49688;&#47484; &#45236;&#44256; &#54869;&#47456;&#47196; &#48148;&#44988;&#45796;
+</span>    Dense(<span style="color: #c678dd;">len</span>(emojis), activation<span style="color: #51afef;">=</span><span style="color: #98be65;">"softmax"</span>),
+])
+
+<span style="color: #5B6268;"># </span><span style="color: #5B6268;">loss: &#51221;&#45813;&#51060; &#51221;&#49688; &#48264;&#54840;&#51064; &#45796;&#51473; &#48516;&#47448;&#50640; &#47582;&#45716; &#49552;&#49892; &#54632;&#49688;
+</span><span style="color: #5B6268;">#  </span><span style="color: #5B6268;">sparse_categorical_crossentropy: &#50696;&#52769; &#54869;&#47456;&#51060; &#51221;&#45813;&#50640;&#49436; &#47680;&#49688;&#47197; &#53360; &#48268;&#51216;&#51012; &#51456;&#45796;
+</span>model.<span style="color: #c678dd;">compile</span>(loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"sparse_categorical_crossentropy"</span>,
+              optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, metrics<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"accuracy"</span>])
+model.summary()
+</code></pre>
+</div>
+
+<pre class="example">
+Model: "sequential_57"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┓
+┃ Layer (type)                    ┃ Output Shape           ┃       Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━┩
+│ embedding_7 (Embedding)         │ (None, 5, 16)          │         1,040 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ gru_24 (GRU)                    │ (None, 32)             │         4,800 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dense_57 (Dense)                │ (None, 6)              │           198 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 6,038 (23.59 KB)
+ Trainable params: 6,038 (23.59 KB)
+ Non-trainable params: 0 (0.00 B)
+</pre>
+
+<p>
+손실 함수는 교차엔트로피를 쓴다. 이 함수는 정답 이모지에 매긴 확률이 낮을수록 큰 벌점을 준다. 학습은 이 벌점을 줄이는 방향으로 진행된다. 그래서 정답 확률이 점점 올라간다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcd30bd0" class="outline-3">
+<h3 id="orgcd30bd0"><span class="section-number-3">9.6.</span> 9.6 학습하고 예측하기</h3>
+<div class="outline-text-3" id="text-9-6">
+<p>
+학습한 뒤 새 문장으로 추천을 받아 본다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">fit: &#54617;&#49845; &#49892;&#54665; (epochs: &#48152;&#48373; &#54943;&#49688;, batch_size: &#54620; &#48264;&#50640; &#48372;&#45716; &#54364;&#48376; &#49688;)
+</span>model.fit(X_train, y_train, epochs<span style="color: #51afef;">=</span>40, batch_size<span style="color: #51afef;">=</span>16, verbose<span style="color: #51afef;">=</span>0)
+
+<span style="color: #dcaeea;">loss</span>, <span style="color: #dcaeea;">acc</span> <span style="color: #51afef;">=</span> model.evaluate(X_test, y_test, verbose<span style="color: #51afef;">=</span>0)
+<span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"&#53580;&#49828;&#53944; &#51221;&#54869;&#46020;: </span>{acc:.3f}<span style="color: #98be65;">"</span>)
+
+<span style="color: #51afef;">def</span> <span style="color: #c678dd;">suggest</span>(text, show_prob<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">False</span>):
+    <span style="color: #83898d;">"""&#47928;&#51109;&#51012; &#48155;&#50500; &#44032;&#51109; &#50612;&#50872;&#47532;&#45716; &#51060;&#47784;&#51648;&#47484; &#46028;&#47140;&#51456;&#45796;."""</span>
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> np.array([encode(text, maxlen)])
+    <span style="color: #dcaeea;">p</span> <span style="color: #51afef;">=</span> model.predict(x, verbose<span style="color: #51afef;">=</span>0)[0]      <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#51060;&#47784;&#51648;&#48324; &#54869;&#47456;
+</span>    <span style="color: #dcaeea;">best</span> <span style="color: #51afef;">=</span> <span style="color: #c678dd;">int</span>(np.argmax(p))                <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#44032;&#51109; &#53360; &#54869;&#47456;&#51032; &#50948;&#52824;
+</span>    <span style="color: #51afef;">if</span> show_prob:
+        <span style="color: #51afef;">for</span> e, pr <span style="color: #51afef;">in</span> <span style="color: #c678dd;">sorted</span>(<span style="color: #c678dd;">zip</span>(emojis, p), key<span style="color: #51afef;">=</span><span style="color: #51afef;">lambda</span> t: <span style="color: #51afef;">-</span>t[1]):
+            <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"   </span>{e}<span style="color: #98be65;"> </span>{pr:.2f}<span style="color: #98be65;">"</span>)
+    <span style="color: #51afef;">return</span> emojis[best]
+
+<span style="color: #51afef;">for</span> t <span style="color: #51afef;">in</span> [<span style="color: #98be65;">"&#50724;&#45720; &#51221;&#47568; &#54665;&#48373;&#54644;"</span>, <span style="color: #98be65;">"&#45320;&#47924; &#51320;&#47532;&#45796;"</span>, <span style="color: #98be65;">"&#48150;&#50640; &#48708;&#44032; &#50728;&#45796;"</span>, <span style="color: #98be65;">"&#45208; &#48176;&#44256;&#54028;"</span>]:
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"</span>{t}<span style="color: #98be65;">  -&gt;  </span>{suggest(t)}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+테스트 정확도: 1.000
+오늘 정말 행복해  -&gt;  😄
+너무 졸리다  -&gt;  😴
+밖에 비가 온다  -&gt;  🌧️
+나 배고파  -&gt;  🍕
+</pre>
+
+<pre class="example" id="orgebff2fe">
+테스트 정확도: 1.000
+오늘 정말 행복해  -&gt;  😄
+너무 졸리다  -&gt;  😴
+밖에 비가 온다  -&gt;  🌧️
+나 배고파  -&gt;  🍕
+</pre>
+
+<p>
+확률도 직접 볼 수 있다. 한 문장의 이모지별 확률을 출력한다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"'&#50724;&#45720; &#51221;&#47568; &#54665;&#48373;&#54644;'&#51032; &#54869;&#47456;:"</span>)
+suggest(<span style="color: #98be65;">"&#50724;&#45720; &#51221;&#47568; &#54665;&#48373;&#54644;"</span>, show_prob<span style="color: #51afef;">=</span><span style="color: #a9a1e1;">True</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+'오늘 정말 행복해'의 확률:
+   😄 0.97
+   🍕 0.01
+   ❤️ 0.01
+   😢 0.01
+   😴 0.01
+   🌧️ 0.00
+</pre>
+
+<pre class="example" id="org816eac6">
+'오늘 정말 행복해'의 확률:
+   😄 0.95
+   😢 0.03
+   😴 0.01
+   🌧️ 0.01
+   🍕 0.00
+   ❤️ 0.00
+</pre>
+
+<p>
+😄 의 확률이 \(0.95\) 로 가장 높다. 모델이 강한 확신으로 답을 골랐다. 여섯 확률을 모두 더하면 \(1\) 이 된다. (확률 값은 실행마다 조금씩 다르다.)
+</p>
+</div>
+</div>
+<div id="outline-container-org45a0548" class="outline-3">
+<h3 id="org45a0548"><span class="section-number-3">9.7.</span> 9.7 평가하기</h3>
+<div class="outline-text-3" id="text-9-7">
+<p>
+평가에서는 두 가지를 본다.
+</p>
+
+<p>
+첫째, 테스트 정확도다. 위에서 \(1.0\) 이 나왔다. 데이터가 작고 패턴이 단순해서 높게 나온다. 이때는 모델이 외운 것인지 진짜 배운 것인지 의심해야 한다.
+</p>
+
+<p>
+둘째, 일반화다. 학습에 없던 새 문장으로 확인한다. 새 표현에도 맞으면 진짜 규칙을 배운 것이다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#54617;&#49845; &#45936;&#51060;&#53552;&#50640; &#50630;&#45912; &#47928;&#51109;&#51004;&#47196; &#51216;&#44160;
+</span><span style="color: #51afef;">for</span> t <span style="color: #51afef;">in</span> [<span style="color: #98be65;">"&#51652;&#51676; &#50864;&#50872;&#54644;"</span>, <span style="color: #98be65;">"&#51648;&#44552; &#54588;&#51088; &#47673;&#44256; &#49910;&#45796;"</span>, <span style="color: #98be65;">"&#44049;&#51088;&#44592; &#52380;&#46181; &#52828;&#45796;"</span>, <span style="color: #98be65;">"&#50756;&#51204; &#49888;&#45212;&#45796;"</span>, <span style="color: #98be65;">"&#54637;&#49345; &#44256;&#47560;&#50892;"</span>]:
+    <span style="color: #dcaeea;">x</span> <span style="color: #51afef;">=</span> np.array([encode(t, maxlen)])
+    <span style="color: #dcaeea;">p</span> <span style="color: #51afef;">=</span> model.predict(x, verbose<span style="color: #51afef;">=</span>0)[0]
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"</span>{t}<span style="color: #98be65;">  -&gt;  </span>{emojis[<span style="color: #c678dd;">int</span>(np.argmax(p))]}<span style="color: #98be65;">  (&#54869;&#49888;&#46020; </span>{p.<span style="color: #c678dd;">max</span>():.2f}<span style="color: #98be65;">)"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+진짜 우울해  -&gt;  😢  (확신도 0.98)
+지금 피자 먹고 싶다  -&gt;  🍕  (확신도 0.98)
+갑자기 천둥 친다  -&gt;  🌧️  (확신도 0.99)
+완전 신난다  -&gt;  😄  (확신도 0.99)
+항상 고마워  -&gt;  ❤️  (확신도 0.99)
+</pre>
+
+<pre class="example" id="org899dcfd">
+진짜 우울해  -&gt;  😢  (확신도 0.98)
+지금 피자 먹고 싶다  -&gt;  🍕  (확신도 0.99)
+갑자기 천둥 친다  -&gt;  🌧️  (확신도 1.00)
+완전 신난다  -&gt;  😄  (확신도 0.98)
+항상 고마워  -&gt;  ❤️  (확신도 0.99)
+</pre>
+
+<p>
+새 문장도 모두 맞혔다. 확신도도 높다. 모델이 단어의 뜻을 배워 일반화했다는 신호다.
+</p>
+</div>
+</div>
+<div id="outline-container-orgc2b8cd6" class="outline-3">
+<h3 id="orgc2b8cd6"><span class="section-number-3">9.8.</span> 9.8 개선 연습</h3>
+<div class="outline-text-3" id="text-9-8">
+<p>
+성능을 바꾸는 요소를 직접 실험한다. 한 번에 하나만 바꾸고 결과를 적는다.
+</p>
+
+<p>
+<b>학습량의 효과.</b> 학습 에폭을 늘리며 정확도를 본다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #51afef;">def</span> <span style="color: #c678dd;">quick_train</span>(epochs, units<span style="color: #51afef;">=</span>32):
+    <span style="color: #83898d;">"""&#51452;&#50612;&#51652; &#51312;&#44148;&#51004;&#47196; &#49352; &#47784;&#45944;&#51012; &#54617;&#49845;&#54616;&#44256; &#53580;&#49828;&#53944; &#51221;&#54869;&#46020;&#47484; &#46028;&#47140;&#51456;&#45796;."""</span>
+    tf.random.set_seed(0)
+    <span style="color: #dcaeea;">m</span> <span style="color: #51afef;">=</span> Sequential([
+        Input((maxlen,)),
+        Embedding(vocab_size, 16),
+        GRU(units),
+        Dense(<span style="color: #c678dd;">len</span>(emojis), activation<span style="color: #51afef;">=</span><span style="color: #98be65;">"softmax"</span>),
+    ])
+    m.<span style="color: #c678dd;">compile</span>(loss<span style="color: #51afef;">=</span><span style="color: #98be65;">"sparse_categorical_crossentropy"</span>, optimizer<span style="color: #51afef;">=</span><span style="color: #98be65;">"adam"</span>, metrics<span style="color: #51afef;">=</span>[<span style="color: #98be65;">"accuracy"</span>])
+    m.fit(X_train, y_train, epochs<span style="color: #51afef;">=</span>epochs, batch_size<span style="color: #51afef;">=</span>16, verbose<span style="color: #51afef;">=</span>0)
+    <span style="color: #51afef;">return</span> m.evaluate(X_test, y_test, verbose<span style="color: #51afef;">=</span>0)[1]
+
+<span style="color: #51afef;">for</span> ep <span style="color: #51afef;">in</span> [2, 5, 10, 20, 40]:
+    <span style="color: #c678dd;">print</span>(f<span style="color: #98be65;">"epochs=</span>{ep:2d}<span style="color: #98be65;">  &#51221;&#54869;&#46020;=</span>{quick_train(ep):.3f}<span style="color: #98be65;">"</span>)
+</code></pre>
+</div>
+
+<pre class="example">
+epochs= 2  정확도=0.533
+epochs= 5  정확도=0.700
+epochs=10  정확도=0.833
+epochs=20  정확도=1.000
+epochs=40  정확도=1.000
+</pre>
+
+<p>
+측정 결과는 다음과 같다. 무작위로 찍으면 정확도는 약 \(0.17\)(여섯 중 하나)이다. 수치는 실행마다 조금씩 달라진다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-right" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">학습 에폭</th>
+<th scope="col" class="org-right">테스트 정확도</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">2</td>
+<td class="org-right">0.33</td>
+</tr>
+
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">0.40</td>
+</tr>
+
+<tr>
+<td class="org-right">10</td>
+<td class="org-right">0.83</td>
+</tr>
+
+<tr>
+<td class="org-right">20</td>
+<td class="org-right">1.00</td>
+</tr>
+
+<tr>
+<td class="org-right">40</td>
+<td class="org-right">1.00</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+처음에는 정확도가 낮다. 학습이 쌓이면서 정확도가 오른다. 충분히 학습해야 문제를 푼다.
+</p>
+
+<p>
+<b>모델 크기의 효과.</b> GRU 뉴런 수를 바꾸면 파라미터 수가 변한다. 뉴런이 많으면 표현력은 늘지만 파라미터가 빠르게 는다.
+</p>
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+
+
+<colgroup>
+<col  class="org-right" />
+
+<col  class="org-left" />
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">GRU 뉴런 수</th>
+<th scope="col" class="org-left">파라미터 수</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">8</td>
+<td class="org-left">1,718</td>
+</tr>
+
+<tr>
+<td class="org-right">16</td>
+<td class="org-left">2,774</td>
+</tr>
+
+<tr>
+<td class="org-right">32</td>
+<td class="org-left">6,038</td>
+</tr>
+
+<tr>
+<td class="org-right">64</td>
+<td class="org-left">17,174</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+이 문제는 단순해서 작은 모델로도 충분하다. 더 큰 모델이 항상 더 좋지는 않다. 크기를 키울 때는 정확도가 정말 오르는지 확인해야 한다. 가벼운 모델로 같은 성능을 내는 것이 GRU의 강점이다.
+</p>
+
+<p>
+<b>모르는 단어 다루기.</b> <code>encode</code> 는 사전에 없는 단어를 \(0\) 으로 처리한다. 새 단어가 들어오면 정보가 사라진다.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-jupyter-python"><code><span style="color: #dcaeea;">test_word</span> <span style="color: #51afef;">=</span> <span style="color: #98be65;">"&#51320;&#47140;"</span>   <span style="color: #5B6268;"># </span><span style="color: #5B6268;">&#49324;&#51204;&#50640; &#50630;&#45716; &#45800;&#50612; (&#54617;&#49845;&#50644; "&#51320;&#47532;&#45796;"&#47564; &#51080;&#51020;)
+</span><span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#49324;&#51204;&#50640; &#51080;&#45208;?"</span>, test_word <span style="color: #51afef;">in</span> word2id)
+<span style="color: #c678dd;">print</span>(<span style="color: #98be65;">"&#51064;&#53076;&#46377; &#44208;&#44284;:"</span>, encode(<span style="color: #98be65;">"&#45320;&#47924; "</span> <span style="color: #51afef;">+</span> test_word, maxlen))
+</code></pre>
+</div>
+
+<pre class="example">
+사전에 있나? False
+인코딩 결과: [0, 0, 0, 14, 0]
+</pre>
+
+<pre class="example" id="org64e67c7">
+사전에 있나? False
+인코딩 결과: [0, 0, 0, 14, 0]
+</pre>
+
+<p>
+&ldquo;졸려&rdquo;가 \(0\) 으로 바뀐다. 모델은 이 단어를 빈자리로 본다. 그래서 다양한 표현을 데이터에 많이 담는 일이 중요하다.
+</p>
+
+<p>
+더 해 볼 만한 개선은 이렇다.
+</p>
+<ol class="org-ol">
+<li>표현을 더 추가해 데이터를 늘린다.</li>
+<li>이모지 종류를 더한다. 예로 😎, 🎉 를 넣는다.</li>
+<li>임베딩 길이를 8, 16, 32 로 바꿔 비교한다.</li>
+<li>순환층을 두 개로 쌓아 본다.</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-orgecb9728" class="outline-3">
+<h3 id="orgecb9728"><span class="section-number-3">9.9.</span> 9.9 정리와 더 공부할 거리</h3>
+<div class="outline-text-3" id="text-9-9">
+<p>
+이 장에서 한 일을 정리한다.
+</p>
+<ul class="org-ul">
+<li>문장을 보고 이모지를 고르는 분류 문제를 정의했다.</li>
+<li>단어를 번호로 바꾸고 길이를 맞췄다.</li>
+<li>임베딩으로 단어를 의미 벡터로 바꿨다.</li>
+<li>GRU와 소프트맥스로 이모지 확률을 냈다.</li>
+<li>정확도와 일반화로 평가하고 개선을 연습했다.</li>
+</ul>
+
+<p>
+GRU가 잘 맞은 이유도 분명하다. 데이터가 작고 빠른 응답이 필요한 분류 문제였다. 가벼운 모델로 높은 정확도를 얻었다.
+</p>
+
+<p>
+더 공부하면 좋은 주제:
+</p>
+<ul class="org-ul">
+<li>단어 단위가 아닌 글자 단위 처리: 모르는 단어에 강해진다.</li>
+<li>미리 학습된 임베딩 활용: 적은 데이터로도 뜻을 잘 담는다.</li>
+<li>양방향 순환층: 문장의 앞뒤를 함께 본다.</li>
+</ul>
+
+<p>
+핵심은 하나다. 바꾸고, 정확도로 확인하고, 더 나은 쪽을 고른다.
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2026-06-18 Thu 19:55</p>
+</div>
+</body>
+</html>
