@@ -107,17 +107,18 @@
   }
 
   function renderNav() {
-    if (!toc.courses || toc.courses.length === 0) {
+    const visibleCourses = (toc.courses || []).filter(course => !course.hidden);
+    if (visibleCourses.length === 0) {
       nav.innerHTML = `
         <div class="sidebar__empty">
-          아직 자료가 없습니다.<br>
+          공개된 자료가 없습니다.<br>
           <code>admin/</code> 페이지에서 첫 자료를 업로드해보세요.
         </div>`;
       return;
     }
 
     const hash = location.hash.replace(/^#\/?/, '');
-    const html = toc.courses.map(course => {
+    const html = visibleCourses.map(course => {
       const chapters = (course.chapters || []).filter(ch => matchesFilter(ch, course));
       if (filterText && chapters.length === 0) return '';
 
@@ -172,7 +173,7 @@
 
   // ---------- Navigation ----------
   function navigateTo(courseSlug, chapterTitle, path) {
-    const course = toc.courses.find(c => c.slug === courseSlug);
+    const course = toc.courses.find(c => c.slug === courseSlug && !c.hidden);
     const chapter = course?.chapters.find(ch => ch.title === chapterTitle);
     if (!chapter) return;
 
@@ -200,7 +201,7 @@
     const parts = hash.split('/').map(decodeURIComponent);
     if (parts.length < 2) return;
     const [courseSlug, chapterSlug] = parts;
-    const course = toc.courses.find(c => c.slug === courseSlug);
+    const course = toc.courses.find(c => c.slug === courseSlug && !c.hidden);
     if (!course) return;
     const chapter = course.chapters.find(ch => slugify(ch.title) === chapterSlug);
     if (!chapter) return;
