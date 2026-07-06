@@ -65,10 +65,15 @@
     if (response.status === 404) {
       return `${action} 실패: 저장소 선택 또는 토큰 쓰기 권한을 확인하세요. Fine-grained PAT에서 minwookhan/lectures 저장소와 Contents: Read and write 권한이 필요합니다.`;
     }
-    if (response.status === 409) {
-      return '목록 파일이 방금 바뀌었습니다. 새로고침 후 다시 시도해주세요.';
+    if (response.status === 409 || /does not match/i.test(String(msg))) {
+      return '목록 파일이 방금 바뀌었습니다. 자동 재시도에도 실패했습니다. 새로고침 후 다시 시도해주세요.';
     }
     return `${action} 실패: ${msg}`;
+  }
+
+  function isConflict(response) {
+    const msg = response.data?.message || '';
+    return response.status === 409 || /does not match/i.test(String(msg));
   }
 
   function toast(msg, ms = 2400) {
@@ -104,6 +109,46 @@
     progressLog.scrollTop = progressLog.scrollHeight;
   }
 
+  async function fetchToc(repo) {
+    const current = await gh(`/repos/${repo.owner}/${repo.name}/contents/data/toc.json?ref=${repo.branch}&_=${Date.now()}`);
+    if (!current.ok) throw new Error(explainGitHubError(current, 'toc.json 조회'));
+    return {
+      sha: current.data.sha,
+      toc: JSON.parse(decodeBase64Utf8(current.data.content))
+    };
+  }
+
+  async function saveVisibility(repo, courseSlug, nextHidden, nextLabel) {
+    let lastResponse = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      if (attempt > 1) log(`최신 목록으로 재시도… (${attempt}/3)`);
+
+      const current = await fetchToc(repo);
+      const course = current.toc.courses?.find((item) => item.slug === courseSlug);
+      if (!course) throw new Error('과목을 찾을 수 없습니다');
+
+      course.hidden = nextHidden;
+
+      const saved = await gh(`/repos/${repo.owner}/${repo.name}/contents/data/toc.json`, {
+        method: 'PUT',
+        body: {
+          message: `visibility: ${course.title} ${nextLabel}`,
+          content: b64EncodeUnicode(JSON.stringify(current.toc, null, 2) + '\n'),
+          sha: current.sha,
+          branch: repo.branch
+        }
+      });
+
+      if (saved.ok) return { saved, course };
+      lastResponse = saved;
+      if (!isConflict(saved)) throw new Error(explainGitHubError(saved, 'toc.json 저장'));
+      await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+    }
+
+    throw new Error(explainGitHubError(lastResponse, 'toc.json 저장'));
+  }
+
   document.addEventListener('click', async (event) => {
     const btn = event.target.closest('[data-action="toggle-course-visibility"]');
     if (!btn) return;
@@ -127,26 +172,8 @@
 
     try {
       log('목록 정보 조회…');
-      const current = await gh(`/repos/${repo.owner}/${repo.name}/contents/data/toc.json?ref=${repo.branch}`);
-      if (!current.ok) throw new Error(explainGitHubError(current, 'toc.json 조회'));
-
-      const toc = JSON.parse(decodeBase64Utf8(current.data.content));
-      const course = toc.courses?.find((item) => item.slug === courseSlug);
-      if (!course) throw new Error('과목을 찾을 수 없습니다');
-
-      course.hidden = nextHidden;
-
       log('숨김 설정 저장…');
-      const saved = await gh(`/repos/${repo.owner}/${repo.name}/contents/data/toc.json`, {
-        method: 'PUT',
-        body: {
-          message: `visibility: ${course.title} ${nextLabel}`,
-          content: b64EncodeUnicode(JSON.stringify(toc, null, 2) + '\n'),
-          sha: current.data.sha,
-          branch: repo.branch
-        }
-      });
-      if (!saved.ok) throw new Error(explainGitHubError(saved, 'toc.json 저장'));
+      const { saved, course } = await saveVisibility(repo, courseSlug, nextHidden, nextLabel);
 
       log(`✓ ${nextLabel} 설정됨 · ${saved.data.commit.sha.slice(0, 7)}`, 'done');
       toast(`"${course.title}" ${nextLabel} 설정됨`);
