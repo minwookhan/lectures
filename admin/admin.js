@@ -757,18 +757,19 @@
       catalog.innerHTML = '<div class="empty">아직 자료가 없습니다. 위에서 첫 자료를 업로드해보세요.</div>';
       return;
     }
+    const canManage = isConfigured();
     catalog.innerHTML = toc.courses.map(course => `
       <div class="cat-course ${course.hidden ? 'is-hidden' : ''}" data-course="${escapeAttr(course.slug)}">
         <div class="cat-course__head">
           <span class="cat-course__title">${escapeHtml(course.title)}</span>
           <span class="cat-course__count">${course.chapters.length}개</span>
           <span class="cat-course__visibility">${course.hidden ? '숨김' : '공개'}</span>
-          <div class="cat-course__actions">
+          ${canManage ? `<div class="cat-course__actions">
             <button class="ghost-btn visibility-btn ${course.hidden ? 'is-hidden' : ''}" data-action="toggle-course-visibility" data-course="${escapeAttr(course.slug)}">
               ${course.hidden ? '공개로 전환' : '숨김으로 전환'}
             </button>
             <button class="danger-btn" data-action="delete-course" data-course="${escapeAttr(course.slug)}">과목 삭제</button>
-          </div>
+          </div>` : ''}
         </div>
         <ul class="cat-list" data-course="${escapeAttr(course.slug)}">
           ${course.chapters.map((ch, i) => `
@@ -786,10 +787,10 @@
                 </div>
                 <div class="cat-item__meta">${escapeHtml(ch.path)}</div>
               </div>
-              <div class="cat-item__actions">
+              ${canManage ? `<div class="cat-item__actions">
                 <button class="ghost-btn" data-action="edit" data-course="${escapeAttr(course.slug)}" data-index="${i}">수정</button>
                 <button class="danger-btn" data-action="delete" data-course="${escapeAttr(course.slug)}" data-index="${i}">삭제</button>
-              </div>
+              </div>` : ''}
             </li>
           `).join('')}
         </ul>
@@ -797,15 +798,17 @@
     `).join('');
 
     // Sortable per list
-    catalog.querySelectorAll('.cat-list').forEach(list => {
-      Sortable.create(list, {
-        handle: '.drag-handle',
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
-        onEnd: () => persistReorder(list)
+    if (canManage) {
+      catalog.querySelectorAll('.cat-list').forEach(list => {
+        Sortable.create(list, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          onEnd: () => persistReorder(list)
+        });
       });
-    });
+    }
 
     // Action buttons
     catalog.querySelectorAll('[data-action]').forEach(btn => {
@@ -995,14 +998,10 @@
   async function boot() {
     updateConnStatus();
     if (!isConfigured()) {
-      catalog.innerHTML = `
-        <div class="empty">
-          시작하려면 우상단 ⚙ 설정에서 GitHub 정보를 입력하세요.<br>
-          <small style="display:block;margin-top:8px">레포 소유자, 이름, 토큰이 필요합니다.</small>
-        </div>`;
-      // Still load any local toc for the course dropdown
       await loadToc();
       refreshCourseSelect();
+      renderCatalog();
+      toast('GitHub 설정 전이라 목록은 읽기 전용으로 표시됩니다', 3200);
       return;
     }
     try {
