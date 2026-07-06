@@ -83,7 +83,8 @@
           "path": "courses/iot/radar-초음파/",
           "tags": []
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "slug": "deeplearning",
