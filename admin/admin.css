@@ -400,6 +400,13 @@ select {
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
+.cat-course.is-hidden {
+  border-style: dashed;
+}
+.cat-course.is-hidden .cat-course__title,
+.cat-course.is-hidden .cat-list {
+  opacity: 0.55;
+}
 .cat-course__head {
   display: flex;
   align-items: center;
@@ -421,10 +428,27 @@ select {
   font-size: 10px;
   color: var(--fg-faint);
 }
+.cat-course__visibility {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid #16a34a40;
+  border-radius: 3px;
+  color: #16a34a;
+  background: #16a34a08;
+}
+.cat-course.is-hidden .cat-course__visibility {
+  color: #dc2626;
+  border-color: #dc262640;
+  background: #dc262608;
+}
 .cat-course__actions {
   margin-left: auto;
   display: flex;
   gap: 4px;
+}
+.visibility-btn.is-hidden {
+  color: var(--accent);
 }
 
 .cat-list {
