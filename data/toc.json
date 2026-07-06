@@ -133,6 +133,11 @@
           "title": "2 Web개발안내",
           "path": "courses/업무용웹앱개발/2-web개발안내/",
           "tags": []
+        },
+        {
+          "title": "Vibe Coding  소개",
+          "path": "courses/업무용웹앱개발/vibe-coding-소개/",
+          "tags": []
         }
       ]
     }

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-07-06 Mon 23:53 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vibe Coding  소개</title>
+<meta name="author" content="minwook Han" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">Vibe Coding  소개</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org97e2cdc">1. 기본 개념</a></li>
+<li><a href="#orgf93b0b0">2. Vibe Coding의 뜻</a>
+<ul>
+<li><a href="#org19fae0e">2.1. 기존 코딩과의 차이</a></li>
+<li><a href="#org02c8f09">2.2. Vibe Coding의 기본 흐름</a></li>
+</ul>
+</li>
+<li><a href="#org4c5725e">3. Vibe Coding의 장점과 한계</a>
+<ul>
+<li><a href="#org85fe444">3.1. 장점</a></li>
+<li><a href="#org9a3d454">3.2. 단점</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org97e2cdc" class="outline-2">
+<h2 id="org97e2cdc"><span class="section-number-2">1.</span> 기본 개념</h2>
+<div class="outline-text-2" id="text-1">
+<ul class="org-ul">
+<li>예전 코딩은 사람이 직접 코드를 한 줄씩 많이 작성하는 방식에 가까웠다.</li>
+<li>Vibe Coding은 사람이 &ldquo;무엇을 만들고 싶은지&rdquo;를 자연어로 설명하고, AI가 코드를 만들어 주면 사람이 실행하고 고치는 방식이다.</li>
+<li>AI Studio는 이런 AI 기능을 실험하고, 프롬프트를 테스트하고, 실제 앱 개발 코드로 연결할 수 있게 해주는 웹 기반 도구다. Google AI Studio는 모델을 빠르게 시험하고 프롬프트를 실험한 뒤, 준비되면 &ldquo;Get code&rdquo;로 Gemini API 코드를 가져올 수 있다. (<a href="https://ai.google.dev/gemini-api/docs/ai-studio-quickstart?utm_source=chatgpt.com">Google AI for Developers</a>)</li>
+</ul>
+
+
+<div id="org0fb48ef" class="figure">
+<p><img src="images/20260705_225451_screenshot.png" alt="20260705_225451_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf93b0b0" class="outline-2">
+<h2 id="orgf93b0b0"><span class="section-number-2">2.</span> Vibe Coding의 뜻</h2>
+<div class="outline-text-2" id="text-2">
+<ul class="org-ul">
+<li>Vibe Coding은 개발자가 자연어로 만들고 싶은 프로그램이나 기능을 설명하면, AI가 코드를 생성하고, 사람은 그 결과를 실행·검토·수정하는 개발 방식</li>
+<li>이 표현은 2025년 Andrej Karpathy가 사용하면서 널리 알려졌고, 일반적으로 LLM에게 작업을 설명해 소스코드를 자동 생성하는 방식으로 설명</li>
+</ul>
+</div>
+<div id="outline-container-org19fae0e" class="outline-3">
+<h3 id="org19fae0e"><span class="section-number-3">2.1.</span> 기존 코딩과의 차이</h3>
+<div class="outline-text-3" id="text-2-1">
+
+<div id="org386a8e2" class="figure">
+<p><img src="images/20260705_230146_screenshot.png" alt="20260705_230146_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org02c8f09" class="outline-3">
+<h3 id="org02c8f09"><span class="section-number-3">2.2.</span> Vibe Coding의 기본 흐름</h3>
+<div class="outline-text-3" id="text-2-2">
+
+<div id="org9cdcbbc" class="figure">
+<p><img src="images/20260705_225713_screenshot.png" alt="20260705_225713_screenshot.png" />
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org4c5725e" class="outline-2">
+<h2 id="org4c5725e"><span class="section-number-2">3.</span> Vibe Coding의 장점과 한계</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+<div id="outline-container-org85fe444" class="outline-3">
+<h3 id="org85fe444"><span class="section-number-3">3.1.</span> 장점</h3>
+<div class="outline-text-3" id="text-3-1">
+<ul class="org-ul">
+<li>빠르게 만들 수 있다.</li>
+<li>코딩 초보자도 간단한 앱을 실험할 수 있다.</li>
+<li>아이디어를 바로 시제품으로 바꿔 볼 수 있다.</li>
+<li>반복 수정이 쉽다.</li>
+<li>개발자는 단순 반복 코드보다 구조 설계, 검토, 문제 해결에 더 집중할 수 있다.</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9a3d454" class="outline-3">
+<h3 id="org9a3d454"><span class="section-number-3">3.2.</span> 단점</h3>
+<div class="outline-text-3" id="text-3-2">
+<ul class="org-ul">
+<li>AI가 만든 코드가 항상 맞지는 않다.</li>
+<li>보안 문제가 숨어 있을 수 있다.</li>
+<li>코드 구조가 지저분해질 수 있다.</li>
+<li>사용자가 코드를 전혀 이해하지 못하면, 오류가 났을 때 원인을 찾기 어렵다.</li>
+<li>따라서 Vibe Coding은 &ldquo;AI가 다 알아서 해주는 마법&rdquo;이 아니라, 사람이 목표를 정하고 결과를 검사하는 협업 방식으로 봐야 한다.</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: minwook Han</p>
+<p class="date">Created: 2026-07-06 Mon 23:53</p>
+</div>
+</body>
+</html>
