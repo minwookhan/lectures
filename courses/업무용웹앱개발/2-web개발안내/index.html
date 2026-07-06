@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-07-06 Mon 23:53 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>2 Web개발안내</title>
+<meta name="author" content="minwook Han" />
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/htmlize.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/readtheorg.css"/>
+<link rel="stylesheet" type="text/css" href="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/css/code-copy.css"/>
+<link rel="stylesheet" type="text/css" href="src/readtheorg_theme/css/search.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/lib/js/jquery.stickytableheaders.min.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/search.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/readtheorg.js"></script>
+<script type="text/javascript" src="https://fniessen.github.io/org-html-themes/src/readtheorg_theme/js/code-copy.js"></script>
+</head>
+<body>
+<div id="content" class="content">
+<h1 class="title">2 Web개발안내</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#org383565a">웹개발 안내</a>
+<ul>
+<li><a href="#orge663c7d">동작 원리: 브라우저와 서버</a></li>
+<li><a href="#org366996d">프론트엔드와 백엔드</a></li>
+<li><a href="#orgfaf3b5f">HTML·CSS·JS 역할</a></li>
+<li><a href="#org9fae5d0">개발 과정: 만들기 → 테스트 → 수정 사이클</a></li>
+</ul>
+</li>
+<li><a href="#orgac328ce">git 맛보기: 저장과 되돌리기</a>
+<ul>
+<li><a href="#org4ce479e">Git이 필요한 순간</a></li>
+<li><a href="#org8a68ea1">4.2 git과 GitHub</a></li>
+</ul>
+</li>
+<li><a href="#org1262d6f">배포 맛보기: 세상에 공개 (Vercel)</a>
+<ul>
+<li><a href="#orgce01b5f">배포란 무엇인가</a></li>
+<li><a href="#orgda3396d">무료 배포 사이트 소개 (Vercel 등)</a></li>
+<li><a href="#org4022b7e">GitHub 저장소를 Vercel에 연결하기</a></li>
+<li><a href="#org9ed05f6">앱 주소(URL) 공유</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org383565a" class="outline-2">
+<h2 id="org383565a">웹개발 안내</h2>
+<div class="outline-text-2" id="text-org383565a">
+</div>
+<div id="outline-container-orge663c7d" class="outline-3">
+<h3 id="orge663c7d">동작 원리: 브라우저와 서버</h3>
+<div class="outline-text-3" id="text-orge663c7d">
+<ul class="org-ul">
+<li>웹화면이 뜨기 까지
+<ul class="org-ul">
+<li>손님(나) = <b>브라우저</b>: 크롬, 사파리처럼 웹을 보여주는 프로그램</li>
+<li>주방 = <b>서버</b>: 요청을 받아 화면 재료를 만들어 보내주는 멀리 있는 컴퓨터</li>
+<li>주문서 = <b>요청(request)</b>: &ldquo;이 페이지 보여줘&rdquo;라고 보내는 신호</li>
+<li>나온 음식 = <b>응답(response)</b>: 서버가 돌려주는 화면 데이터</li>
+</ul></li>
+</ul>
+
+
+<div id="orgd112684" class="figure">
+<p><img src="images/20260705_221059_screenshot.png" alt="20260705_221059_screenshot.png" width="800" />
+</p>
+<p><span class="figure-number">Figure 1: </span>브라우저와서버</p>
+</div>
+
+<ul class="org-ul">
+<li>기초 용어
+<dl class="org-dl">
+<dt>브라우저(browser)</dt><dd>웹 화면을 보여주는 프로그램 (크롬, 엣지, 사파리)</dd>
+<dt>서버(server)</dt><dd>요청을 받아 화면·데이터를 보내주는, 24시간 켜진 컴퓨터</dd>
+<dt>클라이언트(client)</dt><dd>요청을 보내는 쪽. 보통 우리 브라우저가 클라이언트다</dd>
+<dt>요청/응답(request/response)</dt><dd>&ldquo;주세요&rdquo;와 &ldquo;여기요&rdquo;의 한 쌍</dd>
+<dt>URL</dt><dd>웹 페이지의 주소 (예: <code>https://youtube.com</code>)</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org366996d" class="outline-3">
+<h3 id="org366996d">프론트엔드와 백엔드</h3>
+<div class="outline-text-3" id="text-org366996d">
+<ul class="org-ul">
+<li><p>
+웹 서비스는 크게 &ldquo;눈에 보이는 부분&rdquo;과 &ldquo;뒤에서 처리하는 부분&rdquo;으로 구성
+</p>
+
+<ul class="org-ul">
+<li><b>프론트엔드</b> = 홀: 손님이 직접 보고 만지는 곳 (메뉴판, 테이블, 인테리어)</li>
+<li><b>백엔드</b> = 주방: 손님은 못 보지만 실제 요리와 계산이 일어나는 곳</li>
+<li><b>데이터베이스</b> = 창고: 재료(회원 정보, 게시글 등)를 보관하는 곳</li>
+</ul></li>
+</ul>
+
+<div id="org8742f13" class="figure">
+<p><img src="images/20260705_221548_screenshot.png" alt="20260705_221548_screenshot.png" width="800" />
+</p>
+</div>
+
+<ul class="org-ul">
+<li>기초 용어
+<dl class="org-dl">
+<dt>프론트엔드(front-end)</dt><dd>사용자가 보고 조작하는 화면 쪽</dd>
+<dt>백엔드(back-end)</dt><dd>화면 뒤에서 계산·저장·처리를 담당하는 쪽</dd>
+<dt>데이터베이스(database)</dt><dd>정보를 정리해서 보관하는 디지털 창고</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfaf3b5f" class="outline-3">
+<h3 id="orgfaf3b5f">HTML·CSS·JS 역할</h3>
+<div class="outline-text-3" id="text-orgfaf3b5f">
+<ul class="org-ul">
+<li>프론트엔드 화면 하나는 최소 3가지 언어가 사용됨.
+
+<dl class="org-dl">
+<dt>HTML</dt><dd>화면의 뼈대·구조를 만드는 언어</dd>
+<dt>CSS</dt><dd>색·크기·배치 등 겉모습을 꾸미는 언어</dd>
+<dt>JavaScript</dt><dd>클릭·입력 같은 동작과 반응을 만드는 언어</dd>
+<dt>태그(tag)</dt><dd>HTML에서 요소를 표시하는 꼬리표 (예: <code>&lt;button&gt;버튼&lt;/button&gt;</code>)</dd>
+<dt>코드(code)</dt><dd>컴퓨터가 알아듣는 명령을 적은 글</dd>
+</dl></li>
+</ul>
+
+
+<div id="org70a6fb2" class="figure">
+<p><img src="images/20260705_221831_screenshot.png" alt="20260705_221831_screenshot.png" width="800" />
+</p>
+<p><span class="figure-number">Figure 2: </span>웹언어역할</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org9fae5d0" class="outline-3">
+<h3 id="org9fae5d0">개발 과정: 만들기 → 테스트 → 수정 사이클</h3>
+<div class="outline-text-3" id="text-org9fae5d0">
+<ul class="org-ul">
+<li>앱은 한 번에 완성되지 않는다. 만들고, 확인하고, 고치는 과정을 여러 번 반복</li>
+</ul>
+
+<div id="org4bead01" class="figure">
+<p><img src="images/20260705_222051_screenshot.png" alt="20260705_222051_screenshot.png" />
+</p>
+</div>
+
+<ul class="org-ul">
+<li>기초 용어
+<dl class="org-dl">
+<dt>개발(development)</dt><dd>앱·프로그램을 만드는 일 전체</dd>
+<dt>테스트(test)</dt><dd>만든 것이 제대로 작동하는지 확인하는 일</dd>
+<dt>버그(bug)</dt><dd>프로그램이 의도대로 작동하지 않는 오류</dd>
+<dt>디버그(debug)</dt><dd>그 버그를 찾아 고치는 일</dd>
+<dt>미리보기(preview)</dt><dd>배포 전에 결과를 임시로 확인하는 화면</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgac328ce" class="outline-2">
+<h2 id="orgac328ce">git 맛보기: 저장과 되돌리기</h2>
+<div class="outline-text-2" id="text-orgac328ce">
+<ul class="org-ul">
+<li>한 번의 개발 진행으로 완성되지 않음</li>
+<li>과거의 했던 걸로 쉽게 돌아가거나 여러 버전을 동시에 만들면서 테스트 할 수 있음.</li>
+<li>이러한 여러 결과물을 체계적으로 관리 할 수 있음</li>
+</ul>
+</div>
+<div id="outline-container-org4ce479e" class="outline-3">
+<h3 id="org4ce479e">Git이 필요한 순간</h3>
+<div class="outline-text-3" id="text-org4ce479e">
+<ul class="org-ul">
+<li>git은 &ldquo;작업한 순간순간을 저장해두는 기록 장치&rdquo;</li>
+</ul>
+
+
+<div id="org5647654" class="figure">
+<p><img src="images/20260705_222359_screenshot.png" alt="20260705_222359_screenshot.png" />
+</p>
+</div>
+
+<ul class="org-ul">
+<li>기초 용어
+<dl class="org-dl">
+<dt>git</dt><dd>작업 기록을 저장하고 되돌리게 해주는 버전 관리 도구</dd>
+<dt>버전 관리(version control)</dt><dd>시간에 따른 변경 기록을 관리하는 일</dd>
+<dt>커밋(commit)</dt><dd>&ldquo;지금 이 상태&rdquo;를 저장하는 한 번의 기록(세이브 지점)</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8a68ea1" class="outline-3">
+<h3 id="org8a68ea1">4.2 git과 GitHub</h3>
+<div class="outline-text-3" id="text-org8a68ea1">
+<ul class="org-ul">
+<li>하나는 &ldquo;기록하는 도구&rdquo;(git), 하나는 &ldquo;그 기록을 온라인에 올려두는 창고&rdquo;(github)</li>
+
+<li><b>git</b> = 내 책상 위 일기장: 내 컴퓨터 안에서 변경을 기록</li>
+<li><b>GitHub</b> = 그 일기를 인터넷 사물함에 복사해두는 것: 온라인 백업 + 공유</li>
+<li>컴퓨터가 고장 나도 GitHub에 올려뒀으면 코드 백업 됨.</li>
+</ul>
+
+
+<div id="org071f80d" class="figure">
+<p><img src="images/20260705_222556_screenshot.png" alt="20260705_222556_screenshot.png" width="800" />
+</p>
+<p><span class="figure-number">Figure 3: </span>github</p>
+</div>
+
+<ul class="org-ul">
+<li>기초 용어
+<dl class="org-dl">
+<dt>GitHub</dt><dd>git으로 만든 기록을 온라인에 저장·공유하는 웹 서비스</dd>
+<dt>저장소/레포(repository, repo)</dt><dd>한 프로젝트의 코드와 기록을 담아두는 공간</dd>
+<dt>푸시(push)</dt><dd>내 컴퓨터의 기록을 GitHub로 올리는 것</dd>
+<dt>백업(backup)</dt><dd>잃어버리지 않도록 복사본을 따로 저장해두는 것</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org1262d6f" class="outline-2">
+<h2 id="org1262d6f">배포 맛보기: 세상에 공개 (Vercel)</h2>
+<div class="outline-text-2" id="text-org1262d6f">
+</div>
+<div id="outline-container-orgce01b5f" class="outline-3">
+<h3 id="orgce01b5f">배포란 무엇인가</h3>
+<div class="outline-text-3" id="text-orgce01b5f">
+<p>
+배포는 &ldquo;내 컴퓨터 안에만 있던 앱을, 아무나 접속할 수 있는 인터넷 위로 올리는
+일&rdquo;이다.
+</p>
+
+<ul class="org-ul">
+<li>배포 전: 친구에게 앱을 보여주려면 내 화면을 직접 보여줘야 한다</li>
+<li>배포 후: <code>내앱이름.vercel.app</code> 같은 주소를 카톡으로 보내면, 친구가
+자기 폰에서 바로 연다</li>
+
+<li>기초 용어
+<dl class="org-dl">
+<dt>배포(deploy)</dt><dd>만든 앱을 인터넷에 올려 누구나 쓸 수 있게 하는 것</dd>
+<dt>호스팅(hosting)</dt><dd>앱을 항상 켜진 서버에 올려두고 접속을 받아주는 서비스</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgda3396d" class="outline-3">
+<h3 id="orgda3396d">무료 배포 사이트 소개 (Vercel 등)</h3>
+<div class="outline-text-3" id="text-orgda3396d">
+<ul class="org-ul">
+<li>기존에는 배포하려면 서버를 직접 사고 복잡하게 설정해야 했음.</li>
+<li>무료로,클릭 몇 번이면 된다. 대표적인 곳이 <b>Vercel</b> 이다.</li>
+</ul>
+
+
+<div id="org12ac26a" class="figure">
+<p><img src="images/20260705_220621_screenshot.png" alt="20260705_220621_screenshot.png" />
+</p>
+</div>
+
+<ul class="org-ul">
+<li>대표 서비스
+<dl class="org-dl">
+<dt>Vercel</dt><dd>초보자에게 가장 쉬운 무료 배포 서비스</dd>
+<dt>Netlify</dt><dd>Vercel과 비슷한 또 다른 무료 배포 서비스</dd>
+</dl></li>
+
+<li>기초 용어
+<dl class="org-dl">
+<dt>호스팅 서비스(hosting service)</dt><dd>내 앱을 대신 올려주고 관리해주는 회사/사이트</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4022b7e" class="outline-3">
+<h3 id="org4022b7e">GitHub 저장소를 Vercel에 연결하기</h3>
+<div class="outline-text-3" id="text-org4022b7e">
+<ul class="org-ul">
+<li>4장에서 앱을 GitHub에 올려둔 게 여기서 열쇠가 된다. Vercel은 그 GitHub</li>
+</ul>
+<p>
+저장소를 가져가 자동으로 배포해준다.
+</p>
+
+<ul class="org-ul">
+<li>흐름 (개념만)
+<ol class="org-ol">
+<li>Vercel에 GitHub 계정으로 로그인 (두 서비스를 <b>연동</b>)</li>
+<li>배포할 저장소(우리 앱)를 선택</li>
+<li>&ldquo;Deploy&rdquo; 버튼 클릭 → Vercel이 코드를 가져가 몇 분 만에 인터넷에 올림</li>
+</ol></li>
+
+<li>쉬운 비유: 택배 자동 발송
+<ul class="org-ul">
+<li>GitHub(창고)에 물건을 넣어두면, Vercel(택배사)이 알아서 포장해 세상으로
+보낸다. 나중에 GitHub의 코드를 고치면 Vercel이 자동으로 다시 배포해주기도 한다.</li>
+</ul></li>
+
+<li>기초 용어
+<dl class="org-dl">
+<dt>연동(integration)</dt><dd>두 서비스를 서로 연결해 함께 쓰게 만드는 것</dd>
+<dt>자동 배포(auto deploy)</dt><dd>코드를 고치면 별도 조작 없이 알아서 다시 배포되는 것</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9ed05f6" class="outline-3">
+<h3 id="org9ed05f6">앱 주소(URL) 공유</h3>
+<div class="outline-text-3" id="text-org9ed05f6">
+<ul class="org-ul">
+<li>배포가 끝나면 Vercel이 세상에 하나뿐인 인터넷 주소를 만들어준다.</li>
+<li>이제 이주소가 곧 &ldquo;내 앱&rdquo;</li>
+</ul>
+
+
+<div id="org43c85fb" class="figure">
+<p><img src="images/20260705_220736_screenshot.png" alt="20260705_220736_screenshot.png" width="800" />
+</p>
+<p><span class="figure-number">Figure 4: </span>배포된 vercel</p>
+</div>
+
+<ul class="org-ul">
+<li>쉬운 예제
+<ul class="org-ul">
+<li><code>https://내앱이름.vercel.app</code> 같은 주소가 생긴다</li>
+<li>이 주소를 친구에게 보내면 친구 폰에서 바로 열린다</li>
+<li>QR 코드로 만들어 교실 화면에 띄우면 반 전체가 동시에 접속할 수도 있다</li>
+</ul></li>
+
+<li>기초 용어
+<dl class="org-dl">
+<dt>URL</dt><dd>웹에서 특정 페이지를 가리키는 주소</dd>
+<dt>도메인(domain)</dt><dd>주소에서 <code>vercel.app</code> 처럼 서비스를 나타내는 이름 부분</dd>
+</dl></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: minwook Han</p>
+<p class="date">Created: 2026-07-06 Mon 23:53</p>
+</div>
+</body>
+</html>

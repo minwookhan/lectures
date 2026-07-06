@@ -128,6 +128,11 @@
           "title": "1 Prompt예제",
           "path": "courses/업무용웹앱개발/1-prompt예제/",
           "tags": []
+        },
+        {
+          "title": "2 Web개발안내",
+          "path": "courses/업무용웹앱개발/2-web개발안내/",
+          "tags": []
         }
       ]
     }
