@@ -153,6 +153,11 @@
           "title": "5 회의록작성",
           "path": "courses/업무용웹앱개발/5-회의록작성/",
           "tags": []
+        },
+        {
+          "title": "&lrm;",
+          "path": "courses/업무용웹앱개발/lrm/",
+          "tags": []
         }
       ]
     }
