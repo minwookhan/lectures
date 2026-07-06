@@ -23,6 +23,11 @@
           "tags": [
             "iot"
           ]
+        },
+        {
+          "title": "&lrm;",
+          "path": "courses/sample-course/lrm/",
+          "tags": []
         }
       ]
     },
