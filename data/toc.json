@@ -127,7 +127,8 @@
           "path": "courses/ai와미래사회/applegame/",
           "tags": []
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "slug": "업무용웹앱개발",
