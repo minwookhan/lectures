@@ -119,6 +119,17 @@
           "tags": []
         }
       ]
+    },
+    {
+      "slug": "업무용웹앱개발",
+      "title": "업무용웹앱개발",
+      "chapters": [
+        {
+          "title": "1 Prompt예제",
+          "path": "courses/업무용웹앱개발/1-prompt예제/",
+          "tags": []
+        }
+      ]
     }
   ]
 }
