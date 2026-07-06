@@ -29,7 +29,8 @@
           "path": "courses/sample-course/lrm/",
           "tags": []
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "slug": "ml",
