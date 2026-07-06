@@ -697,7 +697,7 @@
     const newToc = JSON.parse(JSON.stringify(toc));
     let courseObj = newToc.courses.find(c => c.slug === course.slug);
     if (!courseObj) {
-      courseObj = { slug: course.slug, title: course.title, chapters: [] };
+      courseObj = { slug: course.slug, title: course.title, hidden: false, chapters: [] };
       newToc.courses.push(courseObj);
     }
     const newPath = pendingPayload.isSingle
@@ -758,11 +758,15 @@
       return;
     }
     catalog.innerHTML = toc.courses.map(course => `
-      <div class="cat-course" data-course="${escapeAttr(course.slug)}">
+      <div class="cat-course ${course.hidden ? 'is-hidden' : ''}" data-course="${escapeAttr(course.slug)}">
         <div class="cat-course__head">
           <span class="cat-course__title">${escapeHtml(course.title)}</span>
           <span class="cat-course__count">${course.chapters.length}개</span>
+          <span class="cat-course__visibility">${course.hidden ? '숨김' : '공개'}</span>
           <div class="cat-course__actions">
+            <button class="ghost-btn visibility-btn ${course.hidden ? 'is-hidden' : ''}" data-action="toggle-course-visibility" data-course="${escapeAttr(course.slug)}">
+              ${course.hidden ? '공개로 전환' : '숨김으로 전환'}
+            </button>
             <button class="danger-btn" data-action="delete-course" data-course="${escapeAttr(course.slug)}">과목 삭제</button>
           </div>
         </div>
@@ -842,6 +846,7 @@
 
     if (action === 'edit') openEdit(courseSlug, idx);
     else if (action === 'delete') deleteChapter(courseSlug, idx);
+    else if (action === 'toggle-course-visibility') toggleCourseVisibility(courseSlug);
     else if (action === 'delete-course') deleteCourse(courseSlug);
   }
 
@@ -927,6 +932,31 @@
       log('✗ ' + e.message, 'error');
       setTimeout(closeProgress, 3000);
       toast('실패: ' + e.message);
+    }
+  }
+
+  async function toggleCourseVisibility(courseSlug) {
+    const course = toc.courses.find(c => c.slug === courseSlug);
+    if (!course) return;
+
+    course.hidden = !course.hidden;
+    const nextLabel = course.hidden ? '숨김' : '공개';
+
+    openProgress(`과목 ${nextLabel} 설정 저장 중…`);
+    try {
+      const fileMap = { 'data/toc.json': { content: JSON.stringify(toc, null, 2) + '\n', encoding: 'utf-8' } };
+      const sha = await commitFiles(`visibility: ${course.title} ${nextLabel}`, fileMap);
+      log(`✓ ${nextLabel} 설정됨 · ${sha.slice(0, 7)}`, 'done');
+      setTimeout(closeProgress, 500);
+      toast(`"${course.title}" ${nextLabel} 설정됨`);
+      refreshCourseSelect();
+      renderCatalog();
+    } catch (e) {
+      course.hidden = !course.hidden;
+      log('✗ ' + e.message, 'error');
+      setTimeout(closeProgress, 3000);
+      toast('실패: ' + e.message);
+      renderCatalog();
     }
   }
 
