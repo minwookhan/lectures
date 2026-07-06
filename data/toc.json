@@ -107,7 +107,8 @@
             "lstm"
           ]
         }
-      ]
+      ],
+      "hidden": true
     },
     {
       "slug": "ai와미래사회",
