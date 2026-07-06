@@ -54,6 +54,23 @@
     return btoa(bin);
   }
 
+  function explainGitHubError(response, action) {
+    const msg = response.data?.message || response.status;
+    if (response.status === 401) {
+      return 'GitHub 토큰이 올바르지 않거나 만료되었습니다. 새 토큰을 넣어주세요.';
+    }
+    if (response.status === 403) {
+      return 'GitHub 토큰에 저장 권한이 없습니다. Contents 권한을 Read and write로 설정해주세요.';
+    }
+    if (response.status === 404) {
+      return `${action} 실패: 저장소 선택 또는 토큰 쓰기 권한을 확인하세요. Fine-grained PAT에서 minwookhan/lectures 저장소와 Contents: Read and write 권한이 필요합니다.`;
+    }
+    if (response.status === 409) {
+      return '목록 파일이 방금 바뀌었습니다. 새로고침 후 다시 시도해주세요.';
+    }
+    return `${action} 실패: ${msg}`;
+  }
+
   function toast(msg, ms = 2400) {
     const el = document.querySelector('#toast');
     if (!el) return;
@@ -111,7 +128,7 @@
     try {
       log('목록 정보 조회…');
       const current = await gh(`/repos/${repo.owner}/${repo.name}/contents/data/toc.json?ref=${repo.branch}`);
-      if (!current.ok) throw new Error(`toc.json 조회 실패: ${current.data?.message || current.status}`);
+      if (!current.ok) throw new Error(explainGitHubError(current, 'toc.json 조회'));
 
       const toc = JSON.parse(decodeBase64Utf8(current.data.content));
       const course = toc.courses?.find((item) => item.slug === courseSlug);
@@ -129,7 +146,7 @@
           branch: repo.branch
         }
       });
-      if (!saved.ok) throw new Error(`toc.json 저장 실패: ${saved.data?.message || saved.status}`);
+      if (!saved.ok) throw new Error(explainGitHubError(saved, 'toc.json 저장'));
 
       log(`✓ ${nextLabel} 설정됨 · ${saved.data.commit.sha.slice(0, 7)}`, 'done');
       toast(`"${course.title}" ${nextLabel} 설정됨`);
@@ -137,8 +154,8 @@
     } catch (error) {
       btn.disabled = false;
       log(`✗ ${error.message}`, 'error');
-      toast('실패: ' + error.message, 3200);
-      window.setTimeout(closeProgress, 3000);
+      toast('실패: ' + error.message, 5200);
+      window.setTimeout(closeProgress, 5000);
     }
   }, true);
 })();
